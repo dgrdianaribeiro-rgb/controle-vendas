@@ -1189,9 +1189,18 @@ function openContaForm(id){
       <div class="field"><label>Descrição</label><input name="descricao" placeholder="opcional" value="${esc(c.descricao)}"></div>
       <div class="field"><label>Nº de parcelas*</label><input required type="number" min="1" step="1" name="parcelas" value="${c.parcelas}"></div>
       <div class="field"><label>Valor da parcela (R$)*</label><input required type="number" step="0.01" min="0" name="valorParcela" value="${c.valorParcela}"></div>
-      <div class="field"><label>1º vencimento*</label><input required type="date" name="primeiroVencimento" value="${c.primeiroVencimento}"></div>
-      <div class="field"><label>Parcelas já pagas</label><input type="number" min="0" step="1" name="parcelasPagas" value="${c.parcelasPagas||0}"></div>
+      <div class="field">
+        <label>1º vencimento*</label>
+        <input required type="date" name="primeiroVencimento" value="${c.primeiroVencimento}">
+        <span class="hint">Data da parcela mais antiga (a nº 1), não a próxima a vencer</span>
+      </div>
+      <div class="field">
+        <label>Parcelas já pagas</label>
+        <input type="number" min="0" step="1" name="parcelasPagas" value="${c.parcelasPagas||0}">
+        <span class="hint">Total pago desde o início, não só este mês</span>
+      </div>
       <div class="field span2"><label>Observações</label><textarea name="obs">${esc(c.obs)}</textarea></div>
+      <div class="form-note span2" id="contaPreview" style="grid-column:1/-1"></div>
       <div class="form-actions" style="grid-column:1/-1">
         ${id?`<button type="button" class="btn danger" onclick="deleteConta('${id}')">Excluir</button>`:''}
         <button type="button" class="btn ghost" onclick="closeModal()">Cancelar</button>
@@ -1199,7 +1208,25 @@ function openContaForm(id){
       </div>
     </form>
   `);
-  document.getElementById('formConta').addEventListener('submit', e=>{
+  const formConta = document.getElementById('formConta');
+  function updateContaPreview(){
+    const f = new FormData(formConta);
+    const parcelas = Math.max(1, parseInt(f.get('parcelas'))||1);
+    const primeiroVencimento = f.get('primeiroVencimento');
+    const parcelasPagas = Math.max(0, parseInt(f.get('parcelasPagas'))||0);
+    const el = document.getElementById('contaPreview');
+    if (!primeiroVencimento){ el.innerHTML = ''; return; }
+    const calc = contaCalc({ parcelas, valorParcela:0, primeiroVencimento, parcelasPagas }, DB.mesAtual);
+    if (!calc.emRange){
+      el.innerHTML = `Em <b>${monthLabel(DB.mesAtual)}</b> (mês atual do app) esta conta estaria <b>${calc.parcelaLabel}</b>.`;
+    } else {
+      const statusTxt = calc.status==='Pago'?'<span style="color:var(--ok)">paga</span>':(calc.status==='Atrasado'?'<span style="color:var(--danger)">atrasada</span>':'<span style="color:var(--warn)">pendente</span>');
+      el.innerHTML = `Em <b>${monthLabel(DB.mesAtual)}</b> (mês atual do app), esta conta é a parcela <b>${calc.parcelaLabel}</b> e ficaria ${statusTxt}.`;
+    }
+  }
+  formConta.addEventListener('input', updateContaPreview);
+  updateContaPreview();
+  formConta.addEventListener('submit', e=>{
     e.preventDefault();
     const f = new FormData(e.target);
     const data = {
