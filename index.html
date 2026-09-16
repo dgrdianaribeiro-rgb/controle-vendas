@@ -435,6 +435,7 @@
 
 /* ===================== UTILS ===================== */
 function uid(){ return 'id'+Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
+function normNome(s){ return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').trim().toLowerCase(); }
 function round2(v){ return Math.round((v+Number.EPSILON)*100)/100; }
 function brl(v){ return (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -603,13 +604,13 @@ function importarPlanilha(wb){
   const novo = { clientes:[], compras:[], pagamentos:[], contas:[], produtos: SEED_PRODUTOS.slice(), mesAtual: DB.mesAtual, pixKey: DB.pixKey, diasVencimento: DB.diasVencimento };
   function clienteIdPorNome(nomeRaw){
     const nome = String(nomeRaw||'').trim(); if(!nome) return null;
-    let c = novo.clientes.find(x=>x.nome.toLowerCase()===nome.toLowerCase());
+    let c = novo.clientes.find(x=>normNome(x.nome)===normNome(nome));
     if(!c){ c = {id:uid(), nome, telefone:'', obs:''}; novo.clientes.push(c); }
     return c.id;
   }
   planilhaSheetRows(wb, ['Clientes']).forEach(r=>{
     const nome = String(cell(r,'Nome')).trim(); if(!nome) return;
-    if(!novo.clientes.some(c=>c.nome.toLowerCase()===nome.toLowerCase())){
+    if(!novo.clientes.some(c=>normNome(c.nome)===normNome(nome))){
       novo.clientes.push({id:uid(), nome, telefone:String(cell(r,'Telefone')).trim(), obs:String(cell(r,'Observações','Observacoes')).trim()});
     }
   });
@@ -766,7 +767,7 @@ window.importarContatosColados = function(){
     const nome = linha.slice(0,idx).trim();
     const telefone = linha.slice(idx+1).trim();
     if (!nome) return;
-    const existente = DB.clientes.find(c=>c.nome.toLowerCase()===nome.toLowerCase());
+    const existente = DB.clientes.find(c=>normNome(c.nome)===normNome(nome));
     if (existente){ if(telefone){ existente.telefone = telefone; atualizados++; } }
     else { DB.clientes.push({id:uid(), nome, telefone, obs:''}); criados++; }
   });
