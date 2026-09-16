@@ -149,6 +149,13 @@
   .pay-toggle .txt.ok{color:var(--ok);} .pay-toggle .txt.danger{color:var(--danger);} .pay-toggle .txt.info{color:var(--volt);}
   .btn.wa{border-color:#25D366;color:#128C4A;}
   .btn.wa:hover{background:#25D366;color:#fff;}
+  .cal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;}
+  .cal-item{border:1.5px solid var(--border);border-radius:14px;padding:14px;text-align:left;background:#fff;cursor:pointer;transition:border-color .15s ease,transform .15s ease;}
+  .cal-item:hover{border-color:var(--volt);transform:translateY(-2px);}
+  .cal-item.current{border-color:var(--volt);border-width:2px;background:rgba(33,0,255,.04);}
+  .cal-item .mes{font-family:'Unbounded',sans-serif;font-weight:700;font-size:.98rem;text-transform:capitalize;}
+  .cal-item .info{margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-45);text-transform:uppercase;letter-spacing:.04em;}
+  .cal-item .info b{display:block;font-family:'Manrope',sans-serif;font-size:.85rem;color:#000;text-transform:none;letter-spacing:0;margin-top:2px;}
 
   /* ---------- forms / modal ---------- */
   .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:flex-end;justify-content:center;z-index:200;padding:0;}
@@ -238,7 +245,7 @@
         <button id="monthPrev" title="Mês anterior" aria-label="Mês anterior">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M15 6l-6 6 6 6"></path></svg>
         </button>
-        <b id="monthLabel">—</b>
+        <b id="monthLabel" role="button" tabindex="0" title="Ver calendário dos próximos meses" onclick="abrirCalendarioMeses()" style="cursor:pointer">—</b>
         <button id="monthNext" title="Próximo mês" aria-label="Próximo mês">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M9 6l6 6-6 6"></path></svg>
         </button>
@@ -284,6 +291,10 @@
         <h2>Cobranças do mês</h2>
         <p>O que cada cliente deve neste mês, somado ao que ficou de meses anteriores. Gere e envie a mensagem pelo WhatsApp direto daqui.</p>
       </div>
+      <button class="btn ghost" onclick="marcarTodosComoPagos()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M20 6 9 17l-5-5"></path></svg>
+        Marcar todos como pagos
+      </button>
     </div>
     <div id="cobrancasCards" class="cards"></div>
     <div id="cobrancasList" class="cob-list"></div>
@@ -448,6 +459,16 @@ function currentYM(){ const d=new Date(); return d.getFullYear()+'-'+String(d.ge
 function ymAdd(ym,n){ const [y,m]=ym.split('-').map(Number); const t=(y*12+(m-1))+n; const ny=Math.floor(t/12), nm=(t%12+12)%12; return ny+'-'+String(nm+1).padStart(2,'0'); }
 function ymDiff(a,b){ const [ay,am]=a.split('-').map(Number); const [by,bm]=b.split('-').map(Number); return (ay*12+am)-(by*12+bm); }
 function todayMidnight(){ const d=new Date(); d.setHours(0,0,0,0); return d; }
+function enesimoDiaUtil(ym, n){
+  const [y,m]=ym.split('-').map(Number);
+  const d = new Date(y, m-1, 1);
+  let count = 0;
+  while (true){
+    const dow = d.getDay();
+    if (dow!==0 && dow!==6){ count++; if (count===n) return new Date(d); }
+    d.setDate(d.getDate()+1);
+  }
+}
 
 /* ===================== STORE ===================== */
 const STORE_KEY='dgrVendasControle_v1';
@@ -689,6 +710,27 @@ document.getElementById('tabs').addEventListener('click', e=>{
 function refreshMonthLabel(){ document.getElementById('monthLabel').textContent = monthLabelShort(DB.mesAtual).replace(/^(\w)/,c=>c.toUpperCase()); document.getElementById('monthLabel').title = monthLabel(DB.mesAtual); }
 document.getElementById('monthPrev').addEventListener('click', ()=>{ DB.mesAtual = ymAdd(DB.mesAtual,-1); saveDB(); renderAll(); });
 document.getElementById('monthNext').addEventListener('click', ()=>{ DB.mesAtual = ymAdd(DB.mesAtual,1); saveDB(); renderAll(); });
+
+window.abrirCalendarioMeses = function(){
+  const base = DB.mesAtual;
+  const meses = Array.from({length:15}, (_,i)=>ymAdd(base, i-3));
+  const cards = meses.map(ym=>{
+    const dia5 = enesimoDiaUtil(ym, 5);
+    const isCurrent = ym===DB.mesAtual;
+    return `<button type="button" class="cal-item ${isCurrent?'current':''}" onclick="irParaMes('${ym}')">
+      <div class="mes">${monthLabel(ym)}</div>
+      <div class="info">5º dia útil<b>${fmtDateObj(dia5)}</b></div>
+    </button>`;
+  }).join('');
+  openModal(`
+    <div class="modal-head"><h3>Calendário de meses</h3><button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div>
+    <p class="hint" style="margin:0 0 14px">Clique num mês para ir direto pra ele. O 5º dia útil é o dia comercial (sem contar sábado/domingo) mais usado como referência de vencimento — feriados não entram nessa conta.</p>
+    <div class="cal-grid">${cards}</div>
+  `);
+};
+window.irParaMes = function(ym){
+  DB.mesAtual = ym; saveDB(); closeModal(); renderAll();
+};
 
 /* ===================== TOAST ===================== */
 let toastTimer=null;
@@ -1182,6 +1224,24 @@ window.bumpParcelasPagas = function(id, delta){
   c.parcelasPagas = Math.max(0, Math.min(c.parcelas, (c.parcelasPagas||0)+delta));
   saveDB(); renderAll();
 };
+window.toggleContaPago = function(id){
+  const c = DB.contas.find(x=>x.id===id); if(!c) return;
+  const calc = contaCalc(c, DB.mesAtual);
+  if (!calc.emRange) return;
+  c.parcelasPagas = calc.status==='Pago' ? Math.max(0, calc.idx-1) : Math.max(c.parcelasPagas||0, calc.idx);
+  saveDB(); renderAll();
+};
+window.marcarTodosComoPagos = function(){
+  const pendentes = clientesComMovimento(DB.mesAtual).filter(id=>cobrancaCliente(id, DB.mesAtual).status==='Falta pagar');
+  if (!pendentes.length){ toast('Ninguém com saldo em aberto neste mês.'); return; }
+  if (!confirm(`Marcar ${pendentes.length} cliente(s) como pagos em ${monthLabel(DB.mesAtual)}?`)) return;
+  pendentes.forEach(id=>{
+    const cob = cobrancaCliente(id, DB.mesAtual);
+    DB.pagamentos.push({ id: uid(), clienteId: id, dataPagamento: new Date().toISOString().slice(0,10), mesRef: DB.mesAtual, valor: cob.totalAberto, forma: 'Pix', obs: 'Marcado em lote' });
+  });
+  saveDB(); renderAll();
+  toast(`${pendentes.length} cliente(s) marcados como pagos. Use ▶ para ir ao próximo mês.`);
+};
 
 function renderContas(){
   const tbody = document.querySelector('#contasTable tbody');
@@ -1218,7 +1278,13 @@ function renderContas(){
           <button type="button" onclick="bumpParcelasPagas('${c.id}',1)">+</button>
         </div>
       </td>
-      <td data-label="Status">${statusBadge(calc.status)}</td>
+      <td data-label="Status">
+        ${calc.emRange ? `
+          <div class="pay-toggle">
+            <span class="txt ${calc.status==='Pago'?'ok':'danger'}">${calc.status==='Pago'?'Pago':(calc.status==='Atrasado'?'Atrasado':'Pendente')}</span>
+            <button class="pay-switch ${calc.status==='Pago'?'on':''}" title="${calc.status==='Pago'?'Pago — clique para desmarcar':'Marcar como pago este mês'}" onclick="toggleContaPago('${c.id}')"><span class="knob"></span></button>
+          </div>` : statusBadge(calc.status)}
+      </td>
       <td class="actions"><button class="btn sm ghost" onclick="openContaForm('${c.id}')">Editar</button></td>
     </tr>`;
   }).join('');
