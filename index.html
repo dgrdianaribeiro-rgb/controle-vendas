@@ -398,6 +398,8 @@
       </button>
     </div>
     <div id="contasCards" class="cards"></div>
+    <div class="section-title" id="contasPorDiaTitle" style="display:none">Total por dia de vencimento</div>
+    <div id="contasPorDia" class="cards"></div>
     <div class="table-wrap"><table class="table" id="contasTable">
       <thead><tr><th>Categoria / Descrição</th><th>Parcela</th><th class="num">Valor do mês</th><th>Vencimento</th><th>Parcelas pagas</th><th>Status</th><th></th></tr></thead>
       <tbody></tbody>
@@ -1253,6 +1255,33 @@ function renderContas(){
     <div class="card"><div class="label">Já pago</div><div class="value">${brl(jaPago)}</div></div>
     <div class="card accent"><div class="label">Falta pagar</div><div class="value">${brl(round2(totalMes-jaPago))}</div></div>
   `;
+
+  const porDia = {};
+  rows.forEach(c=>{
+    const calc = contaCalc(c, DB.mesAtual);
+    if (!calc.emRange || !c.primeiroVencimento) return;
+    const dia = Number(c.primeiroVencimento.slice(8,10));
+    if (!porDia[dia]) porDia[dia] = {total:0, pago:0};
+    porDia[dia].total = round2(porDia[dia].total + calc.valorMes);
+    if (calc.status==='Pago') porDia[dia].pago = round2(porDia[dia].pago + calc.valorMes);
+  });
+  const diasOrdenados = Object.keys(porDia).map(Number).sort((a,b)=>a-b);
+  const porDiaTitle = document.getElementById('contasPorDiaTitle');
+  const porDiaBox = document.getElementById('contasPorDia');
+  if (diasOrdenados.length){
+    porDiaTitle.style.display = '';
+    porDiaBox.innerHTML = diasOrdenados.map(dia=>{
+      const {total,pago} = porDia[dia];
+      const falta = round2(total-pago);
+      return `<div class="card"><div class="label">Dia ${dia}</div><div class="value">${brl(total)}</div>
+        <div style="margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--ink-45);text-transform:uppercase;letter-spacing:.04em">Pago <b style="color:#000">${brl(pago)}</b> · Falta <b style="color:${falta>0.01?'var(--danger)':'#000'}">${brl(falta)}</b></div>
+      </div>`;
+    }).join('');
+  } else {
+    porDiaTitle.style.display = 'none';
+    porDiaBox.innerHTML = '';
+  }
+
   if(!rows.length){
     tbody.innerHTML = `<tr><td colspan="7" class="empty-row">Nenhuma conta cadastrada ainda. Clique em "+ Nova conta".</td></tr>`;
     return;
