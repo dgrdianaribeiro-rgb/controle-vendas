@@ -758,6 +758,7 @@ function renderClientes(){
       <td data-label="Telefone">${esc(c.telefone)||'—'}</td>
       <td data-label="Em aberto" class="num">${brl(cob.totalAberto)}</td>
       <td class="actions">
+        ${cob.status!=='Tudo certo'?`<button class="btn sm primary" onclick="registrarPagamentoRapido('${c.id}')">Pagou</button>`:''}
         <button class="btn sm ghost" onclick="openClienteForm('${c.id}')">Editar</button>
       </td>
     </tr>`;
@@ -1004,8 +1005,8 @@ function renderVendas(){
 document.getElementById('buscaVendas').addEventListener('input', renderVendas);
 
 /* ===================== PAGAMENTOS ===================== */
-function openPagamentoForm(id){
-  const p = id ? DB.pagamentos.find(x=>x.id===id) : {id:'', clienteId:'', dataPagamento:new Date().toISOString().slice(0,10), mesRef:DB.mesAtual, valor:'', forma:'Pix', obs:''};
+function openPagamentoForm(id, preset){
+  const p = id ? DB.pagamentos.find(x=>x.id===id) : Object.assign({id:'', clienteId:'', dataPagamento:new Date().toISOString().slice(0,10), mesRef:DB.mesAtual, valor:'', forma:'Pix', obs:''}, preset||{});
   if(!DB.clientes.length){
     toast('Cadastre um cliente antes de registrar um pagamento.');
     openClienteForm();
@@ -1051,6 +1052,11 @@ function openPagamentoForm(id){
   });
 }
 window.openPagamentoForm = openPagamentoForm;
+window.registrarPagamentoRapido = function(clienteId){
+  const cob = cobrancaCliente(clienteId, DB.mesAtual);
+  const valor = cob.totalAberto > 0 ? cob.totalAberto : '';
+  openPagamentoForm(null, { clienteId, valor, mesRef: DB.mesAtual, dataPagamento: new Date().toISOString().slice(0,10) });
+};
 window.deletePagamento = function(id){
   if(!confirm('Excluir este pagamento?')) return;
   DB.pagamentos = DB.pagamentos.filter(p=>p.id!==id);
@@ -1240,7 +1246,8 @@ function renderCobrancas(){
         <div><span>Total em aberto</span><b>${brl(cob.totalAberto)}</b></div>
       </div>
       <div class="cob-actions">
-        <button class="btn sm primary" onclick="verMensagem('${id}')">Ver mensagem</button>
+        ${cob.status!=='Tudo certo'?`<button class="btn sm primary" onclick="registrarPagamentoRapido('${id}')">Registrar pagamento</button>`:''}
+        <button class="btn sm ghost" onclick="verMensagem('${id}')">Ver mensagem</button>
       </div>
     </div>
   `).join('');
@@ -1301,7 +1308,10 @@ function renderResumo(){
   saldoBody.innerHTML = saldoRows.length ? saldoRows.map(({id,cob})=>`<tr>
     <td data-label="Cliente"><b>${esc(nomeCliente(id))}</b></td>
     <td data-label="Em aberto" class="num">${brl(cob.totalAberto)}</td>
-    <td class="actions"><button class="btn sm ghost" onclick="verMensagem('${id}')">Mensagem</button></td>
+    <td class="actions">
+      <button class="btn sm primary" onclick="registrarPagamentoRapido('${id}')">Pagou</button>
+      <button class="btn sm ghost" onclick="verMensagem('${id}')">Mensagem</button>
+    </td>
   </tr>`).join('') : `<tr><td colspan="3" class="empty-row">Ninguém com saldo em aberto neste mês 🎉</td></tr>`;
 
   const contasRows = DB.contas.map(c=>({c, calc:contaCalc(c,DB.mesAtual)})).filter(x=>x.calc.emRange)
