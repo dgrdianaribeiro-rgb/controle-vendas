@@ -415,6 +415,7 @@
 <div class="modal-overlay" id="modalOverlay"><div class="modal" id="modalBody"></div></div>
 <div class="toast" id="toast"></div>
 
+<script src="assets/xlsx.core.min.js"></script>
 <script>
 (function(){
 "use strict";
@@ -554,6 +555,106 @@ function contaCalc(conta, mesRef){
   else if (venceEm && venceEm<todayMidnight()) status='Atrasado';
   else status='Em aberto';
   return {idx, emRange, valorMes, venceEm, parcelaLabel, status};
+}
+
+/* ===================== IMPORTAR / EXPORTAR PLANILHA (.xlsx) ===================== */
+const PLANILHA_COLUNAS = {
+  clientes: ['Nome','Telefone','Observações'],
+  vendas: ['Cliente','Produto(s)','Marca','Data da Compra','Total da Compra','Nº de Parcelas','Valor da Parcela','Mês da 1ª Parcela','Nome Curto','Observações'],
+  pagamentos: ['Data do Pagamento','Cliente','Mês de Referência','Valor Pago','Forma','Observação'],
+  contas: ['Categoria','Descrição','Nº de Parcelas','Valor da Parcela','1º Vencimento','Parcelas Pagas','Observações'],
+  produtos: ['Marca','Produto','Preço']
+};
+function parseYMCell(v){
+  if (v instanceof Date) return `${v.getFullYear()}-${String(v.getMonth()+1).padStart(2,'0')}`;
+  const s = String(v==null?'':v).trim();
+  let m = s.match(/^(\d{4})-(\d{1,2})/); if(m) return `${m[1]}-${m[2].padStart(2,'0')}`;
+  m = s.match(/^(\d{1,2})\/(\d{4})$/); if(m) return `${m[2]}-${m[1].padStart(2,'0')}`;
+  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); if(m) return `${m[3]}-${m[2].padStart(2,'0')}`;
+  return '';
+}
+function parseISODateCell(v){
+  if (v instanceof Date) return `${v.getFullYear()}-${String(v.getMonth()+1).padStart(2,'0')}-${String(v.getDate()).padStart(2,'0')}`;
+  const s = String(v==null?'':v).trim();
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/); if(m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); if(m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+  return '';
+}
+function planilhaSheetRows(wb, nomes){
+  for (const n of nomes){ if (wb.Sheets[n]) return XLSX.utils.sheet_to_json(wb.Sheets[n], {defval:''}); }
+  return [];
+}
+function cell(row, ...chaves){ for(const c of chaves){ if(row[c]!==undefined && row[c]!=='') return row[c]; } return ''; }
+
+function importarPlanilha(wb){
+  const novo = { clientes:[], compras:[], pagamentos:[], contas:[], produtos: SEED_PRODUTOS.slice(), mesAtual: DB.mesAtual, pixKey: DB.pixKey, diasVencimento: DB.diasVencimento };
+  function clienteIdPorNome(nomeRaw){
+    const nome = String(nomeRaw||'').trim(); if(!nome) return null;
+    let c = novo.clientes.find(x=>x.nome.toLowerCase()===nome.toLowerCase());
+    if(!c){ c = {id:uid(), nome, telefone:'', obs:''}; novo.clientes.push(c); }
+    return c.id;
+  }
+  planilhaSheetRows(wb, ['Clientes']).forEach(r=>{
+    const nome = String(cell(r,'Nome')).trim(); if(!nome) return;
+    if(!novo.clientes.some(c=>c.nome.toLowerCase()===nome.toLowerCase())){
+      novo.clientes.push({id:uid(), nome, telefone:String(cell(r,'Telefone')).trim(), obs:String(cell(r,'Observações','Observacoes')).trim()});
+    }
+  });
+  planilhaSheetRows(wb, ['Vendas','Compras']).forEach(r=>{
+    const clienteId = clienteIdPorNome(cell(r,'Cliente')); if(!clienteId) return;
+    const parcelas = parseInt(cell(r,'Nº de Parcelas','No de Parcelas','Numero de Parcelas','Parcelas'))||0;
+    const valorParcela = round2(parseFloat(cell(r,'Valor da Parcela'))||0);
+    const mesPrimeira = parseYMCell(cell(r,'Mês da 1ª Parcela','Mes da 1a Parcela'));
+    if(!parcelas || !valorParcela || !mesPrimeira) return;
+    const marcaRaw = String(cell(r,'Marca')).trim();
+    novo.compras.push({
+      id: uid(), clienteId,
+      produto: String(cell(r,'Produto(s)','Produto')).trim(),
+      marca: MARCAS.slice(0,4).includes(marcaRaw) ? marcaRaw : (marcaRaw||'Boticário'),
+      apelido: String(cell(r,'Nome Curto')).trim(),
+      dataCompra: parseISODateCell(cell(r,'Data da Compra')),
+      total: round2(parseFloat(cell(r,'Total da Compra'))|| (valorParcela*parcelas)),
+      parcelas, valorParcela, mesPrimeira,
+      obs: String(cell(r,'Observações','Observacoes')).trim()
+    });
+  });
+  planilhaSheetRows(wb, ['Pagamentos']).forEach(r=>{
+    const clienteId = clienteIdPorNome(cell(r,'Cliente')); if(!clienteId) return;
+    const mesRef = parseYMCell(cell(r,'Mês de Referência','Mes de Referencia'));
+    const valor = round2(parseFloat(cell(r,'Valor Pago'))||0);
+    if(!mesRef || !valor) return;
+    novo.pagamentos.push({ id: uid(), clienteId, dataPagamento: parseISODateCell(cell(r,'Data do Pagamento')), mesRef, valor, forma: String(cell(r,'Forma')).trim()||'Outro', obs: String(cell(r,'Observação','Observacao')).trim() });
+  });
+  planilhaSheetRows(wb, ['Minhas Contas','Contas']).forEach(r=>{
+    const parcelas = parseInt(cell(r,'Nº de Parcelas','No de Parcelas','Parcelas'))||0;
+    const valorParcela = round2(parseFloat(cell(r,'Valor da Parcela'))||0);
+    const primeiroVencimento = parseISODateCell(cell(r,'1º Vencimento','1o Vencimento','Primeiro Vencimento'));
+    if(!parcelas || !valorParcela || !primeiroVencimento) return;
+    novo.contas.push({ id: uid(), categoria: String(cell(r,'Categoria')).trim()||'Outro', descricao: String(cell(r,'Descrição','Descricao')).trim(), parcelas, valorParcela, primeiroVencimento, parcelasPagas: parseInt(cell(r,'Parcelas Pagas'))||0, obs: String(cell(r,'Observações','Observacoes')).trim() });
+  });
+  const prodRows = planilhaSheetRows(wb, ['Produtos']);
+  if (prodRows.length){
+    const produtos = prodRows.map(r=>({ id: uid(), marca: String(cell(r,'Marca')).trim()||'Boticário', nome: String(cell(r,'Produto')).trim(), preco: round2(parseFloat(cell(r,'Preço','Preco'))||0) })).filter(p=>p.nome);
+    if (produtos.length) novo.produtos = produtos;
+  }
+  return novo;
+}
+
+function baixarModeloPlanilha(){
+  const wb = XLSX.utils.book_new();
+  const hoje = new Date();
+  const exemploData = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+  const add = (nome, colunas, exemplo) => {
+    const ws = XLSX.utils.aoa_to_sheet([colunas, exemplo]);
+    XLSX.utils.book_append_sheet(wb, ws, nome);
+  };
+  add('Clientes', PLANILHA_COLUNAS.clientes, ['Maria Exemplo', '(85) 90000-0000', '']);
+  add('Vendas', PLANILHA_COLUNAS.vendas, ['Maria Exemplo', 'Malbec Signature', 'Boticário', exemploData, 341.90, 4, 85.48, exemploData, '', '']);
+  add('Pagamentos', PLANILHA_COLUNAS.pagamentos, [exemploData, 'Maria Exemplo', exemploData, 85.48, 'Pix', '']);
+  add('Minhas Contas', PLANILHA_COLUNAS.contas, ['Pedido Boticário', '', 8, 127.46, exemploData, 0, '']);
+  add('Produtos', PLANILHA_COLUNAS.produtos, ['Boticário', 'Malbec Signature', 341.90]);
+  XLSX.writeFile(wb, 'modelo-controle-de-vendas.xlsx');
+  toast('Modelo baixado — apague a linha de exemplo antes de preencher.');
 }
 
 function previsaoCliente(clienteId, mesRef, meses){
@@ -1236,9 +1337,18 @@ document.getElementById('btnSettings').addEventListener('click', ()=>{
         <button class="btn ghost sm" id="btnExport">Exportar</button>
       </div>
       <div class="settings-row">
-        <div class="txt"><b>Importar dados</b><span>Substitui os dados atuais deste navegador</span></div>
+        <div class="txt"><b>Importar dados (.json)</b><span>Substitui os dados atuais deste navegador</span></div>
         <button class="btn ghost sm" id="btnImport">Importar</button>
         <input type="file" id="fileImport" accept=".json,application/json,text/plain">
+      </div>
+      <div class="settings-row">
+        <div class="txt"><b>Baixar modelo de planilha</b><span>Planilha Excel em branco, com um exemplo em cada aba</span></div>
+        <button class="btn ghost sm" id="btnBaixarModelo">Baixar modelo</button>
+      </div>
+      <div class="settings-row">
+        <div class="txt"><b>Importar planilha (.xlsx)</b><span>Preenchida a partir do modelo — substitui os dados atuais</span></div>
+        <button class="btn ghost sm" id="btnImportXlsx">Importar planilha</button>
+        <input type="file" id="fileImportXlsx" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel">
       </div>
       <div class="settings-row">
         <div class="txt"><b>Apagar tudo</b><span>Remove clientes, vendas, pagamentos e contas</span></div>
@@ -1269,6 +1379,22 @@ document.getElementById('btnSettings').addEventListener('click', ()=>{
       }catch(err){ toast('Arquivo inválido: ' + err.message); }
     };
     reader.readAsText(file);
+  });
+  document.getElementById('btnBaixarModelo').addEventListener('click', baixarModeloPlanilha);
+  document.getElementById('btnImportXlsx').addEventListener('click', ()=>document.getElementById('fileImportXlsx').click());
+  document.getElementById('fileImportXlsx').addEventListener('change', e=>{
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try{
+        const wb = XLSX.read(new Uint8Array(reader.result), {type:'array', cellDates:true});
+        const novo = importarPlanilha(wb);
+        const resumoImport = `${novo.clientes.length} cliente(s), ${novo.compras.length} venda(s), ${novo.pagamentos.length} pagamento(s), ${novo.contas.length} conta(s).`;
+        if(!confirm(`Importar vai substituir todos os dados atuais deste navegador.\n\nEncontrado na planilha: ${resumoImport}\n\nContinuar?`)) return;
+        DB = novo; saveDB(); closeModal(); renderAll(); toast('Planilha importada com sucesso.');
+      }catch(err){ toast('Não deu para ler a planilha: ' + err.message); }
+    };
+    reader.readAsArrayBuffer(file);
   });
   document.getElementById('btnWipe').addEventListener('click', ()=>{
     if(!confirm('Isso apaga TODOS os dados deste navegador. Tem certeza?')) return;
