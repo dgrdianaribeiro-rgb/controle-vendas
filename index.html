@@ -1238,7 +1238,7 @@ document.getElementById('btnSettings').addEventListener('click', ()=>{
       <div class="settings-row">
         <div class="txt"><b>Importar dados</b><span>Substitui os dados atuais deste navegador</span></div>
         <button class="btn ghost sm" id="btnImport">Importar</button>
-        <input type="file" id="fileImport" accept="application/json">
+        <input type="file" id="fileImport" accept=".json,application/json,text/plain">
       </div>
       <div class="settings-row">
         <div class="txt"><b>Apagar tudo</b><span>Remove clientes, vendas, pagamentos e contas</span></div>
@@ -1266,7 +1266,7 @@ document.getElementById('btnSettings').addEventListener('click', ()=>{
         if(!confirm('Importar vai substituir todos os dados atuais deste navegador. Continuar?')) return;
         DB = Object.assign({ compras:[], contas:[], pagamentos:[], clientes:[], produtos: SEED_PRODUTOS.slice(), mesAtual: currentYM(), pixKey:'', diasVencimento:5 }, data);
         saveDB(); closeModal(); renderAll(); toast('Dados importados com sucesso.');
-      }catch(err){ toast('Arquivo inválido.'); }
+      }catch(err){ toast('Arquivo inválido: ' + err.message); }
     };
     reader.readAsText(file);
   });
