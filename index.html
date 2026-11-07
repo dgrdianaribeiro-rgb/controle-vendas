@@ -149,6 +149,19 @@
   .pay-toggle .txt.ok{color:var(--ok);} .pay-toggle .txt.danger{color:var(--danger);} .pay-toggle .txt.info{color:var(--volt);}
   .btn.wa{border-color:#25D366;color:#128C4A;}
   .btn.wa:hover{background:#25D366;color:#fff;}
+  .periodo-box{background:#fff;border:1.5px solid var(--ink);border-radius:18px;padding:16px 18px;margin-bottom:24px;}
+  .periodo-head{display:flex;align-items:center;gap:12px 18px;flex-wrap:wrap;}
+  .periodo-head > b{font-family:'Unbounded',sans-serif;font-size:.92rem;}
+  .periodo-inputs{display:flex;align-items:center;gap:8px;}
+  .periodo-inputs label{font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:700;text-transform:uppercase;color:var(--ink-60);}
+  .periodo-inputs input{width:58px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:.95rem;font-weight:700;padding:7px 6px;border:1.5px solid var(--border);border-radius:10px;}
+  .periodo-inputs input:focus{outline:none;border-color:var(--volt);}
+  .periodo-chips{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto;}
+  .periodo-resumo{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);}
+  .periodo-resumo div span{display:block;font-family:'JetBrains Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-45);}
+  .periodo-resumo div b{font-family:'Unbounded',sans-serif;font-size:1.1rem;}
+  .periodo-resumo .falta b{color:var(--danger);}
+  @media (max-width:640px){.periodo-chips{margin-left:0;}}
   .cal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;}
   .cal-item{border:1.5px solid var(--border);border-radius:14px;padding:14px;text-align:left;background:#fff;cursor:pointer;transition:border-color .15s ease,transform .15s ease;}
   .cal-item:hover{border-color:var(--volt);transform:translateY(-2px);}
@@ -291,10 +304,16 @@
         <h2>Cobranças do mês</h2>
         <p>O que cada cliente deve neste mês, somado ao que ficou de meses anteriores. Gere e envie a mensagem pelo WhatsApp direto daqui.</p>
       </div>
-      <button class="btn ghost" onclick="marcarTodosComoPagos()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M20 6 9 17l-5-5"></path></svg>
-        Marcar todos como pagos
-      </button>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn ghost" onclick="abrirEditorMensagem()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 20h4L19 9l-4-4L4 16v4z"></path><path d="M13.5 6.5l4 4"></path></svg>
+          Editar mensagem
+        </button>
+        <button class="btn ghost" onclick="marcarTodosComoPagos()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M20 6 9 17l-5-5"></path></svg>
+          Marcar todos como pagos
+        </button>
+      </div>
     </div>
     <div id="cobrancasCards" class="cards"></div>
     <div id="cobrancasList" class="cob-list"></div>
@@ -398,6 +417,27 @@
       </button>
     </div>
     <div id="contasCards" class="cards"></div>
+    <div class="periodo-box">
+      <div class="periodo-head">
+        <b>Quanto pagar por período</b>
+        <div class="periodo-inputs">
+          <label for="periodoDe">do dia</label>
+          <input id="periodoDe" type="number" min="1" max="31" value="1">
+          <label for="periodoAte">ao dia</label>
+          <input id="periodoAte" type="number" min="1" max="31" value="31">
+        </div>
+        <div class="periodo-chips">
+          <button type="button" class="btn sm ghost" onclick="setPeriodoContas(1,14)">1 a 14</button>
+          <button type="button" class="btn sm ghost" onclick="setPeriodoContas(15,31)">15 a 31</button>
+          <button type="button" class="btn sm ghost" onclick="setPeriodoContas(1,31)">Mês inteiro</button>
+          <button type="button" class="btn sm primary" onclick="baixarPlanilhaContas()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"></path></svg>
+            Baixar planilha
+          </button>
+        </div>
+      </div>
+      <div id="periodoResumo" class="periodo-resumo"></div>
+    </div>
     <div class="section-title" id="contasPorDiaTitle" style="display:none">Total por dia de vencimento</div>
     <div id="contasPorDia" class="cards"></div>
     <div class="table-wrap"><table class="table" id="contasTable">
@@ -542,32 +582,60 @@ function vencimentoCobranca(mesRef){
   return d;
 }
 
-function buildMensagem(clienteId, mesRef){
-  const nome = nomeCliente(clienteId);
+const MODELO_PADRAO = {
+  cobranca: 'Oi {nome}, tudo bem?\n\nSegue o fechamento da sua conta de {mes}:\n\n{itens}\n\nSubtotal do mês: {subtotal}\nSaldo de meses anteriores: {saldo_anterior}\nJá recebido este mês: {ja_recebido}\n\nTotal a pagar: {total}\nVencimento: até {vencimento}\n\nPix: {pix}\n\nQualquer dúvida é só me chamar!',
+  item: '- {produto} (parcela {parcela}): {valor}',
+  quitado: 'Oi {nome}, tudo bem?\n\nPassei só para avisar que sua conta de {mes} está quitada, sem nada em aberto. Obrigada pela parceria!',
+  credito: 'Oi {nome}, tudo bem?\n\nFechando sua conta de {mes}: você ficou com um crédito de {credito}, que já abate no próximo mês.\n\n{itens}\n\nQualquer dúvida é só me chamar!'
+};
+const MODELO_CAMPOS_OPCIONAIS = ['saldo_anterior','ja_recebido','pix'];
+function modelosAtuais(){
+  const m = DB.modelosMensagem || {};
+  return {
+    cobranca: m.cobranca || MODELO_PADRAO.cobranca,
+    item: m.item || MODELO_PADRAO.item,
+    quitado: m.quitado || MODELO_PADRAO.quitado,
+    credito: m.credito || MODELO_PADRAO.credito
+  };
+}
+function preencherModelo(texto, valores){
+  const linhas = texto.split('\n').filter(linha=>
+    !MODELO_CAMPOS_OPCIONAIS.some(k=> linha.includes('{'+k+'}') && !valores[k])
+  );
+  return linhas.join('\n')
+    .replace(/\{(\w+)\}/g, (m,k)=> k in valores ? valores[k] : m)
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+function buildMensagem(clienteId, mesRef, modelos){
+  const mod = modelos || modelosAtuais();
   const cob = cobrancaCliente(clienteId, mesRef);
-  const mesNome = monthLabel(mesRef);
-  if (cob.status==='Tudo certo'){
-    return `Oi ${nome}, tudo bem?\n\nPassei só para avisar que sua conta de ${mesNome} está quitada, sem nada em aberto. Obrigada pela parceria!`;
-  }
-  let msg = `Oi ${nome}, tudo bem?\n\n`;
-  if (cob.status==='Crédito'){
-    msg += `Fechando sua conta de ${mesNome}: você ficou com um crédito de ${brl(Math.abs(cob.totalAberto))}, que já abate no próximo mês.\n\n`;
-  } else {
-    msg += `Segue o fechamento da sua conta de ${mesNome}:\n\n`;
-  }
-  cob.itens.forEach(it=>{
-    const label = it.label.length>70 ? it.label.slice(0,70)+'...' : it.label;
-    msg += `- ${label} (parcela ${it.parcelaLabel}): ${brl(it.valor)}\n`;
-  });
-  msg += `\nSubtotal do mês: ${brl(cob.valorMesTotal)}\n`;
-  if (Math.abs(cob.saldoAnterior) > 0.01) msg += `Saldo de meses anteriores: ${brl(cob.saldoAnterior)}\n`;
-  if (cob.pagoMes > 0.01) msg += `Já recebido este mês: ${brl(cob.pagoMes)}\n`;
-  if (cob.status!=='Crédito'){
-    msg += `\nTotal a pagar: ${brl(cob.totalAberto)}\nVencimento: até ${fmtDateObj(vencimentoCobranca(mesRef))}\n`;
-  }
-  if (DB.pixKey) msg += `\nPix: ${DB.pixKey}\n`;
-  msg += `\nQualquer dúvida é só me chamar!`;
-  return msg;
+  const itens = cob.itens.map(it=> preencherModelo(mod.item, {
+    produto: String(it.label||'').replace(/\s*\n\s*/g,' ').trim(),
+    parcela: it.parcelaLabel,
+    valor: brl(it.valor)
+  })).join('\n');
+  const valores = {
+    nome: nomeCliente(clienteId),
+    mes: monthLabel(mesRef),
+    itens,
+    subtotal: brl(cob.valorMesTotal),
+    saldo_anterior: Math.abs(cob.saldoAnterior)>0.01 ? brl(cob.saldoAnterior) : '',
+    ja_recebido: cob.pagoMes>0.01 ? brl(cob.pagoMes) : '',
+    total: brl(Math.max(0, cob.totalAberto)),
+    credito: brl(Math.abs(Math.min(0, cob.totalAberto))),
+    vencimento: fmtDateObj(vencimentoCobranca(mesRef)),
+    pix: DB.pixKey || ''
+  };
+  if (cob.status==='Tudo certo') return preencherModelo(mod.quitado, valores);
+  if (cob.status==='Crédito') return preencherModelo(mod.credito, valores);
+  return preencherModelo(mod.cobranca, valores);
+}
+function waNumero(telefone){
+  let d = String(telefone||'').replace(/\D/g,'');
+  if (!d) return '';
+  if (d.length<=11) d = '55'+d;
+  return d;
 }
 
 function contaCalc(conta, mesRef){
@@ -624,7 +692,7 @@ function planilhaSheetRows(wb, nomes){
 function cell(row, ...chaves){ for(const c of chaves){ if(row[c]!==undefined && row[c]!=='') return row[c]; } return ''; }
 
 function importarPlanilha(wb){
-  const novo = { clientes:[], compras:[], pagamentos:[], contas:[], produtos: SEED_PRODUTOS.slice(), mesAtual: DB.mesAtual, pixKey: DB.pixKey, diasVencimento: DB.diasVencimento };
+  const novo = { clientes:[], compras:[], pagamentos:[], contas:[], produtos: SEED_PRODUTOS.slice(), mesAtual: DB.mesAtual, pixKey: DB.pixKey, diasVencimento: DB.diasVencimento, modelosMensagem: DB.modelosMensagem };
   function clienteIdPorNome(nomeRaw){
     const nome = String(nomeRaw||'').trim(); if(!nome) return null;
     let c = novo.clientes.find(x=>normNome(x.nome)===normNome(nome));
@@ -1272,11 +1340,76 @@ window.marcarTodosComoPagos = function(){
   toast(`${pendentes.length} cliente(s) marcados como pagos. Use ▶ para ir ao próximo mês.`);
 };
 
+function lerPeriodoContas(){
+  let de = parseInt(document.getElementById('periodoDe').value)||1;
+  let ate = parseInt(document.getElementById('periodoAte').value)||31;
+  de = Math.min(31, Math.max(1, de)); ate = Math.min(31, Math.max(1, ate));
+  if (de>ate) [de,ate] = [ate,de];
+  return {de, ate, inteiro: de===1 && ate===31};
+}
+function contasDoPeriodo(){
+  const {de, ate} = lerPeriodoContas();
+  return DB.contas
+    .map(c=>({c, calc:contaCalc(c, DB.mesAtual)}))
+    .filter(x=>x.calc.emRange && x.calc.venceEm && x.calc.venceEm.getDate()>=de && x.calc.venceEm.getDate()<=ate)
+    .sort((a,b)=> a.calc.venceEm-b.calc.venceEm || a.c.categoria.localeCompare(b.c.categoria,'pt-BR'));
+}
+window.setPeriodoContas = function(de, ate){
+  document.getElementById('periodoDe').value = de;
+  document.getElementById('periodoAte').value = ate;
+  renderContas();
+};
+window.baixarPlanilhaContas = function(){
+  const {de, ate} = lerPeriodoContas();
+  const lista = contasDoPeriodo();
+  if (!lista.length){ toast('Nenhuma conta vencendo nesse período.'); return; }
+  const linhas = [['Vencimento','Categoria','Descrição','Parcela','Valor','Status']];
+  let total=0, pago=0;
+  lista.forEach(({c,calc})=>{
+    total += calc.valorMes; if (calc.status==='Pago') pago += calc.valorMes;
+    linhas.push([calc.venceEm, c.categoria, c.descricao||'', calc.parcelaLabel, round2(calc.valorMes), calc.status==='Pago'?'Pago':(calc.status==='Atrasado'?'Atrasado':'Pendente')]);
+  });
+  linhas.push([]);
+  linhas.push(['','','','Total', round2(total), '']);
+  linhas.push(['','','','Já pago', round2(pago), '']);
+  linhas.push(['','','','Falta pagar', round2(total-pago), '']);
+  const ws = XLSX.utils.aoa_to_sheet(linhas, {cellDates:true, dateNF:'dd/mm/yyyy'});
+  ws['!cols'] = [{wch:12},{wch:20},{wch:24},{wch:9},{wch:12},{wch:10}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Contas a pagar');
+  const pad = n=>String(n).padStart(2,'0');
+  XLSX.writeFile(wb, `contas-a-pagar-${DB.mesAtual}-dia${pad(de)}-a-${pad(ate)}.xlsx`);
+  toast('Planilha baixada.');
+};
+document.getElementById('periodoDe').addEventListener('input', ()=>renderContas());
+document.getElementById('periodoAte').addEventListener('input', ()=>renderContas());
+
 function renderContas(){
   const tbody = document.querySelector('#contasTable tbody');
-  const rows = DB.contas.slice().sort((a,b)=> (a.primeiroVencimento||'').localeCompare(b.primeiroVencimento||''));
+  const periodo = lerPeriodoContas();
+  const doPeriodo = contasDoPeriodo();
+  let pTotal=0, pPago=0;
+  doPeriodo.forEach(({calc})=>{ pTotal+=calc.valorMes; if(calc.status==='Pago') pPago+=calc.valorMes; });
+  const mesNome = MONTH_NAMES[Number(DB.mesAtual.slice(5,7))-1];
+  document.getElementById('periodoResumo').innerHTML = `
+    <div><span>Dia ${periodo.de} a ${periodo.ate} de ${mesNome}</span><b>${doPeriodo.length} conta(s)</b></div>
+    <div><span>Total</span><b>${brl(round2(pTotal))}</b></div>
+    <div><span>Já pago</span><b>${brl(round2(pPago))}</b></div>
+    <div class="falta"><span>Falta pagar</span><b>${brl(round2(pTotal-pPago))}</b></div>
+  `;
+  const idsPeriodo = new Set(doPeriodo.map(x=>x.c.id));
+  const rows = DB.contas.slice()
+    .filter(c=> periodo.inteiro || idsPeriodo.has(c.id))
+    .map(c=>({c, calc:contaCalc(c, DB.mesAtual)}))
+    .sort((a,b)=>{
+      if (a.calc.venceEm && b.calc.venceEm) return a.calc.venceEm-b.calc.venceEm;
+      if (a.calc.venceEm) return -1;
+      if (b.calc.venceEm) return 1;
+      return (a.c.primeiroVencimento||'').localeCompare(b.c.primeiroVencimento||'');
+    })
+    .map(x=>x.c);
   let totalMes=0, jaPago=0;
-  rows.forEach(c=>{ const calc=contaCalc(c,DB.mesAtual); totalMes+=calc.valorMes; if(calc.emRange && calc.status==='Pago') jaPago+=calc.valorMes; });
+  DB.contas.forEach(c=>{ const calc=contaCalc(c,DB.mesAtual); totalMes+=calc.valorMes; if(calc.emRange && calc.status==='Pago') jaPago+=calc.valorMes; });
   document.getElementById('contasCards').innerHTML = `
     <div class="card"><div class="label">Total do mês</div><div class="value">${brl(totalMes)}</div></div>
     <div class="card"><div class="label">Já pago</div><div class="value">${brl(jaPago)}</div></div>
@@ -1284,7 +1417,7 @@ function renderContas(){
   `;
 
   const porDia = {};
-  rows.forEach(c=>{
+  DB.contas.forEach(c=>{
     const calc = contaCalc(c, DB.mesAtual);
     if (!calc.emRange || !c.primeiroVencimento) return;
     const dia = Number(c.primeiroVencimento.slice(8,10));
@@ -1310,7 +1443,9 @@ function renderContas(){
   }
 
   if(!rows.length){
-    tbody.innerHTML = `<tr><td colspan="7" class="empty-row">Nenhuma conta cadastrada ainda. Clique em "+ Nova conta".</td></tr>`;
+    tbody.innerHTML = DB.contas.length
+      ? `<tr><td colspan="7" class="empty-row">Nenhuma conta vence entre o dia ${periodo.de} e o dia ${periodo.ate} deste mês.</td></tr>`
+      : `<tr><td colspan="7" class="empty-row">Nenhuma conta cadastrada ainda. Clique em "+ Nova conta".</td></tr>`;
     return;
   }
   const statusBadge = s => ({
@@ -1351,18 +1486,98 @@ window.verMensagem = function(clienteId){
   const nome = nomeCliente(clienteId);
   const cliente = getCliente(clienteId);
   const msg = buildMensagem(clienteId, DB.mesAtual);
-  const waNumber = (cliente && cliente.telefone) ? cliente.telefone.replace(/\D/g,'') : '';
-  const waHref = waNumber ? `https://wa.me/55${waNumber}?text=${encodeURIComponent(msg)}` : '';
+  const waNumber = waNumero(cliente && cliente.telefone);
+  const waHref = waNumber ? `https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}` : '';
   openModal(`
     <div class="modal-head"><h3>Mensagem — ${esc(nome)}</h3><button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div>
     <div class="msg-preview" id="msgPreview">${esc(msg)}</div>
     <div class="form-actions">
       ${waHref?`<a class="btn primary" href="${waHref}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.29-1.39a9.9 9.9 0 004.75 1.21h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2z"/></svg>Abrir no WhatsApp</a>`:''}
       <button class="btn ghost" onclick="copiarMensagem()">Copiar mensagem</button>
+      <button class="btn ghost" onclick="abrirEditorMensagem()">Editar texto</button>
       <button class="btn ghost" onclick="closeModal()">Fechar</button>
     </div>
   `);
   window.__msgAtual = msg;
+};
+window.abrirEditorMensagem = function(){
+  const mod = modelosAtuais();
+  const ids = clientesComMovimento(DB.mesAtual);
+  const exemploId = ids.find(id=>cobrancaCliente(id, DB.mesAtual).status==='Falta pagar') || ids[0] || '';
+  const opcoesExemplo = ids.slice().sort((a,b)=>nomeCliente(a).localeCompare(nomeCliente(b),'pt-BR'))
+    .map(id=>`<option value="${esc(id)}" ${id===exemploId?'selected':''}>${esc(nomeCliente(id))} — ${cobrancaCliente(id, DB.mesAtual).status}</option>`).join('');
+  const chips = [
+    ['{nome}','nome da cliente'],['{mes}','mês da conta'],['{itens}','lista de produtos'],['{subtotal}','valor do mês'],
+    ['{saldo_anterior}','some se for zero'],['{ja_recebido}','some se for zero'],['{total}','total a pagar'],
+    ['{vencimento}','data de vencimento'],['{pix}','some se vazio'],['{credito}','só na mensagem de crédito']
+  ].map(([k,d])=>`<button type="button" class="btn sm ghost" title="${d}" onclick="inserirCampoMensagem('${k}')">${k}</button>`).join('');
+  const ta = (id, valor, linhas) => `<textarea id="${id}" rows="${linhas}" style="width:100%;font-family:'Manrope',sans-serif;font-size:.88rem;line-height:1.5;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;">${esc(valor)}</textarea>`;
+  openModal(`
+    <div class="modal-head"><h3>Mensagem de cobrança</h3><button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div>
+    <p class="hint" style="margin:0 0 10px">Escreva do seu jeito. Toque num campo abaixo para inserir onde o cursor estiver. As linhas de saldo anterior, já recebido e Pix somem sozinhas quando não têm valor.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">${chips}</div>
+    <div class="form-grid cols-1">
+      <div class="field"><label for="modCobranca">Quando falta pagar</label>${ta('modCobranca', mod.cobranca, 12)}</div>
+      <div class="field"><label for="modItem">Cada produto da lista {itens}</label>${ta('modItem', mod.item, 1)}<span class="hint">Use {produto}, {parcela} e {valor}. Para um nome mais curto, preencha "Nome curto p/ mensagem" na venda.</span></div>
+      <div class="field"><label for="modQuitado">Quando está tudo pago</label>${ta('modQuitado', mod.quitado, 4)}</div>
+      <div class="field"><label for="modCredito">Quando pagou a mais (crédito)</label>${ta('modCredito', mod.credito, 5)}</div>
+      ${ids.length ? `<div class="field"><label for="modExemplo">Prévia com a cliente</label><select id="modExemplo">${opcoesExemplo}</select></div>
+      <div class="msg-preview" id="modPreview"></div>` : `<p class="hint">Cadastre uma venda para ver a prévia.</p>`}
+    </div>
+    <div class="form-actions">
+      <button type="button" class="btn ghost" onclick="restaurarModeloMensagem()">Restaurar padrão</button>
+      <button type="button" class="btn ghost" onclick="closeModal()">Cancelar</button>
+      <button type="button" class="btn primary" onclick="salvarModeloMensagem()">Salvar mensagem</button>
+    </div>
+  `);
+  ['modCobranca','modItem','modQuitado','modCredito'].forEach(id=>{
+    const el = document.getElementById(id);
+    el.addEventListener('focus', ()=>{ window.__modFoco = id; });
+    el.addEventListener('input', atualizarPreviaMensagem);
+  });
+  window.__modFoco = 'modCobranca';
+  const sel = document.getElementById('modExemplo');
+  if (sel) sel.addEventListener('change', atualizarPreviaMensagem);
+  atualizarPreviaMensagem();
+};
+function lerModelosDoEditor(){
+  return {
+    cobranca: document.getElementById('modCobranca').value,
+    item: document.getElementById('modItem').value,
+    quitado: document.getElementById('modQuitado').value,
+    credito: document.getElementById('modCredito').value
+  };
+}
+function atualizarPreviaMensagem(){
+  const box = document.getElementById('modPreview');
+  const sel = document.getElementById('modExemplo');
+  if (!box || !sel) return;
+  box.textContent = buildMensagem(sel.value, DB.mesAtual, lerModelosDoEditor());
+}
+window.inserirCampoMensagem = function(campo){
+  const el = document.getElementById(window.__modFoco || 'modCobranca');
+  const ini = el.selectionStart ?? el.value.length, fim = el.selectionEnd ?? el.value.length;
+  el.value = el.value.slice(0,ini) + campo + el.value.slice(fim);
+  el.focus(); el.selectionStart = el.selectionEnd = ini + campo.length;
+  atualizarPreviaMensagem();
+};
+window.salvarModeloMensagem = function(){
+  const m = lerModelosDoEditor();
+  DB.modelosMensagem = {
+    cobranca: m.cobranca.trim() ? m.cobranca : MODELO_PADRAO.cobranca,
+    item: m.item.trim() ? m.item : MODELO_PADRAO.item,
+    quitado: m.quitado.trim() ? m.quitado : MODELO_PADRAO.quitado,
+    credito: m.credito.trim() ? m.credito : MODELO_PADRAO.credito
+  };
+  saveDB(); closeModal(); renderAll(); toast('Mensagem salva.');
+};
+window.restaurarModeloMensagem = function(){
+  document.getElementById('modCobranca').value = MODELO_PADRAO.cobranca;
+  document.getElementById('modItem').value = MODELO_PADRAO.item;
+  document.getElementById('modQuitado').value = MODELO_PADRAO.quitado;
+  document.getElementById('modCredito').value = MODELO_PADRAO.credito;
+  atualizarPreviaMensagem();
+  toast('Texto padrão de volta — clique em Salvar para manter.');
 };
 window.copiarMensagem = function(){
   const msg = window.__msgAtual||'';
@@ -1407,8 +1622,8 @@ function renderCobrancas(){
     const txtClass = cob.status==='Tudo certo'?'ok':cob.status==='Crédito'?'info':'danger';
     const txt = cob.status==='Tudo certo'?'Pago':cob.status==='Crédito'?'Crédito':'Pendente';
     const cliente = getCliente(id);
-    const waNumber = (cliente && cliente.telefone) ? cliente.telefone.replace(/\D/g,'') : '';
-    const waHref = waNumber ? `https://wa.me/55${waNumber}?text=${encodeURIComponent(buildMensagem(id, DB.mesAtual))}` : '';
+    const waNumber = waNumero(cliente && cliente.telefone);
+    const waHref = waNumber ? `https://wa.me/${waNumber}?text=${encodeURIComponent(buildMensagem(id, DB.mesAtual))}` : '';
     return `
     <div class="cob-card">
       <div class="cob-card-top">
