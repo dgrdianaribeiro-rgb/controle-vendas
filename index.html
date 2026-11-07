@@ -563,8 +563,8 @@ function cobrancaCliente(clienteId, mesRef){
   if (totalAberto>0.01) status='Falta pagar'; else if (totalAberto<-0.01) status='Crédito';
   const itens = compras.filter(c=>valorMesCompra(c,mesRef)>0).map(c=>{
     const idx = parcelaIdx(c.mesPrimeira,mesRef);
-    return { label: c.apelido || c.produto, parcelaLabel: idx+'/'+c.parcelas, valor: valorMesCompra(c,mesRef) };
-  });
+    return { label: c.apelido || c.produto, parcelaLabel: idx+'/'+c.parcelas, valor: valorMesCompra(c,mesRef), idx, compra: c };
+  }).sort((a,b)=> (a.compra.mesPrimeira||'').localeCompare(b.compra.mesPrimeira||''));
   return {valorMesTotal,pagoMes,saldoAnterior,totalAberto,status,compras,itens};
 }
 
@@ -583,21 +583,24 @@ function vencimentoCobranca(mesRef){
 }
 
 const MODELO_PADRAO = {
+  cobranca: 'Oi {nome}, tudo bem?\n\nSegue o fechamento da sua conta de {mes}. Este mês vence a parcela de {qtd_compras}:\n\n{itens}\n\nTotal das parcelas do mês: {subtotal}\nSaldo de meses anteriores: {saldo_anterior}\nJá recebido este mês: {ja_recebido}\n\nTotal a pagar: {total}\nVencimento: até {vencimento}\n\n{recado}\n\nPix: {pix}\n\nQualquer dúvida é só me chamar!',
+  item: '• Compra de {mes_compra}: {descricao}\n   Parcela {parcela_num} de {parcela_total}: {valor}',
+  quitado: 'Oi {nome}, tudo bem?\n\nPassei só para avisar que sua conta de {mes} está quitada, sem nada em aberto. Obrigada pela parceria!\n\n{recado}',
+  credito: 'Oi {nome}, tudo bem?\n\nFechando sua conta de {mes}: você ficou com um crédito de {credito}, que já abate no próximo mês.\n\n{itens}\n\n{recado}\n\nQualquer dúvida é só me chamar!'
+};
+const MODELO_ANTIGO = {
   cobranca: 'Oi {nome}, tudo bem?\n\nSegue o fechamento da sua conta de {mes}:\n\n{itens}\n\nSubtotal do mês: {subtotal}\nSaldo de meses anteriores: {saldo_anterior}\nJá recebido este mês: {ja_recebido}\n\nTotal a pagar: {total}\nVencimento: até {vencimento}\n\nPix: {pix}\n\nQualquer dúvida é só me chamar!',
   item: '- {produto} (parcela {parcela}): {valor}',
   quitado: 'Oi {nome}, tudo bem?\n\nPassei só para avisar que sua conta de {mes} está quitada, sem nada em aberto. Obrigada pela parceria!',
   credito: 'Oi {nome}, tudo bem?\n\nFechando sua conta de {mes}: você ficou com um crédito de {credito}, que já abate no próximo mês.\n\n{itens}\n\nQualquer dúvida é só me chamar!'
 };
-const MODELO_CAMPOS_OPCIONAIS = ['saldo_anterior','ja_recebido','pix'];
+const MODELO_CAMPOS_OPCIONAIS = ['saldo_anterior','ja_recebido','pix','recado'];
 function modelosAtuais(){
   const m = DB.modelosMensagem || {};
-  return {
-    cobranca: m.cobranca || MODELO_PADRAO.cobranca,
-    item: m.item || MODELO_PADRAO.item,
-    quitado: m.quitado || MODELO_PADRAO.quitado,
-    credito: m.credito || MODELO_PADRAO.credito
-  };
+  const pega = k => (m[k] && m[k]!==MODELO_ANTIGO[k]) ? m[k] : MODELO_PADRAO[k];
+  return { cobranca: pega('cobranca'), item: pega('item'), quitado: pega('quitado'), credito: pega('credito') };
 }
+function recadoDoMes(mesRef){ return ((DB.recados||{})[mesRef]||'').trim(); }
 function preencherModelo(texto, valores){
   const linhas = texto.split('\n').filter(linha=>
     !MODELO_CAMPOS_OPCIONAIS.some(k=> linha.includes('{'+k+'}') && !valores[k])
@@ -607,24 +610,52 @@ function preencherModelo(texto, valores){
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 }
-function buildMensagem(clienteId, mesRef, modelos){
+function descricaoAutomatica(produto){
+  const limpo = String(produto||'').replace(/\s*\n\s*/g,' ').replace(/\s+\d{1,4},\d{2}\b/g,'').trim();
+  const partes = limpo.split(/\s*\+\s*|\s+\*\s+/).map(x=>x.trim()).filter(Boolean);
+  if (partes.length<=1) return limpo;
+  if (partes.length<=3) return partes.slice(0,-1).join(', ')+' e '+partes[partes.length-1];
+  return partes.slice(0,2).join(', ')+' e mais '+(partes.length-2)+' itens';
+}
+function descricaoCompra(c){ return (c.apelido||'').trim() || descricaoAutomatica(c.produto); }
+function mesDaCompra(c, mesRef){
+  const ym = (c.dataCompra && /^\d{4}-\d{2}/.test(c.dataCompra)) ? c.dataCompra.slice(0,7) : c.mesPrimeira;
+  const [y,m] = ym.split('-').map(Number);
+  return MONTH_NAMES[m-1] + (String(y)!==mesRef.slice(0,4) ? ' de '+y : '');
+}
+function valoresItem(it, mesRef){
+  const c = it.compra;
+  const restantes = c.parcelas - it.idx;
+  return {
+    descricao: descricaoCompra(c),
+    produto: descricaoCompra(c),
+    mes_compra: mesDaCompra(c, mesRef),
+    parcela: it.parcelaLabel,
+    parcela_num: String(it.idx),
+    parcela_total: String(c.parcelas),
+    valor: brl(it.valor),
+    total_compra: brl(c.total),
+    faltam: restantes<=0 ? 'é a última parcela' : (restantes===1 ? 'falta 1 parcela' : 'faltam '+restantes+' parcelas')
+  };
+}
+function buildMensagem(clienteId, mesRef, modelos, recado){
   const mod = modelos || modelosAtuais();
   const cob = cobrancaCliente(clienteId, mesRef);
-  const itens = cob.itens.map(it=> preencherModelo(mod.item, {
-    produto: String(it.label||'').replace(/\s*\n\s*/g,' ').trim(),
-    parcela: it.parcelaLabel,
-    valor: brl(it.valor)
-  })).join('\n');
+  const linhasItens = cob.itens.map(it=> preencherModelo(mod.item, valoresItem(it, mesRef)));
+  const itens = linhasItens.join(mod.item.includes('\n') ? '\n\n' : '\n');
+  const n = cob.itens.length;
   const valores = {
     nome: nomeCliente(clienteId),
     mes: monthLabel(mesRef),
     itens,
+    qtd_compras: n===1 ? '1 compra' : n+' compras',
     subtotal: brl(cob.valorMesTotal),
     saldo_anterior: Math.abs(cob.saldoAnterior)>0.01 ? brl(cob.saldoAnterior) : '',
     ja_recebido: cob.pagoMes>0.01 ? brl(cob.pagoMes) : '',
     total: brl(Math.max(0, cob.totalAberto)),
     credito: brl(Math.abs(Math.min(0, cob.totalAberto))),
     vencimento: fmtDateObj(vencimentoCobranca(mesRef)),
+    recado: (recado!==undefined ? recado : recadoDoMes(mesRef)).trim(),
     pix: DB.pixKey || ''
   };
   if (cob.status==='Tudo certo') return preencherModelo(mod.quitado, valores);
@@ -692,7 +723,7 @@ function planilhaSheetRows(wb, nomes){
 function cell(row, ...chaves){ for(const c of chaves){ if(row[c]!==undefined && row[c]!=='') return row[c]; } return ''; }
 
 function importarPlanilha(wb){
-  const novo = { clientes:[], compras:[], pagamentos:[], contas:[], produtos: SEED_PRODUTOS.slice(), mesAtual: DB.mesAtual, pixKey: DB.pixKey, diasVencimento: DB.diasVencimento, modelosMensagem: DB.modelosMensagem };
+  const novo = { clientes:[], compras:[], pagamentos:[], contas:[], produtos: SEED_PRODUTOS.slice(), mesAtual: DB.mesAtual, pixKey: DB.pixKey, diasVencimento: DB.diasVencimento, modelosMensagem: DB.modelosMensagem, recados: DB.recados };
   function clienteIdPorNome(nomeRaw){
     const nome = String(nomeRaw||'').trim(); if(!nome) return null;
     let c = novo.clientes.find(x=>normNome(x.nome)===normNome(nome));
@@ -716,7 +747,7 @@ function importarPlanilha(wb){
       id: uid(), clienteId,
       produto: String(cell(r,'Produto(s)','Produto')).trim(),
       marca: MARCAS.slice(0,4).includes(marcaRaw) ? marcaRaw : (marcaRaw||'Boticário'),
-      apelido: String(cell(r,'Nome Curto')).trim(),
+      apelido: String(cell(r,'Descrição para a cliente','Nome Curto')).trim(),
       dataCompra: parseISODateCell(cell(r,'Data da Compra')),
       total: round2(parseFloat(cell(r,'Total da Compra'))|| (valorParcela*parcelas)),
       parcelas, valorParcela, mesPrimeira,
@@ -1011,12 +1042,16 @@ function openVendaForm(id){
         </div>
       </div>
       <div class="field span2"><label>Produto(s)</label><textarea name="produto" placeholder="Ex: Hidratante Quinoa + Malbec Signature">${esc(v.produto)}</textarea></div>
+      <div class="field span2">
+        <label for="vendaApelido">Descrição para a cliente</label>
+        <input id="vendaApelido" name="apelido" maxlength="90" value="${esc(v.apelido)}" placeholder="Ex: Kit Malbec + hidratante (presente do Dia dos Pais)">
+        <span class="hint">É assim que esta compra aparece na cobrança. Se deixar vazio, o app resume os produtos sozinho.</span>
+      </div>
       <div class="field"><label>Marca</label>
         <select name="marca">
           ${['Boticário','Natura','Eudora','Avon','Outra'].map(m=>`<option ${m===v.marca?'selected':''}>${m}</option>`).join('')}
         </select>
       </div>
-      <div class="field"><label>Nome curto p/ mensagem</label><input name="apelido" placeholder="opcional" value="${esc(v.apelido)}"></div>
       <div class="field"><label>Data da compra</label><input type="date" name="dataCompra" value="${v.dataCompra}"></div>
       <div class="field"><label>Total da compra (R$)*</label><input required type="number" step="0.01" min="0" name="total" value="${v.total}"></div>
       <div class="field"><label>Nº de parcelas*</label><input required type="number" min="1" step="1" name="parcelas" value="${v.parcelas}"></div>
@@ -1097,7 +1132,11 @@ function openVendaForm(id){
     const mesPrimeira = f.get('mesPrimeira')||DB.mesAtual;
     const ultima = parcelas>0 ? ymAdd(mesPrimeira, parcelas-1) : '';
     const confere = Math.abs(total - valorParcela*parcelas) <= 1;
-    document.getElementById('vendaPreview').innerHTML = `Última parcela: <b>${ultima?monthLabelShort(ultima):'—'}</b> · Conferência: ${confere?'<span style="color:var(--ok)">OK</span>':'<span style="color:var(--danger)">confira os valores</span>'}`;
+    const compraPrevia = { produto: f.get('produto')||'', apelido: f.get('apelido')||'', dataCompra: f.get('dataCompra')||'', mesPrimeira, parcelas: Math.max(1,parcelas), total };
+    const idxPrevia = Math.min(compraPrevia.parcelas, Math.max(1, parcelaIdx(mesPrimeira, DB.mesAtual)));
+    const linhaCobranca = (f.get('produto')||f.get('apelido')) ? preencherModelo(modelosAtuais().item, valoresItem({compra: compraPrevia, idx: idxPrevia, parcelaLabel: idxPrevia+'/'+compraPrevia.parcelas, valor: valorParcela}, DB.mesAtual)) : '';
+    document.getElementById('vendaPreview').innerHTML = `Última parcela: <b>${ultima?monthLabelShort(ultima):'—'}</b> · Conferência: ${confere?'<span style="color:var(--ok)">OK</span>':'<span style="color:var(--danger)">confira os valores</span>'}`
+      + (linhaCobranca ? `<div style="margin-top:10px"><span class="hint" style="display:block;margin-bottom:4px">Como aparece na cobrança:</span><div class="msg-preview" style="padding:10px 12px;background:#fff">${esc(linhaCobranca)}</div></div>` : '');
   }
   form.addEventListener('input', updatePreview);
   updatePreview();
@@ -1506,21 +1545,40 @@ window.abrirEditorMensagem = function(){
   const exemploId = ids.find(id=>cobrancaCliente(id, DB.mesAtual).status==='Falta pagar') || ids[0] || '';
   const opcoesExemplo = ids.slice().sort((a,b)=>nomeCliente(a).localeCompare(nomeCliente(b),'pt-BR'))
     .map(id=>`<option value="${esc(id)}" ${id===exemploId?'selected':''}>${esc(nomeCliente(id))} — ${cobrancaCliente(id, DB.mesAtual).status}</option>`).join('');
-  const chips = [
-    ['{nome}','nome da cliente'],['{mes}','mês da conta'],['{itens}','lista de produtos'],['{subtotal}','valor do mês'],
-    ['{saldo_anterior}','some se for zero'],['{ja_recebido}','some se for zero'],['{total}','total a pagar'],
-    ['{vencimento}','data de vencimento'],['{pix}','some se vazio'],['{credito}','só na mensagem de crédito']
-  ].map(([k,d])=>`<button type="button" class="btn sm ghost" title="${d}" onclick="inserirCampoMensagem('${k}')">${k}</button>`).join('');
+  const chipsDe = lista => lista.map(([k,d])=>`<button type="button" class="btn sm ghost" title="${d}" onclick="inserirCampoMensagem('${k}')">${k}</button>`).join('');
+  const chipsGerais = chipsDe([
+    ['{nome}','nome da cliente'],['{mes}','mês da conta'],['{qtd_compras}','"1 compra" / "2 compras"'],['{itens}','a lista de compras do mês'],
+    ['{subtotal}','soma das parcelas do mês'],['{saldo_anterior}','some se for zero'],['{ja_recebido}','some se for zero'],
+    ['{total}','total a pagar'],['{vencimento}','data de vencimento'],['{recado}','recado do mês — some se vazio'],['{pix}','some se vazio'],['{credito}','só na mensagem de crédito']
+  ]);
+  const chipsItem = chipsDe([
+    ['{descricao}','descrição da compra para a cliente'],['{mes_compra}','mês em que comprou'],['{parcela_num}','número da parcela'],
+    ['{parcela_total}','total de parcelas'],['{valor}','valor desta parcela'],['{total_compra}','valor total da compra'],['{faltam}','"faltam 2 parcelas" / "é a última parcela"']
+  ]);
   const ta = (id, valor, linhas) => `<textarea id="${id}" rows="${linhas}" style="width:100%;font-family:'Manrope',sans-serif;font-size:.88rem;line-height:1.5;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;">${esc(valor)}</textarea>`;
   openModal(`
     <div class="modal-head"><h3>Mensagem de cobrança</h3><button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div>
-    <p class="hint" style="margin:0 0 10px">Escreva do seu jeito. Toque num campo abaixo para inserir onde o cursor estiver. As linhas de saldo anterior, já recebido e Pix somem sozinhas quando não têm valor.</p>
-    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">${chips}</div>
+    <div class="form-note" style="margin:0 0 14px">Esta é a sua <b>mensagem padrão</b>: o que você salvar aqui vale para todas as clientes, em todos os meses, até você mudar de novo. Para um aviso só deste mês, use o <b>Recado de ${esc(monthLabel(DB.mesAtual))}</b> — ele some sozinho no mês seguinte.</div>
     <div class="form-grid cols-1">
-      <div class="field"><label for="modCobranca">Quando falta pagar</label>${ta('modCobranca', mod.cobranca, 12)}</div>
-      <div class="field"><label for="modItem">Cada produto da lista {itens}</label>${ta('modItem', mod.item, 1)}<span class="hint">Use {produto}, {parcela} e {valor}. Para um nome mais curto, preencha "Nome curto p/ mensagem" na venda.</span></div>
-      <div class="field"><label for="modQuitado">Quando está tudo pago</label>${ta('modQuitado', mod.quitado, 4)}</div>
-      <div class="field"><label for="modCredito">Quando pagou a mais (crédito)</label>${ta('modCredito', mod.credito, 5)}</div>
+      <div class="field">
+        <label for="modRecado">Recado de ${esc(monthLabel(DB.mesAtual))} (opcional)</label>
+        ${ta('modRecado', recadoDoMes(DB.mesAtual), 2)}
+        <span class="hint">Ex: "Chegou o catálogo do ciclo novo, quer que eu te mande?" Entra onde estiver {recado}.</span>
+      </div>
+      <div class="field">
+        <label for="modCobranca">Mensagem padrão — quando falta pagar</label>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px">${chipsGerais}</div>
+        ${ta('modCobranca', mod.cobranca, 14)}
+        <span class="hint">Linhas com saldo anterior, já recebido, recado ou Pix somem sozinhas quando não têm valor.</span>
+      </div>
+      <div class="field">
+        <label for="modItem">Como aparece cada compra em {itens}</label>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px">${chipsItem}</div>
+        ${ta('modItem', mod.item, 3)}
+        <span class="hint">Cada compra vira um bloco separado. A {descricao} vem do campo "Descrição para a cliente" da venda; se estiver vazio, o app resume os produtos sozinho.</span>
+      </div>
+      <div class="field"><label for="modQuitado">Mensagem padrão — quando está tudo pago</label>${ta('modQuitado', mod.quitado, 4)}</div>
+      <div class="field"><label for="modCredito">Mensagem padrão — quando pagou a mais (crédito)</label>${ta('modCredito', mod.credito, 5)}</div>
       ${ids.length ? `<div class="field"><label for="modExemplo">Prévia com a cliente</label><select id="modExemplo">${opcoesExemplo}</select></div>
       <div class="msg-preview" id="modPreview"></div>` : `<p class="hint">Cadastre uma venda para ver a prévia.</p>`}
     </div>
@@ -1530,7 +1588,7 @@ window.abrirEditorMensagem = function(){
       <button type="button" class="btn primary" onclick="salvarModeloMensagem()">Salvar mensagem</button>
     </div>
   `);
-  ['modCobranca','modItem','modQuitado','modCredito'].forEach(id=>{
+  ['modRecado','modCobranca','modItem','modQuitado','modCredito'].forEach(id=>{
     const el = document.getElementById(id);
     el.addEventListener('focus', ()=>{ window.__modFoco = id; });
     el.addEventListener('input', atualizarPreviaMensagem);
@@ -1552,7 +1610,7 @@ function atualizarPreviaMensagem(){
   const box = document.getElementById('modPreview');
   const sel = document.getElementById('modExemplo');
   if (!box || !sel) return;
-  box.textContent = buildMensagem(sel.value, DB.mesAtual, lerModelosDoEditor());
+  box.textContent = buildMensagem(sel.value, DB.mesAtual, lerModelosDoEditor(), document.getElementById('modRecado').value);
 }
 window.inserirCampoMensagem = function(campo){
   const el = document.getElementById(window.__modFoco || 'modCobranca');
@@ -1569,6 +1627,9 @@ window.salvarModeloMensagem = function(){
     quitado: m.quitado.trim() ? m.quitado : MODELO_PADRAO.quitado,
     credito: m.credito.trim() ? m.credito : MODELO_PADRAO.credito
   };
+  DB.recados = DB.recados || {};
+  const recado = document.getElementById('modRecado').value.trim();
+  if (recado) DB.recados[DB.mesAtual] = recado; else delete DB.recados[DB.mesAtual];
   saveDB(); closeModal(); renderAll(); toast('Mensagem salva.');
 };
 window.restaurarModeloMensagem = function(){
