@@ -153,6 +153,16 @@
   .mes-chip{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;padding:7px 10px;border-radius:999px;border:1.5px solid var(--border);background:#fff;color:var(--ink-60);cursor:pointer;}
   .mes-chip:hover{border-color:var(--ink);}
   .mes-chip.on{background:var(--ok);border-color:var(--ok);color:#fff;}
+  .head-btns{display:flex;gap:8px;flex-wrap:wrap;}
+  .lista-dia{margin:14px 0 6px;display:flex;justify-content:space-between;gap:8px;font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-45);}
+  .lista-dia b{color:#000;}
+  .lista-item{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:.88rem;}
+  .lista-item .muda{display:block;font-size:.76rem;color:var(--ink-45);margin-top:2px;}
+  .lista-item .val{font-family:'JetBrains Mono',monospace;font-weight:700;white-space:nowrap;}
+  .lista-sai{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--border);font-size:.88rem;}
+  .lista-sai input{margin-top:3px;}
+  .lista-resumo{margin:12px 0;padding:12px 14px;border-radius:12px;background:var(--muted-bg);font-size:.86rem;line-height:1.5;}
+  .lista-resumo .ok{color:var(--ok);font-weight:700;} .lista-resumo .danger{color:var(--danger);font-weight:700;}
   .grupo-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:16px;}
   @media (max-width:640px){.grupo-tabs{grid-template-columns:1fr;}}
   .grupo-tab{text-align:left;background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:12px 14px;cursor:pointer;font:inherit;color:#000;}
@@ -424,10 +434,16 @@
         <h2>Minhas contas a pagar</h2>
         <p>Pedidos com a fornecedora, empréstimos, cartão, celular — tudo o que você precisa pagar todo mês. O − / + ajusta em qual parcela a conta está; só fica paga quando você liga a chave.</p>
       </div>
-      <button class="btn primary" onclick="openContaForm()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
-        Nova conta
-      </button>
+      <div class="head-btns">
+        <button class="btn ghost" onclick="abrirConferirLista()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"></path></svg>
+          Conferir com lista
+        </button>
+        <button class="btn primary" onclick="openContaForm()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+          Nova conta
+        </button>
+      </div>
     </div>
     <div id="contasCards" class="cards"></div>
     <div class="grupo-tabs" id="grupoContasTabs" role="tablist"></div>
@@ -1417,6 +1433,186 @@ window.ajustarParcelaConta = function(id, delta){
   c.primeiroVencimento = ymAdd(ym, -delta) + '-' + dia;
   sincronizarContadorPagas(c);
   saveDB(); renderAll();
+};
+/* ===== Conferir / atualizar contas a partir de uma lista colada (ex.: a lista da Clarice) ===== */
+function valorBR(txt){ return round2(parseFloat(String(txt).replace(/\./g,'').replace(',','.'))||0); }
+function ymMaisProximo(mes){
+  const ano = Number(DB.mesAtual.slice(0,4));
+  const cands = [ano-1, ano, ano+1].map(y=>y+'-'+String(mes).padStart(2,'0'));
+  return cands.sort((a,b)=>Math.abs(ymDiff(a,DB.mesAtual))-Math.abs(ymDiff(b,DB.mesAtual)))[0];
+}
+function categoriaDaLista(nome){
+  const n = normNome(nome);
+  const mapa = [[/botic/,'Pedido Boticário'],[/natura/,'Pedido Natura'],[/eudora/,'Pedido Eudora'],[/avon/,'Pedido Avon'],
+    [/emprest/,'Empréstimo'],[/farmac/,'Farmácia'],[/celular/,'Celular'],[/cartao/,'Cartão']];
+  for (const [re,cat] of mapa) if (re.test(n)) return {categoria:cat, descricao:''};
+  return {categoria:'Outro', descricao:String(nome).trim()};
+}
+function lerListaContas(texto){
+  const itens=[], totaisDia={}; let atual=null, totalGeral=null, ignoradas=0;
+  String(texto||'').split(/\r?\n/).forEach(linha=>{
+    const l = linha.trim(); if(!l) return;
+    let m;
+    if ((m = l.match(/^dia\s+(\d{1,2})\s*\/\s*(\d{1,2})/i))){ atual = {dia:Number(m[1]), mes:Number(m[2])}; return; }
+    if ((m = l.match(/^total\s*:\s*R\$\s*([\d.]+,\d{2})/i))){ if(atual) totaisDia[atual.mes+'-'+atual.dia] = valorBR(m[1]); return; }
+    if ((m = l.match(/^total\s+[^\d:]+?\s+R\$\s*([\d.]+,\d{2})/i))){ totalGeral = valorBR(m[1]); return; }
+    if ((m = l.match(/^(.+?)\s+[—–-]+\s+(\d{1,3})\s*\/\s*(\d{1,3})\s+[—–-]+\s+R\$\s*([\d.]+,\d{2})\s*$/))){
+      if (!atual){ ignoradas++; return; }
+      const idx = Number(m[2]), total = Number(m[3]);
+      if (idx<1 || total<1 || idx>total){ ignoradas++; return; }
+      itens.push({nome:m[1].trim(), idx, parcelas:total, valor:valorBR(m[4]), dia:atual.dia, mes:atual.mes, ym:ymMaisProximo(atual.mes)});
+    }
+  });
+  return {itens, totaisDia, totalGeral, ignoradas};
+}
+function planoListaContas(lista){
+  const meses = Array.from(new Set(lista.itens.map(i=>i.ym)));
+  const ativaEmAlgum = c => meses.some(ym=>contaCalc(c, ym).emRange);
+  const usados = new Set();
+  const cents = v => Math.round(v*100);
+  const novos = lista.itens.map(it=>Object.assign({}, it, categoriaDaLista(it.nome), {old:null}));
+  // 1ª passada: mesmo valor de parcela
+  novos.forEach(n=>{
+    let melhor=null, nota=-1;
+    DB.contas.forEach(c=>{
+      if (usados.has(c.id) || cents(c.valorParcela)!==cents(n.valor)) return;
+      const ativa = contaCalc(c, n.ym).emRange;
+      if (!ativa && c.parcelas!==n.parcelas) return;
+      const s = (c.parcelas===n.parcelas?4:0) + (ativa?2:0) + (grupoDaConta(c)===grupoDaConta(n)?1:0) + (Number((c.primeiroVencimento||'').slice(8,10))===n.dia?1:0);
+      if (s>nota){ nota=s; melhor=c; }
+    });
+    if (melhor){ n.old=melhor; usados.add(melhor.id); }
+  });
+  // 2ª passada: valor parecido (correção de centavos ou de valor)
+  novos.filter(n=>!n.old).forEach(n=>{
+    let melhor=null, dif=Infinity;
+    DB.contas.forEach(c=>{
+      if (usados.has(c.id) || !contaCalc(c, n.ym).emRange) return;
+      const d = Math.abs(c.valorParcela-n.valor)/Math.max(n.valor,0.01);
+      const ok = d<=0.01 || (d<=0.15 && grupoDaConta(c)===grupoDaConta(n) && c.parcelas===n.parcelas);
+      if (ok && d<dif){ dif=d; melhor=c; }
+    });
+    if (melhor){ n.old=melhor; usados.add(melhor.id); }
+  });
+  novos.forEach(n=>{
+    const o = n.old;
+    if (o && n.categoria==='Outro' && !/^pedido/i.test(o.categoria||'') && normNome(o.categoria+' '+(o.descricao||'')).includes(normNome(n.nome))){
+      n.categoria = o.categoria; n.descricao = o.descricao||'';
+    } else if (o && o.descricao && n.categoria!=='Outro'){ n.descricao = o.descricao; }
+    n.mudancas = [];
+    if (!o) return;
+    const calc = contaCalc(o, n.ym);
+    const diaOld = Number((o.primeiroVencimento||'').slice(8,10));
+    if (o.categoria!==n.categoria) n.mudancas.push(`categoria ${o.categoria} → ${n.categoria}`);
+    if (cents(o.valorParcela)!==cents(n.valor)) n.mudancas.push(`valor ${brl(o.valorParcela)} → ${brl(n.valor)}`);
+    const parcOld = calc.emRange ? calc.parcelaLabel : calc.parcelaLabel+' ('+o.parcelas+'x)';
+    if (!calc.emRange || calc.idx!==n.idx || o.parcelas!==n.parcelas) n.mudancas.push(`parcela ${parcOld} → ${n.idx}/${n.parcelas}`);
+    if (diaOld!==n.dia) n.mudancas.push(`dia ${diaOld} → ${n.dia}`);
+  });
+  const saem = DB.contas.filter(c=>!usados.has(c.id) && ativaEmAlgum(c));
+  const ficam = DB.contas.filter(c=>!usados.has(c.id) && !ativaEmAlgum(c));
+  return {novos, saem, ficam, meses};
+}
+let planoLista = null;
+window.abrirConferirLista = function(){
+  const bk = DB.backupContas;
+  openModal(`
+    <div class="modal-head"><h3>Conferir contas com uma lista</h3><button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div>
+    <p class="hint" style="margin:0 0 10px">Cole a lista do mês no formato <b>Dia 07/11</b> e, embaixo, linhas como <b>Boticário — 4/8 — R$ 110,44</b>. O app mostra o que muda antes de salvar. Só as contas desse mês são atualizadas: contas já quitadas, futuras, clientes e vendas não são alteradas.</p>
+    ${bk?`<p class="hint" style="margin:0 0 10px">Última atualização por lista: ${fmtDateObj(new Date(bk.em))}. <button type="button" class="btn sm ghost" onclick="desfazerListaContas()">Desfazer</button></p>`:''}
+    <textarea id="listaContasTxt" rows="10" style="width:100%;font-size:.85rem;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;" placeholder="Dia 05/11&#10;Natura — 2/4 — R$ 34,90&#10;&#10;Total: R$ 34,90"></textarea>
+    <div class="form-actions">
+      <button type="button" class="btn ghost" onclick="closeModal()">Cancelar</button>
+      <button type="button" class="btn primary" onclick="conferirListaContas()">Conferir</button>
+    </div>
+  `);
+};
+window.conferirListaContas = function(){
+  const texto = document.getElementById('listaContasTxt').value;
+  const lista = lerListaContas(texto);
+  if (!lista.itens.length){ toast('Não encontrei contas na lista. Use linhas como "Boticário — 4/8 — R$ 110,44" abaixo de "Dia 07/11".'); return; }
+  planoLista = planoListaContas(lista);
+  planoLista.textoOriginal = texto;
+  const {novos, saem, ficam, meses} = planoLista;
+  const soma = round2(novos.reduce((t,n)=>t+n.valor,0));
+  const grupos = {};
+  novos.forEach(n=>{ const k=n.ym+'-'+String(n.dia).padStart(2,'0'); (grupos[k]=grupos[k]||{dia:n.dia,mes:n.mes,itens:[]}).itens.push(n); });
+  const avisos = [];
+  Object.keys(grupos).sort().forEach(k=>{
+    const g = grupos[k], t = round2(g.itens.reduce((s,n)=>s+n.valor,0)), dito = lista.totaisDia[g.mes+'-'+g.dia];
+    g.total = t;
+    if (dito!=null && Math.round(dito*100)!==Math.round(t*100)) avisos.push(`Dia ${g.dia}: as linhas somam ${brl(t)}, mas a lista diz ${brl(dito)}.`);
+  });
+  const nCorr = novos.filter(n=>n.old && n.mudancas.length).length, nIguais = novos.filter(n=>n.old && !n.mudancas.length).length, nNovas = novos.filter(n=>!n.old).length;
+  const confereTotal = lista.totalGeral==null ? '' :
+    (Math.round(lista.totalGeral*100)===Math.round(soma*100) ? ` <span class="ok">✓ bate com o total da lista</span>` : ` <span class="danger">✗ a lista diz ${brl(lista.totalGeral)}</span>`);
+  const linhaConta = n => {
+    const rotulo = n.descricao ? `${esc(n.categoria)} — ${esc(n.descricao)}` : esc(n.categoria);
+    const tag = !n.old ? '<span class="badge info">nova</span>' : (n.mudancas.length ? '<span class="badge warn">corrigida</span>' : '<span class="badge ok">igual</span>');
+    return `<div class="lista-item"><div>${tag} <b>${rotulo}</b> · ${n.idx}/${n.parcelas}${n.mudancas.length?`<span class="muda">${esc(n.mudancas.join(' · '))}</span>`:''}</div><div class="val">${brl(n.valor)}</div></div>`;
+  };
+  openModal(`
+    <div class="modal-head"><h3>O que vai mudar</h3><button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div>
+    <div class="lista-resumo">
+      <b>${novos.length} conta(s)</b> em ${meses.map(monthLabel).join(', ')} · total <b>${brl(soma)}</b>${confereTotal}<br>
+      ${nIguais} já estavam certas · ${nCorr} serão corrigidas · ${nNovas} nova(s) · ${saem.length} sai(em) do mês<br>
+      ${ficam.length} conta(s) quitadas ou futuras continuam exatamente como estão.
+      ${avisos.length?`<br><span class="danger">${avisos.map(esc).join('<br>')}</span>`:''}
+      ${lista.ignoradas?`<br><span class="danger">${lista.ignoradas} linha(s) não puderam ser lidas.</span>`:''}
+    </div>
+    ${Object.keys(grupos).sort().map(k=>{ const g=grupos[k]; return `<div class="lista-dia"><span>Dia ${String(g.dia).padStart(2,'0')}/${String(g.mes).padStart(2,'0')}</span><b>${brl(g.total)}</b></div>${g.itens.map(linhaConta).join('')}`; }).join('')}
+    ${saem.length?`<div class="lista-dia" style="margin-top:20px"><span>Estão no app neste mês, mas não na lista</span></div>
+      <p class="hint" style="margin:0 0 4px">Serão retiradas. Marque a que você quiser manter.</p>
+      ${saem.map(c=>{ const calc=contaCalc(c, meses[0]); return `<label class="lista-sai"><input type="checkbox" class="manterConta" value="${c.id}"><span><b>${esc(c.categoria)}</b>${c.descricao?' — '+esc(c.descricao):''} · ${calc.parcelaLabel} · dia ${Number((c.primeiroVencimento||'').slice(8,10))} · <b>${brl(c.valorParcela)}</b><br><span class="hint">Manter esta conta</span></span></label>`; }).join('')}`:''}
+    <label class="lista-sai" style="margin-top:14px"><input type="checkbox" id="listaPagarAnteriores" checked><span>Marcar como pagas as parcelas dos meses anteriores<br><span class="hint">Ex.: se está na 4/8, as parcelas 1, 2 e 3 ficam pagas. As de ${meses.map(monthLabel).join(', ')} continuam como você deixou.</span></span></label>
+    <p class="hint" style="margin:12px 0 0">O app guarda uma cópia das contas de antes. Se algo ficar errado, é só tocar em Desfazer em "Conferir com lista".</p>
+    <div class="form-actions">
+      <button type="button" class="btn ghost" onclick="abrirConferirLista(); document.getElementById('listaContasTxt').value = planoLista ? planoLista.textoOriginal : '';">Voltar</button>
+      <button type="button" class="btn primary" onclick="aplicarListaContas()">Atualizar contas</button>
+    </div>
+  `);
+};
+window.aplicarListaContas = function(){
+  if (!planoLista) return;
+  const {novos, saem} = planoLista;
+  const manter = new Set(Array.from(document.querySelectorAll('.manterConta:checked')).map(i=>i.value));
+  const pagarAnteriores = document.getElementById('listaPagarAnteriores').checked;
+  DB.backupContas = { em: new Date().toISOString(), contas: JSON.parse(JSON.stringify(DB.contas)) };
+  const substituidas = new Set(novos.filter(n=>n.old).map(n=>n.old.id));
+  saem.forEach(c=>{ if(!manter.has(c.id)) substituidas.add(c.id); });
+  const contas = DB.contas.filter(c=>!substituidas.has(c.id));
+  novos.forEach(n=>{
+    const o = n.old;
+    const ymPrimeiro = ymAdd(n.ym, -(n.idx-1));
+    const nova = {
+      id: o ? o.id : uid(),
+      categoria: n.categoria,
+      descricao: n.descricao || '',
+      parcelas: n.parcelas,
+      valorParcela: n.valor,
+      primeiroVencimento: ymPrimeiro + '-' + String(n.dia).padStart(2,'0'),
+      obs: o ? (o.obs||'') : ''
+    };
+    const meses = mesesDasParcelas(nova);
+    const antes = meses.filter(m=>ymDiff(m, n.ym)<0);
+    const pagosOld = o ? new Set(mesesPagosConta(o)) : new Set();
+    const pagos = new Set(pagarAnteriores ? antes : antes.filter(m=>pagosOld.has(m)));
+    meses.filter(m=>ymDiff(m, n.ym)>=0 && pagosOld.has(m)).forEach(m=>pagos.add(m));
+    nova.pagosMeses = Array.from(pagos).sort();
+    sincronizarContadorPagas(nova);
+    contas.push(nova);
+  });
+  DB.contas = contas;
+  planoLista = null;
+  saveDB(); closeModal(); renderAll();
+  toast('Contas atualizadas. Para voltar como estava: Conferir com lista → Desfazer.');
+};
+window.desfazerListaContas = function(){
+  const bk = DB.backupContas; if (!bk) return;
+  if (!confirm('Voltar as contas a pagar para como estavam antes da última atualização por lista?')) return;
+  DB.contas = bk.contas;
+  delete DB.backupContas;
+  saveDB(); closeModal(); renderAll(); toast('Contas voltaram para como estavam.');
 };
 window.toggleContaPago = function(id){
   const c = DB.contas.find(x=>x.id===id); if(!c) return;
