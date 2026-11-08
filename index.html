@@ -149,6 +149,10 @@
   .pay-toggle .txt.ok{color:var(--ok);} .pay-toggle .txt.danger{color:var(--danger);} .pay-toggle .txt.info{color:var(--volt);}
   .btn.wa{border-color:#25D366;color:#128C4A;}
   .btn.wa:hover{background:#25D366;color:#fff;}
+  .meses-chips{display:flex;flex-wrap:wrap;gap:6px;}
+  .mes-chip{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;padding:7px 10px;border-radius:999px;border:1.5px solid var(--border);background:#fff;color:var(--ink-60);cursor:pointer;}
+  .mes-chip:hover{border-color:var(--ink);}
+  .mes-chip.on{background:var(--ok);border-color:var(--ok);color:#fff;}
   .grupo-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:16px;}
   @media (max-width:640px){.grupo-tabs{grid-template-columns:1fr;}}
   .grupo-tab{text-align:left;background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:12px 14px;cursor:pointer;font:inherit;color:#000;}
@@ -418,7 +422,7 @@
     <div class="panel-head">
       <div>
         <h2>Minhas contas a pagar</h2>
-        <p>Pedidos com a fornecedora, empréstimos, cartão, celular — tudo o que você precisa pagar todo mês. Atualize "parcelas pagas" pelo botão + / −.</p>
+        <p>Pedidos com a fornecedora, empréstimos, cartão, celular — tudo o que você precisa pagar todo mês. O − / + ajusta em qual parcela a conta está; só fica paga quando você liga a chave.</p>
       </div>
       <button class="btn primary" onclick="openContaForm()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
@@ -451,7 +455,7 @@
     <div class="section-title" id="contasPorDiaTitle" style="display:none">Total por dia de vencimento</div>
     <div id="contasPorDia" class="cards"></div>
     <div class="table-wrap"><table class="table" id="contasTable">
-      <thead><tr><th>Categoria / Descrição</th><th>Parcela</th><th class="num">Valor do mês</th><th>Vencimento</th><th>Parcelas pagas</th><th>Status</th><th></th></tr></thead>
+      <thead><tr><th>Categoria / Descrição</th><th>Parcela deste mês</th><th class="num">Valor do mês</th><th>Vencimento</th><th>Status</th><th></th></tr></thead>
       <tbody></tbody>
     </table></div>
   </section>
@@ -679,6 +683,26 @@ function waNumero(telefone){
   return d;
 }
 
+function mesesDasParcelas(conta){
+  const ym = String(conta.primeiroVencimento||'').slice(0,7);
+  if (!/^\d{4}-\d{2}$/.test(ym)) return [];
+  return Array.from({length: Math.max(0, conta.parcelas||0)}, (_,i)=>ymAdd(ym, i));
+}
+function mesesPagosConta(conta){
+  if (Array.isArray(conta.pagosMeses)) return conta.pagosMeses;
+  return mesesDasParcelas(conta).slice(0, Math.max(0, conta.parcelasPagas||0));
+}
+function sincronizarContadorPagas(conta){
+  const meses = new Set(mesesDasParcelas(conta));
+  conta.parcelasPagas = (conta.pagosMeses||[]).filter(m=>meses.has(m)).length;
+}
+function migrarContas(){
+  let mudou = false;
+  DB.contas.forEach(c=>{
+    if (!Array.isArray(c.pagosMeses)){ c.pagosMeses = mesesPagosConta(c).slice(); mudou = true; }
+  });
+  if (mudou) saveDB();
+}
 function contaCalc(conta, mesRef){
   const ymPrimeiro = conta.primeiroVencimento.slice(0,7);
   const idx = parcelaIdx(ymPrimeiro, mesRef);
@@ -697,7 +721,7 @@ function contaCalc(conta, mesRef){
   let status;
   if (idx>conta.parcelas) status='Quitado';
   else if (idx<1) status='Futuro';
-  else if ((conta.parcelasPagas||0)>=idx) status='Pago';
+  else if (mesesPagosConta(conta).includes(mesRef)) status='Pago';
   else if (venceEm && venceEm<todayMidnight()) status='Atrasado';
   else status='Em aberto';
   return {idx, emRange, valorMes, venceEm, parcelaLabel, status};
@@ -1311,10 +1335,10 @@ function openContaForm(id){
         <input required type="date" name="primeiroVencimento" value="${c.primeiroVencimento}">
         <span class="hint">Data da parcela mais antiga (a nº 1), não a próxima a vencer</span>
       </div>
-      <div class="field">
+      <div class="field span2">
         <label>Parcelas já pagas</label>
-        <input type="number" min="0" step="1" name="parcelasPagas" value="${c.parcelasPagas||0}">
-        <span class="hint">Total pago desde o início, não só este mês</span>
+        <div id="contaMesesPagos" class="meses-chips"></div>
+        <span class="hint">Toque nas parcelas que você já pagou. Mudar datas ou nº de parcelas não marca nada como pago.</span>
       </div>
       <div class="field span2"><label>Observações</label><textarea name="obs">${esc(c.obs)}</textarea></div>
       <div class="form-note span2" id="contaPreview" style="grid-column:1/-1"></div>
@@ -1326,14 +1350,27 @@ function openContaForm(id){
     </form>
   `);
   const formConta = document.getElementById('formConta');
+  const pagosForm = new Set(id ? mesesPagosConta(c) : []);
+  function renderMesesPagos(){
+    const f = new FormData(formConta);
+    const meses = mesesDasParcelas({ parcelas: Math.min(60, Math.max(1, parseInt(f.get('parcelas'))||1)), primeiroVencimento: f.get('primeiroVencimento') });
+    document.getElementById('contaMesesPagos').innerHTML = meses.length ? meses.map((m,i)=>
+      `<button type="button" class="mes-chip ${pagosForm.has(m)?'on':''}" aria-pressed="${pagosForm.has(m)}" data-mes="${m}">${i+1}ª · ${monthLabelShort(m)}</button>`).join('')
+      : '<span class="hint">Preencha o 1º vencimento.</span>';
+  }
+  document.getElementById('contaMesesPagos').addEventListener('click', e=>{
+    const b = e.target.closest('.mes-chip'); if(!b) return;
+    const m = b.dataset.mes;
+    if (pagosForm.has(m)) pagosForm.delete(m); else pagosForm.add(m);
+    renderMesesPagos(); updateContaPreview();
+  });
   function updateContaPreview(){
     const f = new FormData(formConta);
     const parcelas = Math.max(1, parseInt(f.get('parcelas'))||1);
     const primeiroVencimento = f.get('primeiroVencimento');
-    const parcelasPagas = Math.max(0, parseInt(f.get('parcelasPagas'))||0);
     const el = document.getElementById('contaPreview');
     if (!primeiroVencimento){ el.innerHTML = ''; return; }
-    const calc = contaCalc({ parcelas, valorParcela:0, primeiroVencimento, parcelasPagas }, DB.mesAtual);
+    const calc = contaCalc({ parcelas, valorParcela:0, primeiroVencimento, pagosMeses: Array.from(pagosForm) }, DB.mesAtual);
     if (!calc.emRange){
       el.innerHTML = `Em <b>${monthLabel(DB.mesAtual)}</b> (mês atual do app) esta conta estaria <b>${calc.parcelaLabel}</b>.`;
     } else {
@@ -1341,7 +1378,11 @@ function openContaForm(id){
       el.innerHTML = `Em <b>${monthLabel(DB.mesAtual)}</b> (mês atual do app), esta conta é a parcela <b>${calc.parcelaLabel}</b> e ficaria ${statusTxt}.`;
     }
   }
-  formConta.addEventListener('input', updateContaPreview);
+  formConta.addEventListener('input', e=>{
+    if (e.target.name==='parcelas' || e.target.name==='primeiroVencimento') renderMesesPagos();
+    updateContaPreview();
+  });
+  renderMesesPagos();
   updateContaPreview();
   formConta.addEventListener('submit', e=>{
     e.preventDefault();
@@ -1352,9 +1393,11 @@ function openContaForm(id){
       parcelas: Math.max(1, parseInt(f.get('parcelas'))||1),
       valorParcela: round2(parseFloat(f.get('valorParcela'))||0),
       primeiroVencimento: f.get('primeiroVencimento'),
-      parcelasPagas: Math.max(0, parseInt(f.get('parcelasPagas'))||0),
       obs: (f.get('obs')||'').trim()
     };
+    const mesesValidos = new Set(mesesDasParcelas(data));
+    data.pagosMeses = Array.from(pagosForm).filter(m=>mesesValidos.has(m)).sort();
+    data.parcelasPagas = data.pagosMeses.length;
     if (id){ Object.assign(c, data); } else { DB.contas.push(Object.assign({id:uid()}, data)); }
     saveDB(); closeModal(); renderAll(); toast('Conta salva.');
   });
@@ -1365,16 +1408,24 @@ window.deleteConta = function(id){
   DB.contas = DB.contas.filter(c=>c.id!==id);
   saveDB(); closeModal(); renderAll(); toast('Conta excluída.');
 };
-window.bumpParcelasPagas = function(id, delta){
+window.ajustarParcelaConta = function(id, delta){
   const c = DB.contas.find(x=>x.id===id); if(!c) return;
-  c.parcelasPagas = Math.max(0, Math.min(c.parcelas, (c.parcelasPagas||0)+delta));
+  const calc = contaCalc(c, DB.mesAtual);
+  if (calc.emRange && calc.idx+delta < 1){ toast('Já está na 1ª parcela.'); return; }
+  if (calc.emRange && calc.idx+delta > c.parcelas){ toast('Já está na última parcela.'); return; }
+  const ym = c.primeiroVencimento.slice(0,7), dia = c.primeiroVencimento.slice(8,10);
+  c.primeiroVencimento = ymAdd(ym, -delta) + '-' + dia;
+  sincronizarContadorPagas(c);
   saveDB(); renderAll();
 };
 window.toggleContaPago = function(id){
   const c = DB.contas.find(x=>x.id===id); if(!c) return;
   const calc = contaCalc(c, DB.mesAtual);
   if (!calc.emRange) return;
-  c.parcelasPagas = calc.status==='Pago' ? Math.max(0, calc.idx-1) : Math.max(c.parcelasPagas||0, calc.idx);
+  const pagos = new Set(mesesPagosConta(c));
+  if (pagos.has(DB.mesAtual)) pagos.delete(DB.mesAtual); else pagos.add(DB.mesAtual);
+  c.pagosMeses = Array.from(pagos).sort();
+  sincronizarContadorPagas(c);
   saveDB(); renderAll();
 };
 window.marcarTodosComoPagos = function(){
@@ -1533,8 +1584,8 @@ function renderContas(){
 
   if(!rows.length){
     tbody.innerHTML = DB.contas.length
-      ? `<tr><td colspan="7" class="empty-row">${periodo.inteiro ? 'Nenhuma conta neste grupo.' : `Nenhuma conta vence entre o dia ${periodo.de} e o dia ${periodo.ate} deste mês.`}</td></tr>`
-      : `<tr><td colspan="7" class="empty-row">Nenhuma conta cadastrada ainda. Clique em "+ Nova conta".</td></tr>`;
+      ? `<tr><td colspan="6" class="empty-row">${periodo.inteiro ? 'Nenhuma conta neste grupo.' : `Nenhuma conta vence entre o dia ${periodo.de} e o dia ${periodo.ate} deste mês.`}</td></tr>`
+      : `<tr><td colspan="6" class="empty-row">Nenhuma conta cadastrada ainda. Clique em "+ Nova conta".</td></tr>`;
     return;
   }
   const statusBadge = s => ({
@@ -1548,16 +1599,16 @@ function renderContas(){
     const calc = contaCalc(c, DB.mesAtual);
     return `<tr>
       <td data-label="Categoria"><b>${esc(c.categoria)}</b>${c.descricao?' — '+esc(c.descricao):''}</td>
-      <td data-label="Parcela">${calc.parcelaLabel}</td>
+      <td data-label="Parcela deste mês">
+        <div class="stepper-row" title="Ajusta em qual parcela esta conta está neste mês. Não marca como pago.">
+          <button type="button" aria-label="Parcela anterior" onclick="ajustarParcelaConta('${c.id}',-1)">−</button>
+          <input type="text" readonly aria-label="Parcela deste mês" value="${calc.parcelaLabel}">
+          <button type="button" aria-label="Próxima parcela" onclick="ajustarParcelaConta('${c.id}',1)">+</button>
+        </div>
+        <span class="hint" style="display:block;margin-top:4px;font-size:.72rem;color:var(--ink-45)">${c.parcelasPagas||0} de ${c.parcelas} pagas</span>
+      </td>
       <td data-label="Valor do mês" class="num">${brl(calc.valorMes)}</td>
       <td data-label="Vencimento">${calc.venceEm?fmtDateObj(calc.venceEm):'—'}</td>
-      <td data-label="Parcelas pagas">
-        <div class="stepper-row">
-          <button type="button" onclick="bumpParcelasPagas('${c.id}',-1)">−</button>
-          <input type="text" readonly value="${c.parcelasPagas||0} / ${c.parcelas}">
-          <button type="button" onclick="bumpParcelasPagas('${c.id}',1)">+</button>
-        </div>
-      </td>
       <td data-label="Status">
         ${calc.emRange ? `
           <div class="pay-toggle">
@@ -1949,6 +2000,7 @@ window.saveSettings = function(){
 
 /* ===================== RENDER ALL ===================== */
 function renderAll(){
+  migrarContas();
   refreshMonthLabel();
   renderResumo();
   renderCobrancas();
