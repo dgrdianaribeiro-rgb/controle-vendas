@@ -154,6 +154,10 @@
   .mes-chip:hover{border-color:var(--ink);}
   .mes-chip.on{background:var(--ok);border-color:var(--ok);color:#fff;}
   .head-btns{display:flex;gap:8px;flex-wrap:wrap;}
+  .comp-table{width:100%;border-collapse:collapse;font-size:.84rem;}
+  .comp-table th{font-family:'JetBrains Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-45);text-align:left;padding:6px 6px;border-bottom:1.5px solid var(--border);}
+  .comp-table td{padding:7px 6px;border-bottom:1px solid var(--border);}
+  .comp-table .num{text-align:right;font-family:'JetBrains Mono',monospace;white-space:nowrap;}
   .lista-dia{margin:14px 0 6px;display:flex;justify-content:space-between;gap:8px;font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-45);}
   .lista-dia b{color:#000;}
   .lista-item{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:.88rem;}
@@ -730,8 +734,8 @@ function contaCalc(conta, mesRef){
   else parcelaLabel = idx+'/'+conta.parcelas;
   if (emRange){
     const ym = ymAdd(ymPrimeiro, idx-1);
-    const day = Number(conta.primeiroVencimento.slice(8,10));
     const [yy,mm]=ym.split('-').map(Number);
+    const day = Math.min(Number(conta.primeiroVencimento.slice(8,10)), new Date(yy, mm, 0).getDate());
     venceEm = new Date(yy, mm-1, day);
   }
   let status;
@@ -1543,6 +1547,28 @@ window.conferirListaContas = function(){
     g.total = t;
     if (dito!=null && Math.round(dito*100)!==Math.round(t*100)) avisos.push(`Dia ${g.dia}: as linhas somam ${brl(t)}, mas a lista diz ${brl(dito)}.`);
   });
+  const comparacao = (()=>{
+    const mesComp = meses[0];
+    const app = {}, lst = {};
+    DB.contas.forEach(c=>{ const calc=contaCalc(c, mesComp); if(calc.emRange && calc.venceEm){ const d=calc.venceEm.getDate(); app[d]=round2((app[d]||0)+calc.valorMes); } });
+    novos.filter(n=>n.ym===mesComp).forEach(n=>{ lst[n.dia]=round2((lst[n.dia]||0)+n.valor); });
+    const dias = Array.from(new Set([...Object.keys(app),...Object.keys(lst)].map(Number))).sort((a,b)=>a-b);
+    const mm = mesComp.slice(5,7);
+    const linha = (rot, a, l, forte) => { const d=round2(l-a), dif=Math.abs(d)>=0.005;
+      return `<tr${forte?' style="font-weight:700"':''}><td>${rot}</td><td class="num">${brl(a)}</td><td class="num">${brl(l)}</td><td class="num" style="color:${dif?'var(--danger)':'var(--ok)'}">${dif?(d>0?'+':'')+brl(d):'✓'}</td></tr>`; };
+    const soma = (o, f) => round2(dias.filter(f).reduce((t,d)=>t+(o[d]||0),0));
+    let html='', nDif=0;
+    const bloco = (de, ate) => {
+      const ds = dias.filter(d=>d>=de && d<=ate); if(!ds.length) return;
+      ds.forEach(d=>{ if(Math.abs((lst[d]||0)-(app[d]||0))>=0.005) nDif++; html += linha(String(d).padStart(2,'0')+'/'+mm, app[d]||0, lst[d]||0); });
+      html += linha(`Subtotal ${String(ds[0]).padStart(2,'0')} a ${String(ds[ds.length-1]).padStart(2,'0')}`, soma(app,d=>d>=de&&d<=ate), soma(lst,d=>d>=de&&d<=ate), true);
+    };
+    bloco(1,14); bloco(15,31);
+    html += linha('Total do mês', soma(app,()=>true), soma(lst,()=>true), true);
+    return {nDif, html: `<div class="lista-dia" style="margin-top:16px"><span>Resumo por vencimento — ${esc(monthLabel(mesComp))}</span></div>
+      <p class="hint" style="margin:0 0 6px">${nDif ? `${nDif} dia(s) com diferença entre o app hoje e a lista. As linhas abaixo mostram o que causa cada uma.` : 'O app já está igual à lista em todos os dias.'}</p>
+      <table class="comp-table"><thead><tr><th>Data</th><th class="num">No app hoje</th><th class="num">Na lista</th><th class="num">Diferença</th></tr></thead><tbody>${html}</tbody></table>`};
+  })();
   const nCorr = novos.filter(n=>n.old && n.mudancas.length).length, nIguais = novos.filter(n=>n.old && !n.mudancas.length).length, nNovas = novos.filter(n=>!n.old).length;
   const confereTotal = lista.totalGeral==null ? '' :
     (Math.round(lista.totalGeral*100)===Math.round(soma*100) ? ` <span class="ok">✓ bate com o total da lista</span>` : ` <span class="danger">✗ a lista diz ${brl(lista.totalGeral)}</span>`);
@@ -1560,6 +1586,7 @@ window.conferirListaContas = function(){
       ${avisos.length?`<br><span class="danger">${avisos.map(esc).join('<br>')}</span>`:''}
       ${lista.ignoradas?`<br><span class="danger">${lista.ignoradas} linha(s) não puderam ser lidas.</span>`:''}
     </div>
+    ${comparacao.html}
     ${Object.keys(grupos).sort().map(k=>{ const g=grupos[k]; return `<div class="lista-dia"><span>Dia ${String(g.dia).padStart(2,'0')}/${String(g.mes).padStart(2,'0')}</span><b>${brl(g.total)}</b></div>${g.itens.map(linhaConta).join('')}`; }).join('')}
     ${saem.length?`<div class="lista-dia" style="margin-top:20px"><span>Estão no app neste mês, mas não na lista</span></div>
       <p class="hint" style="margin:0 0 4px">Serão retiradas. Marque a que você quiser manter.</p>
@@ -1755,7 +1782,7 @@ function renderContas(){
   DB.contas.filter(contaNoGrupo).forEach(c=>{
     const calc = contaCalc(c, DB.mesAtual);
     if (!calc.emRange || !c.primeiroVencimento) return;
-    const dia = Number(c.primeiroVencimento.slice(8,10));
+    const dia = calc.venceEm ? calc.venceEm.getDate() : Number(c.primeiroVencimento.slice(8,10));
     if (!porDia[dia]) porDia[dia] = {total:0, pago:0};
     porDia[dia].total = round2(porDia[dia].total + calc.valorMes);
     if (calc.status==='Pago') porDia[dia].pago = round2(porDia[dia].pago + calc.valorMes);
