@@ -188,6 +188,8 @@
   .periodo-resumo div span{display:block;font-family:'JetBrains Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-45);}
   .periodo-resumo div b{font-family:'Unbounded',sans-serif;font-size:1.1rem;}
   .periodo-resumo .falta b{color:var(--danger);}
+  .periodo-resumo div small{display:block;font-size:.72rem;color:var(--ink-45);margin-top:2px;}
+  .periodo-resumo .total b{color:var(--volt);}
   @media (max-width:640px){.periodo-chips{margin-left:0;}}
   .cal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;}
   .cal-item{border:1.5px solid var(--border);border-radius:14px;padding:14px;text-align:left;background:#fff;cursor:pointer;transition:border-color .15s ease,transform .15s ease;}
@@ -1754,9 +1756,9 @@ function renderContas(){
   const mesNome = MONTH_NAMES[Number(DB.mesAtual.slice(5,7))-1];
   document.getElementById('periodoResumo').innerHTML = `
     <div><span>${grupoContas==='todas'?'':GRUPOS_CONTAS[grupoContas].nome+' · '}Dia ${periodo.de} a ${periodo.ate} de ${mesNome}</span><b>${doPeriodo.length} conta(s)</b></div>
-    <div><span>Total</span><b>${brl(round2(pTotal))}</b></div>
-    <div><span>Já pago</span><b>${brl(round2(pPago))}</b></div>
-    <div class="falta"><span>Falta pagar</span><b>${brl(round2(pTotal-pPago))}</b></div>
+    <div class="total"><span>Total do período</span><b>${brl(round2(pTotal))}</b><small>pagas + pendentes</small></div>
+    <div><span>Já pago</span><b>${brl(round2(pPago))}</b><small>marcadas como pagas</small></div>
+    <div class="falta"><span>Falta pagar</span><b>${brl(round2(pTotal-pPago))}</b><small>total − já pago</small></div>
   `;
   const idsPeriodo = new Set(doPeriodo.map(x=>x.c.id));
   const rows = DB.contas.slice()
