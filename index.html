@@ -2239,6 +2239,26 @@ function renderAll(){
 
 renderAll();
 
+/* Link de correção: #lista=<texto em base64url> abre "Conferir com lista" já preenchido.
+   Nada é salvo sem a pessoa tocar em "Atualizar contas". */
+function abrirListaDoLink(){
+  const m = location.hash.match(/^#lista=([A-Za-z0-9_\-]+)/);
+  if (!m) return;
+  history.replaceState(null, '', location.pathname + location.search);
+  let texto = '';
+  try{
+    const b64 = m[1].replace(/-/g,'+').replace(/_/g,'/');
+    const bin = atob(b64 + '==='.slice((b64.length+3)%4));
+    texto = new TextDecoder().decode(Uint8Array.from(bin, ch=>ch.charCodeAt(0)));
+  }catch(e){ toast('Não consegui ler o link de correção.'); return; }
+  const tabBtn = document.querySelector('.tab-btn[data-tab="contas"]'); if (tabBtn) tabBtn.click();
+  abrirConferirLista();
+  document.getElementById('listaContasTxt').value = texto;
+  conferirListaContas();
+}
+abrirListaDoLink();
+window.addEventListener('hashchange', abrirListaDoLink);
+
 /* ===================== PWA (best-effort) ===================== */
 if ('serviceWorker' in navigator) {
   // no-op placeholder: keeping the app installable without offline caching complexity.
