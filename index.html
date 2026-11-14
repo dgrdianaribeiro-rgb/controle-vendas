@@ -238,6 +238,51 @@
   .stepper-row button:hover{background:var(--paper-dim);}
   .stepper-row input{text-align:center;width:64px;}
 
+  /* ---------- Gestão de Parcelas (tema próprio) ---------- */
+  body.tema-gestao{
+    --volt:#0f766e; --volt-deep:#0a524d; --acid:#ffb59a;
+    --paper:#fbf5f0; --paper-dim:#f1e5dc;
+    --info-bg:rgba(15,118,110,.10);
+    --gp-coral:#e8603c; --gp-coral-bg:rgba(232,96,60,.12);
+    background:var(--paper);
+  }
+  body.tema-gestao .topbar{background:rgba(251,245,240,.92);}
+  body.tema-gestao .tab-btn.active{background:var(--volt);border-color:var(--volt);}
+  .tab-btn.tab-gestao{border-color:rgba(15,118,110,.45);color:#0f766e;}
+  .tab-btn.tab-gestao.active{background:#0f766e;border-color:#0f766e;color:#fff;}
+  .gp-hero{background:linear-gradient(135deg,#0f766e 0%,#0a524d 100%);color:#fff;border-radius:22px;padding:22px clamp(18px,3vw,28px);margin-bottom:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;}
+  .gp-hero .label{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.7);}
+  .gp-hero .value{font-family:'Unbounded',sans-serif;font-weight:700;font-size:1.35rem;margin-top:6px;letter-spacing:-.02em;}
+  .gp-hero .sub{font-size:.76rem;color:rgba(255,255,255,.75);margin-top:2px;}
+  .gp-hero .destaque .value{color:#ffb59a;}
+  .gp-filtros{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px;}
+  .gp-filtros button{font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:7px 13px;border-radius:999px;border:1.5px solid var(--border);background:#fff;color:var(--ink-60);cursor:pointer;}
+  .gp-filtros button.on{background:var(--gp-coral);border-color:var(--gp-coral);color:#fff;}
+  .gp-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px;}
+  .gp-card{background:#fff;border:1.5px solid var(--border);border-radius:18px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;border-left:6px solid #0f766e;}
+  .gp-card.quitado{border-left-color:var(--ink-35);opacity:.75;}
+  .gp-card.atrasado{border-left-color:var(--gp-coral);}
+  .gp-card.futuro{border-left-color:#ffb59a;}
+  .gp-card .topo{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;}
+  .gp-card .nome{font-weight:800;font-size:1rem;line-height:1.25;}
+  .gp-card .onde{font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-45);margin-top:2px;}
+  .gp-card .valor{font-family:'Unbounded',sans-serif;font-weight:700;font-size:1.05rem;white-space:nowrap;}
+  .gp-card .valor small{display:block;font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:600;color:var(--ink-45);text-align:right;text-transform:uppercase;}
+  .gp-bar{height:9px;border-radius:999px;background:var(--paper-dim);overflow:hidden;}
+  .gp-bar span{display:block;height:100%;background:#0f766e;border-radius:999px;}
+  .gp-info{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:.8rem;color:var(--ink-60);}
+  .gp-info b{color:#000;font-weight:700;}
+  .gp-card .rodape{display:flex;justify-content:space-between;align-items:center;gap:10px;border-top:1px solid var(--border);padding-top:10px;}
+  .gp-meses{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 10px;scrollbar-width:thin;}
+  .gp-mes{flex:none;width:78px;background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:10px 8px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px;}
+  .gp-mes.atual{border-color:#0f766e;box-shadow:0 0 0 2px rgba(15,118,110,.15);}
+  .gp-mes .m{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;text-transform:uppercase;color:var(--ink-45);}
+  .gp-mes .col{width:22px;height:80px;background:var(--paper-dim);border-radius:6px;display:flex;align-items:flex-end;overflow:hidden;}
+  .gp-mes .col span{display:block;width:100%;background:#0f766e;border-radius:6px;}
+  .gp-mes .v{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;}
+  .gp-mes .fim{font-size:.66rem;color:var(--gp-coral,#e8603c);font-weight:700;line-height:1.2;min-height:1.2em;}
+  .gp-vazio{background:#fff;border:1.5px dashed var(--border);border-radius:18px;padding:34px 20px;text-align:center;color:var(--ink-60);}
+
   /* ---------- fab ---------- */
   .fab-wrap{position:fixed;right:18px;bottom:22px;z-index:150;display:flex;flex-direction:column-reverse;align-items:flex-end;gap:10px;}
   .fab{width:58px;height:58px;border-radius:50%;background:var(--volt);color:#fff;border:none;box-shadow:0 14px 28px -12px rgba(33,0,255,.55);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .18s ease,background .18s ease;}
@@ -306,6 +351,7 @@
     <button class="tab-btn" data-tab="pagamentos">Pagamentos</button>
     <button class="tab-btn" data-tab="contas">Minhas Contas</button>
     <button class="tab-btn" data-tab="previsao">Previsão 6 Meses</button>
+    <button class="tab-btn tab-gestao" data-tab="gestao">Gestão de Parcelas</button>
   </div>
 </div>
 
@@ -497,6 +543,31 @@
     </table></div>
   </section>
 
+  <!-- GESTÃO DE PARCELAS (separada das vendas) -->
+  <section class="tabpanel" id="tab-gestao">
+    <div class="panel-head">
+      <div>
+        <h2>Gestão de Parcelas</h2>
+        <p>Seus parcelamentos pessoais: cartão, crediário, financiamento, empréstimo. Esta aba é separada das vendas, cobranças e Minhas Contas: nada daqui entra nos outros totais.</p>
+      </div>
+      <div class="head-btns">
+        <button class="btn ghost" onclick="baixarPlanilhaParcelas()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"></path></svg>
+          Baixar planilha
+        </button>
+        <button class="btn primary" onclick="openParcelamentoForm()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+          Novo parcelamento
+        </button>
+      </div>
+    </div>
+    <div id="gpHero" class="gp-hero"></div>
+    <div class="gp-filtros" id="gpFiltros" role="tablist"></div>
+    <div id="gpLista" class="gp-list"></div>
+    <div class="section-title">Próximos 12 meses — quanto fica comprometido</div>
+    <div id="gpMeses" class="gp-meses"></div>
+  </section>
+
   <footer class="appfoot">Feito para uso pessoal · dados salvos só neste navegador · use exportar/importar para levar para outro aparelho</footer>
 </main>
 
@@ -508,6 +579,7 @@
     <button class="fab-item" onclick="closeFab(); openClienteForm();"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4 4-6 8-6s8 2 8 6"></path></svg></span>Novo cliente</button>
     <button class="fab-item" onclick="closeFab(); openProdutoForm();"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M20.59 13.41 13.42 20.6a2 2 0 0 1-2.83 0L3 13V3h10l7.59 7.59a2 2 0 0 1 0 2.82Z"></path><circle cx="7.5" cy="7.5" r="1.2" fill="currentColor" stroke="none"></circle></svg></span>Novo produto</button>
     <button class="fab-item" onclick="closeFab(); openContaForm();"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M3 9h18"></path></svg></span>Nova conta</button>
+    <button class="fab-item" onclick="closeFab(); openParcelamentoForm();"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"></rect><path d="M2 10h20M6 15h4"></path></svg></span>Novo parcelamento</button>
   </div>
   <button class="fab" id="fabBtn" aria-label="Ações rápidas">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
@@ -779,7 +851,7 @@ function planilhaSheetRows(wb, nomes){
 function cell(row, ...chaves){ for(const c of chaves){ if(row[c]!==undefined && row[c]!=='') return row[c]; } return ''; }
 
 function importarPlanilha(wb){
-  const novo = { clientes:[], compras:[], pagamentos:[], contas:[], produtos: SEED_PRODUTOS.slice(), mesAtual: DB.mesAtual, pixKey: DB.pixKey, diasVencimento: DB.diasVencimento, modelosMensagem: DB.modelosMensagem, recados: DB.recados };
+  const novo = { clientes:[], compras:[], pagamentos:[], contas:[], produtos: SEED_PRODUTOS.slice(), mesAtual: DB.mesAtual, pixKey: DB.pixKey, diasVencimento: DB.diasVencimento, modelosMensagem: DB.modelosMensagem, recados: DB.recados, parcelamentos: DB.parcelamentos||[] };
   function clienteIdPorNome(nomeRaw){
     const nome = String(nomeRaw||'').trim(); if(!nome) return null;
     let c = novo.clientes.find(x=>normNome(x.nome)===normNome(nome));
@@ -861,6 +933,7 @@ document.getElementById('tabs').addEventListener('click', e=>{
   const btn = e.target.closest('.tab-btn'); if(!btn) return;
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b===btn));
   document.querySelectorAll('.tabpanel').forEach(p=>p.classList.toggle('active', p.id==='tab-'+btn.dataset.tab));
+  document.body.classList.toggle('tema-gestao', btn.dataset.tab==='gestao');
 });
 
 /* ===================== MONTH SWITCH ===================== */
@@ -2118,7 +2191,9 @@ function aplicarImportJson(texto){
     const data = JSON.parse(texto);
     if(!data || typeof data!=='object') throw new Error('formato inválido');
     if(!confirm('Importar vai substituir todos os dados atuais deste navegador. Continuar?')) return;
+    const parcelamentosAtuais = DB.parcelamentos||[];
     DB = Object.assign({ compras:[], contas:[], pagamentos:[], clientes:[], produtos: SEED_PRODUTOS.slice(), mesAtual: currentYM(), pixKey:'', diasVencimento:5 }, data);
+    if (!Array.isArray(data.parcelamentos)) DB.parcelamentos = parcelamentosAtuais;
     saveDB(); closeModal(); renderAll(); toast('Dados importados com sucesso.');
   }catch(err){ toast('Não deu para importar: ' + err.message); }
 }
@@ -2162,7 +2237,7 @@ document.getElementById('btnSettings').addEventListener('click', ()=>{
         <button class="btn ghost sm" id="btnColarJson">Colar</button>
       </div>
       <div class="settings-row">
-        <div class="txt"><b>Apagar tudo</b><span>Remove clientes, vendas, pagamentos e contas</span></div>
+        <div class="txt"><b>Apagar tudo</b><span>Remove clientes, vendas, pagamentos, contas e parcelamentos</span></div>
         <button class="btn danger sm" id="btnWipe">Apagar</button>
       </div>
     </div>
@@ -2223,6 +2298,229 @@ window.saveSettings = function(){
   saveDB(); closeModal(); renderAll(); toast('Ajustes salvos.');
 };
 
+
+/* ===================== GESTÃO DE PARCELAS (separada das vendas) ===================== */
+const TIPOS_PARCELAMENTO = ['Cartão de crédito','Crediário / loja','Empréstimo','Financiamento','Consórcio','Outro'];
+let gpFiltro = 'ativos';
+function gpLista(){ if (!Array.isArray(DB.parcelamentos)) DB.parcelamentos = []; return DB.parcelamentos; }
+function gpCalc(p, mesRef){
+  const calc = contaCalc(p, mesRef);
+  const meses = mesesDasParcelas(p);
+  const pagos = new Set(mesesPagosConta(p).filter(m=>meses.includes(m)));
+  const nPagas = pagos.size;
+  const restantes = Math.max(0, p.parcelas - nPagas);
+  const atrasadas = meses.filter(m=>ymDiff(m, mesRef)<0 && !pagos.has(m)).length;
+  const ultimo = meses[meses.length-1] || '';
+  let situacao;
+  if (restantes===0) situacao = 'quitado';
+  else if (calc.idx<1) situacao = 'futuro';
+  else if (atrasadas>0 || calc.status==='Atrasado') situacao = 'atrasado';
+  else situacao = 'ativo';
+  return Object.assign({}, calc, {nPagas, restantes, saldo: round2(restantes*p.valorParcela), atrasadas, ultimo, situacao, pagoMes: pagos.has(mesRef)});
+}
+window.setGpFiltro = function(f){ gpFiltro = f; renderGestao(); };
+function renderGestao(){
+  const lista = gpLista();
+  const mes = DB.mesAtual;
+  const itens = lista.map(p=>({p, g:gpCalc(p, mes)}));
+  let doMes=0, pagoMes=0, saldo=0, fim='';
+  itens.forEach(({p,g})=>{
+    if (g.emRange){ doMes += p.valorParcela; if (g.pagoMes) pagoMes += p.valorParcela; }
+    saldo += g.saldo;
+    if (g.restantes>0 && g.ultimo > fim) fim = g.ultimo;
+  });
+  const ativos = itens.filter(x=>x.g.situacao!=='quitado').length;
+  document.getElementById('gpHero').innerHTML = `
+    <div><div class="label">Parcelas de ${esc(MONTH_NAMES[Number(mes.slice(5,7))-1])}</div><div class="value">${brl(round2(doMes))}</div><div class="sub">${itens.filter(x=>x.g.emRange).length} parcela(s) no mês</div></div>
+    <div><div class="label">Já pago no mês</div><div class="value">${brl(round2(pagoMes))}</div></div>
+    <div class="destaque"><div class="label">Falta pagar no mês</div><div class="value">${brl(round2(doMes-pagoMes))}</div></div>
+    <div><div class="label">Saldo devedor total</div><div class="value">${brl(round2(saldo))}</div><div class="sub">${ativos} parcelamento(s) em andamento</div></div>
+    <div><div class="label">Livre de parcelas em</div><div class="value">${fim?esc(monthLabelShort(ymAdd(fim,1))):'—'}</div><div class="sub">${fim?'última parcela em '+esc(monthLabel(fim)):'nenhuma parcela em aberto'}</div></div>`;
+
+  const filtros = {ativos:'Em andamento', mes:'Vencem neste mês', atrasado:'Atrasados', quitado:'Quitados', todos:'Todos'};
+  const conta = {
+    ativos: itens.filter(x=>x.g.situacao!=='quitado').length,
+    mes: itens.filter(x=>x.g.emRange).length,
+    atrasado: itens.filter(x=>x.g.situacao==='atrasado').length,
+    quitado: itens.filter(x=>x.g.situacao==='quitado').length,
+    todos: itens.length
+  };
+  document.getElementById('gpFiltros').innerHTML = Object.keys(filtros).map(k=>`<button type="button" role="tab" aria-selected="${gpFiltro===k}" class="${gpFiltro===k?'on':''}" onclick="setGpFiltro('${k}')">${filtros[k]} · ${conta[k]}</button>`).join('');
+
+  const visiveis = itens.filter(({g})=>
+    gpFiltro==='todos' ? true :
+    gpFiltro==='mes' ? g.emRange :
+    gpFiltro==='atrasado' ? g.situacao==='atrasado' :
+    gpFiltro==='quitado' ? g.situacao==='quitado' : g.situacao!=='quitado')
+    .sort((a,b)=>{
+      const da = a.g.venceEm ? a.g.venceEm.getDate() : 99, db = b.g.venceEm ? b.g.venceEm.getDate() : 99;
+      return da-db || (a.p.descricao||'').localeCompare(b.p.descricao||'','pt-BR');
+    });
+  const box = document.getElementById('gpLista');
+  if (!lista.length){
+    box.innerHTML = `<div class="gp-vazio" style="grid-column:1/-1"><b>Nenhum parcelamento cadastrado ainda.</b><br>Toque em <b>Novo parcelamento</b> para adicionar o primeiro: cartão, loja, empréstimo…</div>`;
+  } else if (!visiveis.length){
+    box.innerHTML = `<div class="gp-vazio" style="grid-column:1/-1">Nada aqui neste filtro.</div>`;
+  } else {
+    const sit = {ativo:'<span class="badge info">Em dia</span>', atrasado:'<span class="badge danger">Atrasado</span>', futuro:'<span class="badge warn">Começa depois</span>', quitado:'<span class="badge muted">Quitado</span>'};
+    box.innerHTML = visiveis.map(({p,g})=>{
+      const pct = Math.round(100*g.nPagas/Math.max(1,p.parcelas));
+      const dia = Number((p.primeiroVencimento||'').slice(8,10));
+      return `<div class="gp-card ${g.situacao}">
+        <div class="topo">
+          <div><div class="nome">${esc(p.descricao||p.tipo)}</div><div class="onde">${esc(p.tipo||'')}${p.onde?' · '+esc(p.onde):''}</div></div>
+          <div class="valor">${brl(p.valorParcela)}<small>por mês</small></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:5px"><span><b>${g.nPagas} de ${p.parcelas}</b> pagas</span><span>${pct}%</span></div>
+          <div class="gp-bar"><span style="width:${pct}%"></span></div>
+        </div>
+        <div class="gp-info">
+          <div>Neste mês<br><b>${g.emRange?'parcela '+g.parcelaLabel:(g.idx<1?'ainda não começou':'já terminou')}</b></div>
+          <div>Vence todo dia<br><b>${dia||'—'}</b></div>
+          <div>Faltam<br><b>${g.restantes} parcela(s) · ${brl(g.saldo)}</b></div>
+          <div>Última parcela<br><b>${g.ultimo?esc(monthLabelShort(g.ultimo)):'—'}</b></div>
+          ${g.atrasadas?`<div style="grid-column:1/-1;color:var(--gp-coral,#e8603c)"><b style="color:inherit">${g.atrasadas} parcela(s) de meses anteriores sem marcar como paga</b></div>`:''}
+        </div>
+        <div class="rodape">
+          ${g.emRange ? `<div class="pay-toggle">
+              <button class="pay-switch ${g.pagoMes?'on':''}" title="${g.pagoMes?'Pago — toque para desmarcar':'Marcar a parcela deste mês como paga'}" onclick="toggleParcelamentoPago('${p.id}')"><span class="knob"></span></button>
+              <span class="txt ${g.pagoMes?'ok':'danger'}">${g.pagoMes?'Paga':'Pendente'}</span>
+            </div>` : sit[g.situacao]}
+          <div style="display:flex;gap:6px;align-items:center">${g.emRange?sit[g.situacao]:''}<button class="btn sm ghost" onclick="openParcelamentoForm('${p.id}')">Editar</button></div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // próximos 12 meses
+  const meses = Array.from({length:12}, (_,i)=>ymAdd(mes, i));
+  const totais = meses.map(m=>round2(lista.reduce((t,p)=>{ const c=contaCalc(p,m); return t + (c.emRange ? p.valorParcela : 0); },0)));
+  const max = Math.max(1, ...totais);
+  document.getElementById('gpMeses').innerHTML = meses.map((m,i)=>{
+    const terminam = lista.filter(p=>{ const ms=mesesDasParcelas(p); return ms[ms.length-1]===m; });
+    const fimTxt = terminam.length ? 'termina: '+terminam.map(p=>esc(p.descricao||p.tipo)).join(', ') : '';
+    return `<div class="gp-mes ${i===0?'atual':''}" title="${esc(monthLabel(m))}${fimTxt?' — '+fimTxt:''}">
+      <div class="m">${esc(monthLabelShort(m))}</div>
+      <div class="col"><span style="height:${Math.round(100*totais[i]/max)}%"></span></div>
+      <div class="v">${totais[i]?brl(totais[i]).replace('R$','').trim():'—'}</div>
+      <div class="fim">${terminam.length?'✓ '+terminam.length+' termina'+(terminam.length>1?'m':''):''}</div>
+    </div>`;
+  }).join('');
+}
+
+window.toggleParcelamentoPago = function(id){
+  const p = gpLista().find(x=>x.id===id); if(!p) return;
+  if (!contaCalc(p, DB.mesAtual).emRange) return;
+  const pagos = new Set(mesesPagosConta(p));
+  if (pagos.has(DB.mesAtual)) pagos.delete(DB.mesAtual); else pagos.add(DB.mesAtual);
+  p.pagosMeses = Array.from(pagos).sort();
+  sincronizarContadorPagas(p);
+  saveDB(); renderGestao();
+};
+
+function openParcelamentoForm(id){
+  const atual = id ? gpLista().find(x=>x.id===id) : null;
+  const mes = DB.mesAtual;
+  const p = atual || {descricao:'', tipo:'Cartão de crédito', onde:'', parcelas:10, valorParcela:'', primeiroVencimento: mes+'-10', pagosMeses:null, obs:''};
+  const idxAtual = parcelaIdx(String(p.primeiroVencimento).slice(0,7), mes);
+  const diaAtual = Number(String(p.primeiroVencimento).slice(8,10)) || 10;
+  const tipos = TIPOS_PARCELAMENTO.slice(); if (p.tipo && !tipos.includes(p.tipo)) tipos.push(p.tipo);
+  openModal(`
+    <div class="modal-head"><h3>${id?'Editar parcelamento':'Novo parcelamento'}</h3><button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div>
+    <form id="formParcelamento" class="form-grid">
+      <div class="field span2" style="grid-column:1/-1"><label>O que é*</label><input required name="descricao" placeholder="Ex.: Geladeira, Celular novo, Empréstimo banco" value="${esc(p.descricao)}"></div>
+      <div class="field"><label>Tipo</label><select name="tipo">${tipos.map(t=>`<option ${t===p.tipo?'selected':''}>${esc(t)}</option>`).join('')}</select></div>
+      <div class="field"><label>Onde / cartão</label><input name="onde" placeholder="Ex.: Nubank, Magalu" value="${esc(p.onde||'')}"></div>
+      <div class="field"><label>Nº de parcelas*</label><input required type="number" min="1" max="600" step="1" name="parcelas" value="${p.parcelas}"></div>
+      <div class="field"><label>Valor da parcela (R$)*</label><input required type="number" step="0.01" min="0" name="valorParcela" value="${p.valorParcela}">
+        <span class="hint" id="gpTotalHint"></span></div>
+      <div class="field"><label>Em ${esc(monthLabel(mes))}, está na parcela nº</label><input required type="number" step="1" min="-60" max="600" name="idx" value="${idxAtual}">
+        <span class="hint">Use 0 se a 1ª parcela vence só no mês que vem.</span></div>
+      <div class="field"><label>Vence todo dia</label><input required type="number" min="1" max="31" step="1" name="dia" value="${diaAtual}"></div>
+      <div class="field" style="grid-column:1/-1">
+        <label>Parcelas já pagas</label>
+        <div id="gpMesesPagos" class="meses-chips"></div>
+        <span class="hint">Toque para marcar ou desmarcar. ${id?'':'As parcelas dos meses anteriores já vêm marcadas.'}</span>
+      </div>
+      <div class="field" style="grid-column:1/-1"><label>Observações</label><textarea name="obs">${esc(p.obs||'')}</textarea></div>
+      <div class="form-actions" style="grid-column:1/-1">
+        ${id?`<button type="button" class="btn danger" onclick="deleteParcelamento('${id}')">Excluir</button>`:''}
+        <button type="button" class="btn ghost" onclick="closeModal()">Cancelar</button>
+        <button type="submit" class="btn primary">Salvar</button>
+      </div>
+    </form>
+  `);
+  const form = document.getElementById('formParcelamento');
+  let pagos = new Set(atual ? mesesPagosConta(atual) : []);
+  let mexeuNosPagos = !!atual;
+  const dados = () => {
+    const f = new FormData(form);
+    const parcelas = Math.min(600, Math.max(1, parseInt(f.get('parcelas'))||1));
+    const idx = parseInt(f.get('idx')); const i = isNaN(idx) ? 1 : idx;
+    const dia = Math.min(31, Math.max(1, parseInt(f.get('dia'))||1));
+    return {parcelas, valorParcela: round2(parseFloat(f.get('valorParcela'))||0), primeiroVencimento: ymAdd(mes, -(i-1)) + '-' + String(dia).padStart(2,'0')};
+  };
+  function render(){
+    const d = dados();
+    const meses = mesesDasParcelas(d);
+    if (!mexeuNosPagos) pagos = new Set(meses.filter(m=>ymDiff(m, mes)<0));
+    document.getElementById('gpMesesPagos').innerHTML = meses.map((m,i)=>
+      `<button type="button" class="mes-chip ${pagos.has(m)?'on':''}" aria-pressed="${pagos.has(m)}" data-mes="${m}">${i+1}ª · ${monthLabelShort(m)}</button>`).join('');
+    document.getElementById('gpTotalHint').textContent = d.valorParcela ? `Total: ${brl(round2(d.valorParcela*d.parcelas))} · termina em ${monthLabel(meses[meses.length-1])}` : '';
+  }
+  document.getElementById('gpMesesPagos').addEventListener('click', e=>{
+    const b = e.target.closest('.mes-chip'); if(!b) return;
+    mexeuNosPagos = true;
+    const m = b.dataset.mes; if (pagos.has(m)) pagos.delete(m); else pagos.add(m);
+    render();
+  });
+  form.addEventListener('input', render);
+  render();
+  form.addEventListener('submit', e=>{
+    e.preventDefault();
+    const f = new FormData(form);
+    const d = dados();
+    const validos = new Set(mesesDasParcelas(d));
+    const novo = Object.assign(d, {
+      descricao: (f.get('descricao')||'').trim(),
+      tipo: f.get('tipo'),
+      onde: (f.get('onde')||'').trim(),
+      obs: (f.get('obs')||'').trim(),
+      pagosMeses: Array.from(pagos).filter(m=>validos.has(m)).sort()
+    });
+    novo.parcelasPagas = novo.pagosMeses.length;
+    if (atual) Object.assign(atual, novo); else gpLista().push(Object.assign({id:uid()}, novo));
+    saveDB(); closeModal(); renderGestao(); toast('Parcelamento salvo.');
+  });
+}
+window.openParcelamentoForm = openParcelamentoForm;
+window.deleteParcelamento = function(id){
+  if (!confirm('Excluir este parcelamento?')) return;
+  DB.parcelamentos = gpLista().filter(p=>p.id!==id);
+  saveDB(); closeModal(); renderGestao(); toast('Parcelamento excluído.');
+};
+window.baixarPlanilhaParcelas = function(){
+  const lista = gpLista();
+  if (!lista.length){ toast('Nenhum parcelamento cadastrado ainda.'); return; }
+  const mes = DB.mesAtual;
+  const linhas = [['O que é','Tipo','Onde','Valor da parcela','Nº de parcelas','Parcela neste mês','Pagas','Faltam','Saldo devedor','Vence dia','Última parcela','Situação']];
+  const sitNome = {ativo:'Em dia', atrasado:'Atrasado', futuro:'Começa depois', quitado:'Quitado'};
+  let saldo = 0;
+  lista.forEach(p=>{
+    const g = gpCalc(p, mes); saldo += g.saldo;
+    linhas.push([p.descricao, p.tipo, p.onde||'', p.valorParcela, p.parcelas, g.emRange?g.parcelaLabel:'—', g.nPagas, g.restantes, g.saldo, Number(p.primeiroVencimento.slice(8,10)), g.ultimo?monthLabel(g.ultimo):'', sitNome[g.situacao]]);
+  });
+  linhas.push([]);
+  linhas.push(['','','','','','','','Total', round2(saldo)]);
+  const ws = XLSX.utils.aoa_to_sheet(linhas);
+  ws['!cols'] = [{wch:24},{wch:18},{wch:14},{wch:14},{wch:12},{wch:14},{wch:8},{wch:8},{wch:14},{wch:9},{wch:18},{wch:14}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Parcelamentos');
+  XLSX.writeFile(wb, `gestao-de-parcelas-${mes}.xlsx`);
+  toast('Planilha baixada.');
+};
+
 /* ===================== RENDER ALL ===================== */
 function renderAll(){
   migrarContas();
@@ -2235,6 +2533,7 @@ function renderAll(){
   renderPagamentos();
   renderContas();
   renderPrevisao();
+  renderGestao();
 }
 
 renderAll();
