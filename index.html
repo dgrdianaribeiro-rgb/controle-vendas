@@ -316,6 +316,11 @@
   .gp-mini{display:flex;flex-direction:column;gap:2px;margin-top:4px;width:90px;}
   .gp-mini span{display:block;height:4px;border-radius:4px;}
   .gp-mini .e{background:#0f766e;} .gp-mini .s{background:var(--gp-coral,#e8603c);}
+  .gp-liq{display:grid;gap:6px;}
+  .gp-liq div{background:var(--info-bg);border-radius:12px;padding:8px 12px;}
+  .gp-liq span{display:block;font-family:'JetBrains Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-45);}
+  .gp-liq b{font-family:'JetBrains Mono',monospace;font-size:.84rem;}
+  .gp-liq small{display:block;font-size:.72rem;color:var(--ink-45);}
   .gp-alivio{font-size:.76rem;color:#0f766e;font-weight:700;}
   .gp-vazio{background:#fff;border:1.5px dashed var(--border);border-radius:18px;padding:34px 20px;text-align:center;color:var(--ink-60);}
 
@@ -2410,13 +2415,24 @@ function gpMes(ym){
   const saidas = soma(contas, x=>x.it.valor);
   const pago = soma(contas.filter(x=>gpPago(x.it, ym)), x=>x.it.valor);
   // descontos em folha saem da quinzena do salário (a 1ª receita marcada como "salário com descontos")
-  const salario = receitas.filter(r=>r.descontaFolha).sort((a,b)=>(a.dia||0)-(b.dia||0))[0];
-  const qFolha = salario ? gpQuinzena(salario.dia) || 1 : 1;
+  // descontos em folha: saem do salário da quinzena do dia informado na conta; sem dia, do último salário do mês
+  const salarios = receitas.filter(r=>r.descontaFolha).sort((a,b)=>(a.dia||0)-(b.dia||0));
+  const salario = salarios[salarios.length-1];
+  const qFolha = salario ? gpQuinzena(salario.dia) || 2 : 2;
+  const qDoDesconto = it => gpQuinzena(Number(it.dia)) || qFolha;
   const quinz = {1:{ent:0,sai:0,folha:0}, 2:{ent:0,sai:0,folha:0}, 0:{ent:0,sai:0,folha:0}};
   receitas.forEach(r=>{ quinz[gpQuinzena(r.dia)].ent += r.valor; });
   contas.forEach(x=>{ quinz[gpQuinzena(gpDia(x.it))].sai += x.it.valor; });
-  quinz[qFolha].folha = totFolha;
-  return {ym, itens, contas, folha, receitas, entradas, totFolha, saidas, pago, sobra: round2(entradas-totFolha-saidas), quinz, qFolha, salario};
+  folha.forEach(x=>{ quinz[qDoDesconto(x.it)].folha += x.it.valor; });
+  // salário líquido de cada pagamento (bruto − descontos da quinzena dele)
+  const liquidos = [1,2].map(q=>{
+    const sal = salarios.filter(r=>(gpQuinzena(r.dia)||2)===q);
+    if (!sal.length) return null;
+    const bruto = round2(sal.reduce((t,r)=>t+r.valor,0));
+    const desc = round2(folha.filter(x=>qDoDesconto(x.it)===q).reduce((t,x)=>t+x.it.valor,0));
+    return {q, sal, bruto, desc, liquido: round2(bruto-desc)};
+  }).filter(Boolean);
+  return {ym, itens, contas, folha, receitas, entradas, totFolha, saidas, pago, sobra: round2(entradas-totFolha-saidas), quinz, qFolha, qDoDesconto, salario, salarios, liquidos};
 }
 
 window.setGpAba = function(a){ gpAba = a; renderGestao(); };
@@ -2515,7 +2531,7 @@ function gpViewReceitas(M){
   const porFonte = {};
   M.receitas.forEach(r=>{ porFonte[r.fonte] = round2((porFonte[r.fonte]||0)+r.valor); });
   const coopera = round2(M.folha.filter(x=>/coopera/i.test((x.it.onde||'')+' '+x.it.descricao+' '+x.it.grupo)).reduce((t,x)=>t+x.it.valor,0));
-  const liquido = M.salario ? round2(M.salario.valor - M.totFolha) : null;
+
   return `
     <div class="gp-duo">
       <div class="gp-card">
@@ -2526,9 +2542,10 @@ function gpViewReceitas(M){
       </div>
       <div class="gp-card">
         <div class="topo"><div><div class="nome">Descontos em folha</div><div class="onde">saem direto do salário</div></div><div class="valor">${brl(M.totFolha)}<small>no mês</small></div></div>
-        <div class="gp-rows">${M.folha.length ? M.folha.map(({it,oc})=>`<button type="button" class="gp-row" onclick="openParcelamentoForm('${it.id}')"><span class="d">${esc(it.descricao)}<small>${esc(it.grupo)} · ${gpChipRec(it, oc)}${it.onde?' · '+esc(it.onde):''}</small></span><span class="v">${brl(it.valor)}</span></button>`).join('') : '<div class="gp-vazio" style="padding:18px">Nenhum desconto em folha neste mês.</div>'}</div>
-        <div class="gp-fontes"><span>Compras na Coopera <b>${brl(coopera)}</b></span>${liquido!=null?`<span>Salário líquido previsto <b>${brl(liquido)}</b></span>`:''}</div>
-        <div class="rodape"><span class="hint">${M.salario?`Descontado de: ${esc(M.salario.descricao||M.salario.fonte)}`:'Marque no seu salário "sofre os descontos em folha".'}</span><button class="btn sm primary" onclick="novaCompraCoopera()">+ Compra na Coopera</button></div>
+        <div class="gp-rows">${M.folha.length ? M.folha.map(({it,oc})=>`<button type="button" class="gp-row" onclick="openParcelamentoForm('${it.id}')"><span class="d">${esc(it.descricao)}<small>${esc(it.grupo)} · ${gpChipRec(it, oc)}${it.onde?' · '+esc(it.onde):''} · sai na ${M.qDoDesconto(it)}ª quinzena</small></span><span class="v">${brl(it.valor)}</span></button>`).join('') : '<div class="gp-vazio" style="padding:18px">Nenhum desconto em folha neste mês.</div>'}</div>
+        <div class="gp-fontes"><span>Compras na Coopera <b>${brl(coopera)}</b></span></div>
+        ${M.liquidos.length ? `<div class="gp-liq">${M.liquidos.map(l=>`<div><span>Salário ${l.q}ª quinzena${l.sal[0].dia?' · dia '+l.sal[0].dia:''}</span><b>${brl(l.bruto)} − ${brl(l.desc)} = ${brl(l.liquido)}</b><small>líquido previsto</small></div>`).join('')}</div>` : ''}
+        <div class="rodape"><span class="hint">${M.salarios.length?'Cada desconto sai do salário da quinzena indicada na conta. Sem quinzena, sai do salário do fim do mês.':'Marque no seu salário "sofre os descontos em folha".'}</span><button class="btn sm primary" onclick="novaCompraCoopera()">+ Compra na Coopera</button></div>
       </div>
     </div>`;
 }
@@ -2659,7 +2676,7 @@ function openParcelamentoForm(id, preset){
       <div class="field gp-so-per"><label>Repete a cada quantos meses</label><input type="number" min="1" max="24" step="1" name="intervalo" value="${p.intervalo||2}"></div>
       <div class="field gp-so-mes"><label id="gpMesLabel">Começa em</label><input type="month" name="mesInicio" value="${p.mesInicio}"></div>
       <div class="field gp-so-fixo"><label>Até (opcional)</label><input type="month" name="mesFim" value="${p.mesFim||''}"><span class="hint">Deixe vazio se não tem data para acabar.</span></div>
-      <div class="field"><label>Dia de vencimento</label><input type="number" min="1" max="31" step="1" name="dia" value="${p.dia||''}" placeholder="usa o do grupo"></div>
+      <div class="field"><label id="gpDiaLabel">Dia de vencimento</label><input type="number" min="1" max="31" step="1" name="dia" value="${p.dia||''}" placeholder="usa o do grupo"><span class="hint" id="gpDiaHint"></span></div>
       <div class="field"><label>Onde (opcional)</label><input name="onde" placeholder="Ex.: Coopera, Shopee" value="${esc(p.onde||'')}"></div>
       <div class="field gp-so-parc" style="grid-column:1/-1">
         <label>Parcelas já pagas</label>
@@ -2699,6 +2716,10 @@ function openParcelamentoForm(id, preset){
     form.querySelectorAll('.gp-so-mes').forEach(el=>el.style.display = d.recorrencia==='parcelado'?'none':'');
     form.querySelectorAll('.gp-so-fixo').forEach(el=>el.style.display = (d.recorrencia==='fixo'||d.recorrencia==='periodico')?'':'none');
     document.getElementById('gpMesLabel').textContent = d.recorrencia==='unico' ? 'Mês da compra' : 'Começa em';
+    const folha = form.forma.value==='folha';
+    document.getElementById('gpDiaLabel').textContent = folha ? 'Descontado no salário do dia' : 'Dia de vencimento';
+    form.dia.placeholder = folha ? '15 ou 30' : 'usa o do grupo';
+    document.getElementById('gpDiaHint').textContent = folha ? 'Até 15 = sai do salário da 1ª quinzena. Depois disso = 2ª quinzena. Vazio = fim do mês.' : '';
     const hint = document.getElementById('gpTotalHint');
     if (d.recorrencia==='parcelado'){
       const ms = gpMesesParcelas(d);
@@ -2738,7 +2759,7 @@ function openParcelamentoForm(id, preset){
 }
 window.openParcelamentoForm = openParcelamentoForm;
 window.novaCompraCoopera = function(){
-  openParcelamentoForm(null, {grupo:'Coopera', onde:'Coopera', forma:'folha', recorrencia:'unico', descricao:'Compra na Coopera'});
+  openParcelamentoForm(null, {grupo:'Coopera', onde:'Coopera', forma:'folha', recorrencia:'unico', descricao:'Compra na Coopera', dia:30});
 };
 window.deleteParcelamento = function(id){
   if (!confirm('Excluir esta conta?')) return;
@@ -2867,9 +2888,11 @@ function gpImportarDoLink(){
   openModal(`
     <div class="modal-head"><h3>Adicionar à Gestão de Parcelas</h3><button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div>
     ${novas.length||novasRec.length ? `
-      <div class="lista-resumo"><b>${novas.length} conta(s)</b>${novasRec.length?` e <b>${novasRec.length} recebimento(s)</b>`:''} novas. Valores de ${esc(monthLabel(ref))}:</div>
+      <div class="lista-resumo"><b>${novas.length} conta(s)</b>${novasRec.length?` e <b>${novasRec.length} recebimento(s)</b>`:''} novo(s). Valores de ${esc(monthLabel(ref))}:</div>
       ${Object.keys(porGrupo).map(g=>`<div class="lista-item"><div><b>${esc(g)}</b> · ${porGrupo[g].n} conta(s)</div><div class="val">${brl(porGrupo[g].t)}</div></div>`).join('')}
-      <div class="lista-item"><div><b>Total de ${esc(monthLabel(ref))}</b></div><div class="val">${brl(round2(Object.values(porGrupo).reduce((t,g)=>t+g.t,0)))}</div></div>
+      ${novas.length?`<div class="lista-item"><div><b>Contas de ${esc(monthLabel(ref))}</b></div><div class="val">${brl(round2(Object.values(porGrupo).reduce((t,g)=>t+g.t,0)))}</div></div>`:''}
+      ${novasRec.map(r=>`<div class="lista-item"><div>${esc(r.descricao||r.fonte)} · <span class="hint">${esc(r.fonte)} · dia ${r.dia||'—'}</span></div><div class="val">${brl(r.valor)}</div></div>`).join('')}
+      ${novasRec.length?`<div class="lista-item"><div><b>Recebimentos por mês</b></div><div class="val">${brl(round2(novasRec.reduce((t,r)=>t+r.valor,0)))}</div></div>`:''}
       <p class="hint" style="margin:12px 0 0">${(pacote.contas||[]).length-novas.length ? ((pacote.contas||[]).length-novas.length)+' conta(s) do link já estavam cadastradas e não serão repetidas. ' : ''}Nada das vendas, cobranças ou Minhas Contas muda.</p>
       <div class="form-actions">
         <button type="button" class="btn ghost" onclick="closeModal()">Cancelar</button>
