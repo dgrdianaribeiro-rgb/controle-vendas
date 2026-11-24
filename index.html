@@ -250,7 +250,8 @@
   body.tema-gestao .tab-btn.active{background:var(--volt);border-color:var(--volt);}
   .tab-btn.tab-gestao{border-color:rgba(15,118,110,.45);color:#0f766e;}
   .tab-btn.tab-gestao.active{background:#0f766e;border-color:#0f766e;color:#fff;}
-  .gp-hero{background:linear-gradient(135deg,#0f766e 0%,#0a524d 100%);color:#fff;border-radius:22px;padding:22px clamp(18px,3vw,28px);margin-bottom:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;}
+  .gp-hero{background:linear-gradient(135deg,#0f766e 0%,#0a524d 100%);color:#fff;border-radius:22px;padding:22px clamp(18px,3vw,28px);margin-bottom:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;}
+  @media (max-width:520px){ .gp-hero{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px 12px;padding:18px 16px;} .gp-hero .value{font-size:.98rem;white-space:nowrap;} }
   .gp-hero .label{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.7);}
   .gp-hero .value{font-family:'Unbounded',sans-serif;font-weight:700;font-size:1.35rem;margin-top:6px;letter-spacing:-.02em;}
   .gp-hero .sub{font-size:.76rem;color:rgba(255,255,255,.75);margin-top:2px;}
@@ -281,6 +282,41 @@
   .gp-mes .col span{display:block;width:100%;background:#0f766e;border-radius:6px;}
   .gp-mes .v{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;}
   .gp-mes .fim{font-size:.66rem;color:var(--gp-coral,#e8603c);font-weight:700;line-height:1.2;min-height:1.2em;}
+  .gp-hero .negativo .value{color:#ffd0c2;}
+  .gp-hero .negativo .label{color:#ffd0c2;}
+  .gp-sub{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px;}
+  .gp-sub button{font-size:.78rem;padding:6px 11px;border-radius:999px;border:1.5px solid var(--border);background:transparent;color:var(--ink-60);cursor:pointer;}
+  .gp-sub button.on{border-color:#0f766e;color:#0f766e;font-weight:700;background:#fff;}
+  .gp-rows{display:flex;flex-direction:column;}
+  .gp-row{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:none;border-bottom:1px solid var(--border);padding:8px 0;cursor:pointer;color:inherit;font:inherit;}
+  .gp-row:hover .d{color:#0f766e;}
+  .gp-row .d{font-size:.88rem;font-weight:600;min-width:0;}
+  .gp-row .d small{display:block;font-weight:500;font-size:.74rem;color:var(--ink-45);margin-top:1px;}
+  .gp-row .d small b.folha{color:#0f766e;font-weight:700;}
+  .gp-row .v{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:.84rem;white-space:nowrap;}
+  .gp-row.fora,.gp-rec.fora{opacity:.5;}
+  .gp-rec{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);}
+  .gp-rec .gp-row{border-bottom:none;flex:1;}
+  .gp-link{background:none;border:none;padding:0;color:var(--gp-coral,#e8603c);font:inherit;text-decoration:underline;cursor:pointer;text-transform:none;letter-spacing:0;}
+  .gp-duo{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;}
+  .gp-fontes{display:flex;flex-wrap:wrap;gap:6px;}
+  .gp-fontes span{font-size:.76rem;background:var(--paper-dim);border-radius:999px;padding:4px 10px;color:var(--ink-60);}
+  .gp-fontes b{color:#000;}
+  .gp-q .valor.neg{color:var(--gp-coral,#e8603c);}
+  .gp-qlin{display:flex;justify-content:space-between;font-size:.9rem;padding-top:6px;border-top:1px solid var(--border);}
+  .gp-qlin b{font-family:'JetBrains Mono',monospace;}
+  .gp-qsub{display:flex;justify-content:space-between;font-size:.78rem;color:var(--ink-45);padding-left:10px;}
+  .gp-resumo{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin-bottom:14px;}
+  .gp-resumo > div{background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:12px 14px;}
+  .gp-resumo span{display:block;font-family:'JetBrains Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-45);}
+  .gp-resumo b{font-size:.95rem;}
+  .gp-resumo .alerta{grid-column:1/-1;background:var(--gp-coral-bg,rgba(232,96,60,.12));border-color:transparent;color:#8a2f17;font-size:.86rem;}
+  .gp-prev tr.neg td.sobra{color:var(--gp-coral,#e8603c);}
+  .gp-prev td.sobra{color:#0f766e;}
+  .gp-mini{display:flex;flex-direction:column;gap:2px;margin-top:4px;width:90px;}
+  .gp-mini span{display:block;height:4px;border-radius:4px;}
+  .gp-mini .e{background:#0f766e;} .gp-mini .s{background:var(--gp-coral,#e8603c);}
+  .gp-alivio{font-size:.76rem;color:#0f766e;font-weight:700;}
   .gp-vazio{background:#fff;border:1.5px dashed var(--border);border-radius:18px;padding:34px 20px;text-align:center;color:var(--ink-60);}
 
   /* ---------- fab ---------- */
@@ -543,29 +579,29 @@
     </table></div>
   </section>
 
-  <!-- GESTÃO DE PARCELAS (separada das vendas) -->
+  <!-- GESTÃO DE PARCELAS (orçamento pessoal, separado das vendas) -->
   <section class="tabpanel" id="tab-gestao">
     <div class="panel-head">
       <div>
         <h2>Gestão de Parcelas</h2>
-        <p>Seus parcelamentos pessoais: cartão, crediário, financiamento, empréstimo. Esta aba é separada das vendas, cobranças e Minhas Contas: nada daqui entra nos outros totais.</p>
+        <p>Seu orçamento pessoal: cartões, parcelas, contas fixas, assinaturas, descontos em folha e o que você recebe. Separado das vendas, cobranças e Minhas Contas.</p>
       </div>
       <div class="head-btns">
         <button class="btn ghost" onclick="baixarPlanilhaParcelas()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"></path></svg>
-          Baixar planilha
+          Planilha
         </button>
+        <button class="btn ghost" onclick="novaCompraCoopera()">+ Coopera</button>
+        <button class="btn ghost" onclick="openReceitaForm()">+ Recebimento</button>
         <button class="btn primary" onclick="openParcelamentoForm()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
-          Novo parcelamento
+          Conta / parcela
         </button>
       </div>
     </div>
     <div id="gpHero" class="gp-hero"></div>
-    <div class="gp-filtros" id="gpFiltros" role="tablist"></div>
-    <div id="gpLista" class="gp-list"></div>
-    <div class="section-title">Próximos 12 meses — quanto fica comprometido</div>
-    <div id="gpMeses" class="gp-meses"></div>
+    <div class="gp-filtros" id="gpViews" role="tablist"></div>
+    <div id="gpView"></div>
   </section>
 
   <footer class="appfoot">Feito para uso pessoal · dados salvos só neste navegador · use exportar/importar para levar para outro aparelho</footer>
@@ -579,7 +615,7 @@
     <button class="fab-item" onclick="closeFab(); openClienteForm();"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4 4-6 8-6s8 2 8 6"></path></svg></span>Novo cliente</button>
     <button class="fab-item" onclick="closeFab(); openProdutoForm();"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M20.59 13.41 13.42 20.6a2 2 0 0 1-2.83 0L3 13V3h10l7.59 7.59a2 2 0 0 1 0 2.82Z"></path><circle cx="7.5" cy="7.5" r="1.2" fill="currentColor" stroke="none"></circle></svg></span>Novo produto</button>
     <button class="fab-item" onclick="closeFab(); openContaForm();"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M3 9h18"></path></svg></span>Nova conta</button>
-    <button class="fab-item" onclick="closeFab(); openParcelamentoForm();"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"></rect><path d="M2 10h20M6 15h4"></path></svg></span>Novo parcelamento</button>
+    <button class="fab-item" onclick="closeFab(); openParcelamentoForm();"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"></rect><path d="M2 10h20M6 15h4"></path></svg></span>Conta pessoal (Gestão)</button>
   </div>
   <button class="fab" id="fabBtn" aria-label="Ações rápidas">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
@@ -851,7 +887,7 @@ function planilhaSheetRows(wb, nomes){
 function cell(row, ...chaves){ for(const c of chaves){ if(row[c]!==undefined && row[c]!=='') return row[c]; } return ''; }
 
 function importarPlanilha(wb){
-  const novo = { clientes:[], compras:[], pagamentos:[], contas:[], produtos: SEED_PRODUTOS.slice(), mesAtual: DB.mesAtual, pixKey: DB.pixKey, diasVencimento: DB.diasVencimento, modelosMensagem: DB.modelosMensagem, recados: DB.recados, parcelamentos: DB.parcelamentos||[] };
+  const novo = { clientes:[], compras:[], pagamentos:[], contas:[], produtos: SEED_PRODUTOS.slice(), mesAtual: DB.mesAtual, pixKey: DB.pixKey, diasVencimento: DB.diasVencimento, modelosMensagem: DB.modelosMensagem, recados: DB.recados, parcelamentos: DB.parcelamentos||[], receitas: DB.receitas||[], gpGrupos: DB.gpGrupos||{} };
   function clienteIdPorNome(nomeRaw){
     const nome = String(nomeRaw||'').trim(); if(!nome) return null;
     let c = novo.clientes.find(x=>normNome(x.nome)===normNome(nome));
@@ -2191,9 +2227,11 @@ function aplicarImportJson(texto){
     const data = JSON.parse(texto);
     if(!data || typeof data!=='object') throw new Error('formato inválido');
     if(!confirm('Importar vai substituir todos os dados atuais deste navegador. Continuar?')) return;
-    const parcelamentosAtuais = DB.parcelamentos||[];
+    const parcelamentosAtuais = DB.parcelamentos||[], receitasAtuais = DB.receitas||[], gruposAtuais = DB.gpGrupos||{};
     DB = Object.assign({ compras:[], contas:[], pagamentos:[], clientes:[], produtos: SEED_PRODUTOS.slice(), mesAtual: currentYM(), pixKey:'', diasVencimento:5 }, data);
     if (!Array.isArray(data.parcelamentos)) DB.parcelamentos = parcelamentosAtuais;
+    if (!Array.isArray(data.receitas)) DB.receitas = receitasAtuais;
+    if (!data.gpGrupos) DB.gpGrupos = gruposAtuais;
     saveDB(); closeModal(); renderAll(); toast('Dados importados com sucesso.');
   }catch(err){ toast('Não deu para importar: ' + err.message); }
 }
@@ -2299,149 +2337,334 @@ window.saveSettings = function(){
 };
 
 
-/* ===================== GESTÃO DE PARCELAS (separada das vendas) ===================== */
-const TIPOS_PARCELAMENTO = ['Cartão de crédito','Crediário / loja','Empréstimo','Financiamento','Consórcio','Outro'];
-let gpFiltro = 'ativos';
-function gpLista(){ if (!Array.isArray(DB.parcelamentos)) DB.parcelamentos = []; return DB.parcelamentos; }
-function gpCalc(p, mesRef){
-  const calc = contaCalc(p, mesRef);
-  const meses = mesesDasParcelas(p);
-  const pagos = new Set(mesesPagosConta(p).filter(m=>meses.includes(m)));
-  const nPagas = pagos.size;
-  const restantes = Math.max(0, p.parcelas - nPagas);
-  const atrasadas = meses.filter(m=>ymDiff(m, mesRef)<0 && !pagos.has(m)).length;
-  const ultimo = meses[meses.length-1] || '';
-  let situacao;
-  if (restantes===0) situacao = 'quitado';
-  else if (calc.idx<1) situacao = 'futuro';
-  else if (atrasadas>0 || calc.status==='Atrasado') situacao = 'atrasado';
-  else situacao = 'ativo';
-  return Object.assign({}, calc, {nPagas, restantes, saldo: round2(restantes*p.valorParcela), atrasadas, ultimo, situacao, pagoMes: pagos.has(mesRef)});
-}
-window.setGpFiltro = function(f){ gpFiltro = f; renderGestao(); };
-function renderGestao(){
-  const lista = gpLista();
-  const mes = DB.mesAtual;
-  const itens = lista.map(p=>({p, g:gpCalc(p, mes)}));
-  let doMes=0, pagoMes=0, saldo=0, fim='';
-  itens.forEach(({p,g})=>{
-    if (g.emRange){ doMes += p.valorParcela; if (g.pagoMes) pagoMes += p.valorParcela; }
-    saldo += g.saldo;
-    if (g.restantes>0 && g.ultimo > fim) fim = g.ultimo;
+/* ===================== GESTÃO DE PARCELAS (orçamento pessoal, separado das vendas) ===================== */
+const GP_FORMAS = {cartao:'Cartão de crédito', debito:'Débito automático', boleto:'Boleto / Pix', folha:'Desconto em folha'};
+const GP_RECORRENCIAS = {parcelado:'Parcelado', fixo:'Fixo todo mês', periodico:'A cada X meses', unico:'Só uma vez'};
+const GP_FONTES = ['Salário','Adiantamento','Social media','Freela','13º salário','Empréstimo','Reembolso','Outro'];
+let gpAba = 'contas';
+let gpMostrar = 'mes';
+
+function gpPrep(){
+  if (!Array.isArray(DB.parcelamentos)) DB.parcelamentos = [];
+  if (!Array.isArray(DB.receitas)) DB.receitas = [];
+  if (!DB.gpGrupos || typeof DB.gpGrupos!=='object') DB.gpGrupos = {};
+  let mudou = false;
+  DB.parcelamentos.forEach(p=>{
+    if (p.recorrencia) return;
+    // formato antigo (primeira versão da aba)
+    p.recorrencia = 'parcelado';
+    p.mesInicio = String(p.primeiroVencimento||DB.mesAtual).slice(0,7);
+    p.dia = Number(String(p.primeiroVencimento||'').slice(8,10)) || null;
+    p.valor = p.valorParcela;
+    p.grupo = p.onde || p.tipo || 'Outros';
+    p.forma = p.tipo==='Cartão de crédito' ? 'cartao' : 'boleto';
+    mudou = true;
   });
-  const ativos = itens.filter(x=>x.g.situacao!=='quitado').length;
-  document.getElementById('gpHero').innerHTML = `
-    <div><div class="label">Parcelas de ${esc(MONTH_NAMES[Number(mes.slice(5,7))-1])}</div><div class="value">${brl(round2(doMes))}</div><div class="sub">${itens.filter(x=>x.g.emRange).length} parcela(s) no mês</div></div>
-    <div><div class="label">Já pago no mês</div><div class="value">${brl(round2(pagoMes))}</div></div>
-    <div class="destaque"><div class="label">Falta pagar no mês</div><div class="value">${brl(round2(doMes-pagoMes))}</div></div>
-    <div><div class="label">Saldo devedor total</div><div class="value">${brl(round2(saldo))}</div><div class="sub">${ativos} parcelamento(s) em andamento</div></div>
-    <div><div class="label">Livre de parcelas em</div><div class="value">${fim?esc(monthLabelShort(ymAdd(fim,1))):'—'}</div><div class="sub">${fim?'última parcela em '+esc(monthLabel(fim)):'nenhuma parcela em aberto'}</div></div>`;
+  if (mudou) saveDB();
+  return DB.parcelamentos;
+}
+function gpOcorre(it, ym){
+  if (!it.mesInicio) return null;
+  const d = ymDiff(ym, it.mesInicio);
+  if (d<0) return null;
+  if (it.mesFim && ymDiff(ym, it.mesFim)>0) return null;
+  if (it.recorrencia==='parcelado'){ const n=d+1; return n<=it.parcelas ? {num:n, label:n+'/'+it.parcelas} : null; }
+  if (it.recorrencia==='unico') return d===0 ? {num:1, label:'só este mês'} : null;
+  if (it.recorrencia==='periodico'){ const iv=Math.max(1,it.intervalo||1); return d%iv===0 ? {num:d/iv+1, label:'a cada '+iv+' meses'} : null; }
+  return {num:d+1, label:'fixo'};
+}
+function gpUltimo(it){
+  if (it.recorrencia==='parcelado') return ymAdd(it.mesInicio, it.parcelas-1);
+  if (it.recorrencia==='unico') return it.mesInicio;
+  return it.mesFim || '';
+}
+function gpGrupoCfg(nome){ return DB.gpGrupos[nome] || {}; }
+function gpDia(it){ return Number(it.dia) || Number(gpGrupoCfg(it.grupo).dia) || null; }
+function gpPago(it, ym){ return (it.pagosMeses||[]).includes(ym); }
+function gpMesesParcelas(it){ return it.recorrencia==='parcelado' ? Array.from({length:it.parcelas},(_,i)=>ymAdd(it.mesInicio,i)) : []; }
+function gpSaldo(it){
+  if (it.recorrencia!=='parcelado') return 0;
+  const ms = gpMesesParcelas(it);
+  return round2(ms.filter(m=>!gpPago(it,m)).length * it.valor);
+}
+function gpReceitaOcorre(r, ym){
+  if (!r.mesInicio) return false;
+  const d = ymDiff(ym, r.mesInicio);
+  if (d<0) return false;
+  if (r.mesFim && ymDiff(ym, r.mesFim)>0) return false;
+  if (r.recorrencia==='unico') return d===0;
+  if (r.recorrencia==='periodico') return d % Math.max(1,r.intervalo||1)===0;
+  return true;
+}
+function gpQuinzena(dia){ return dia ? (dia<=15 ? 1 : 2) : 0; }
 
-  const filtros = {ativos:'Em andamento', mes:'Vencem neste mês', atrasado:'Atrasados', quitado:'Quitados', todos:'Todos'};
-  const conta = {
-    ativos: itens.filter(x=>x.g.situacao!=='quitado').length,
-    mes: itens.filter(x=>x.g.emRange).length,
-    atrasado: itens.filter(x=>x.g.situacao==='atrasado').length,
-    quitado: itens.filter(x=>x.g.situacao==='quitado').length,
-    todos: itens.length
-  };
-  document.getElementById('gpFiltros').innerHTML = Object.keys(filtros).map(k=>`<button type="button" role="tab" aria-selected="${gpFiltro===k}" class="${gpFiltro===k?'on':''}" onclick="setGpFiltro('${k}')">${filtros[k]} · ${conta[k]}</button>`).join('');
-
-  const visiveis = itens.filter(({g})=>
-    gpFiltro==='todos' ? true :
-    gpFiltro==='mes' ? g.emRange :
-    gpFiltro==='atrasado' ? g.situacao==='atrasado' :
-    gpFiltro==='quitado' ? g.situacao==='quitado' : g.situacao!=='quitado')
-    .sort((a,b)=>{
-      const da = a.g.venceEm ? a.g.venceEm.getDate() : 99, db = b.g.venceEm ? b.g.venceEm.getDate() : 99;
-      return da-db || (a.p.descricao||'').localeCompare(b.p.descricao||'','pt-BR');
-    });
-  const box = document.getElementById('gpLista');
-  if (!lista.length){
-    box.innerHTML = `<div class="gp-vazio" style="grid-column:1/-1"><b>Nenhum parcelamento cadastrado ainda.</b><br>Toque em <b>Novo parcelamento</b> para adicionar o primeiro: cartão, loja, empréstimo…</div>`;
-  } else if (!visiveis.length){
-    box.innerHTML = `<div class="gp-vazio" style="grid-column:1/-1">Nada aqui neste filtro.</div>`;
-  } else {
-    const sit = {ativo:'<span class="badge info">Em dia</span>', atrasado:'<span class="badge danger">Atrasado</span>', futuro:'<span class="badge warn">Começa depois</span>', quitado:'<span class="badge muted">Quitado</span>'};
-    box.innerHTML = visiveis.map(({p,g})=>{
-      const pct = Math.round(100*g.nPagas/Math.max(1,p.parcelas));
-      const dia = Number((p.primeiroVencimento||'').slice(8,10));
-      return `<div class="gp-card ${g.situacao}">
-        <div class="topo">
-          <div><div class="nome">${esc(p.descricao||p.tipo)}</div><div class="onde">${esc(p.tipo||'')}${p.onde?' · '+esc(p.onde):''}</div></div>
-          <div class="valor">${brl(p.valorParcela)}<small>por mês</small></div>
-        </div>
-        <div>
-          <div style="display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:5px"><span><b>${g.nPagas} de ${p.parcelas}</b> pagas</span><span>${pct}%</span></div>
-          <div class="gp-bar"><span style="width:${pct}%"></span></div>
-        </div>
-        <div class="gp-info">
-          <div>Neste mês<br><b>${g.emRange?'parcela '+g.parcelaLabel:(g.idx<1?'ainda não começou':'já terminou')}</b></div>
-          <div>Vence todo dia<br><b>${dia||'—'}</b></div>
-          <div>Faltam<br><b>${g.restantes} parcela(s) · ${brl(g.saldo)}</b></div>
-          <div>Última parcela<br><b>${g.ultimo?esc(monthLabelShort(g.ultimo)):'—'}</b></div>
-          ${g.atrasadas?`<div style="grid-column:1/-1;color:var(--gp-coral,#e8603c)"><b style="color:inherit">${g.atrasadas} parcela(s) de meses anteriores sem marcar como paga</b></div>`:''}
-        </div>
-        <div class="rodape">
-          ${g.emRange ? `<div class="pay-toggle">
-              <button class="pay-switch ${g.pagoMes?'on':''}" title="${g.pagoMes?'Pago — toque para desmarcar':'Marcar a parcela deste mês como paga'}" onclick="toggleParcelamentoPago('${p.id}')"><span class="knob"></span></button>
-              <span class="txt ${g.pagoMes?'ok':'danger'}">${g.pagoMes?'Paga':'Pendente'}</span>
-            </div>` : sit[g.situacao]}
-          <div style="display:flex;gap:6px;align-items:center">${g.emRange?sit[g.situacao]:''}<button class="btn sm ghost" onclick="openParcelamentoForm('${p.id}')">Editar</button></div>
-        </div>
-      </div>`;
-    }).join('');
-  }
-
-  // próximos 12 meses
-  const meses = Array.from({length:12}, (_,i)=>ymAdd(mes, i));
-  const totais = meses.map(m=>round2(lista.reduce((t,p)=>{ const c=contaCalc(p,m); return t + (c.emRange ? p.valorParcela : 0); },0)));
-  const max = Math.max(1, ...totais);
-  document.getElementById('gpMeses').innerHTML = meses.map((m,i)=>{
-    const terminam = lista.filter(p=>{ const ms=mesesDasParcelas(p); return ms[ms.length-1]===m; });
-    const fimTxt = terminam.length ? 'termina: '+terminam.map(p=>esc(p.descricao||p.tipo)).join(', ') : '';
-    return `<div class="gp-mes ${i===0?'atual':''}" title="${esc(monthLabel(m))}${fimTxt?' — '+fimTxt:''}">
-      <div class="m">${esc(monthLabelShort(m))}</div>
-      <div class="col"><span style="height:${Math.round(100*totais[i]/max)}%"></span></div>
-      <div class="v">${totais[i]?brl(totais[i]).replace('R$','').trim():'—'}</div>
-      <div class="fim">${terminam.length?'✓ '+terminam.length+' termina'+(terminam.length>1?'m':''):''}</div>
-    </div>`;
-  }).join('');
+/* Contas do mês, recebimentos e descontos, prontos para somar */
+function gpMes(ym){
+  const itens = gpPrep().map(it=>({it, oc:gpOcorre(it, ym)})).filter(x=>x.oc);
+  const contas = itens.filter(x=>x.it.forma!=='folha');
+  const folha = itens.filter(x=>x.it.forma==='folha');
+  const receitas = DB.receitas.filter(r=>gpReceitaOcorre(r, ym));
+  const soma = (arr, f) => round2(arr.reduce((t,x)=>t+f(x),0));
+  const entradas = soma(receitas, r=>r.valor);
+  const totFolha = soma(folha, x=>x.it.valor);
+  const saidas = soma(contas, x=>x.it.valor);
+  const pago = soma(contas.filter(x=>gpPago(x.it, ym)), x=>x.it.valor);
+  // descontos em folha saem da quinzena do salário (a 1ª receita marcada como "salário com descontos")
+  const salario = receitas.filter(r=>r.descontaFolha).sort((a,b)=>(a.dia||0)-(b.dia||0))[0];
+  const qFolha = salario ? gpQuinzena(salario.dia) || 1 : 1;
+  const quinz = {1:{ent:0,sai:0,folha:0}, 2:{ent:0,sai:0,folha:0}, 0:{ent:0,sai:0,folha:0}};
+  receitas.forEach(r=>{ quinz[gpQuinzena(r.dia)].ent += r.valor; });
+  contas.forEach(x=>{ quinz[gpQuinzena(gpDia(x.it))].sai += x.it.valor; });
+  quinz[qFolha].folha = totFolha;
+  return {ym, itens, contas, folha, receitas, entradas, totFolha, saidas, pago, sobra: round2(entradas-totFolha-saidas), quinz, qFolha, salario};
 }
 
-window.toggleParcelamentoPago = function(id){
-  const p = gpLista().find(x=>x.id===id); if(!p) return;
-  if (!contaCalc(p, DB.mesAtual).emRange) return;
-  const pagos = new Set(mesesPagosConta(p));
-  if (pagos.has(DB.mesAtual)) pagos.delete(DB.mesAtual); else pagos.add(DB.mesAtual);
-  p.pagosMeses = Array.from(pagos).sort();
-  sincronizarContadorPagas(p);
+window.setGpAba = function(a){ gpAba = a; renderGestao(); };
+window.setGpMostrar = function(m){ gpMostrar = m; renderGestao(); };
+
+function gpChipRec(it, oc){
+  if (it.recorrencia==='parcelado') return `${oc?oc.label:'0/'+it.parcelas} · até ${esc(monthLabelShort(gpUltimo(it)))}`;
+  if (it.recorrencia==='periodico') return `a cada ${it.intervalo} meses`;
+  if (it.recorrencia==='unico') return 'compra única';
+  return 'fixo' + (it.mesFim ? ' · até '+esc(monthLabelShort(it.mesFim)) : '');
+}
+
+function renderGestao(){
+  const lista = gpPrep();
+  const mes = DB.mesAtual;
+  const M = gpMes(mes);
+  let saldoDevedor = 0, fim = '';
+  lista.forEach(it=>{ saldoDevedor += gpSaldo(it); if (it.recorrencia==='parcelado' && gpSaldo(it)>0 && gpUltimo(it)>fim) fim = gpUltimo(it); });
+  const mesNome = MONTH_NAMES[Number(mes.slice(5,7))-1];
+  document.getElementById('gpHero').innerHTML = `
+    <div><div class="label">Entradas de ${esc(mesNome)}</div><div class="value">${brl(M.entradas)}</div><div class="sub">${M.receitas.length?M.receitas.length+' recebimento(s)':'cadastre em Recebimentos'}</div></div>
+    <div><div class="label">Descontos em folha</div><div class="value">${brl(M.totFolha)}</div><div class="sub">academia, Coopera…</div></div>
+    <div><div class="label">Contas do mês</div><div class="value">${brl(M.saidas)}</div><div class="sub">já pago ${brl(M.pago)}</div></div>
+    <div class="${M.sobra<0?'negativo':'destaque'}"><div class="label">${M.sobra<0?'Falta no mês':'Sobra no mês'}</div><div class="value">${brl(Math.abs(M.sobra))}</div><div class="sub">entradas − folha − contas</div></div>
+    <div><div class="label">Saldo devedor parcelado</div><div class="value">${brl(round2(saldoDevedor))}</div><div class="sub">${fim?'livre de parcelas em '+esc(monthLabelShort(ymAdd(fim,1))):'nenhuma parcela em aberto'}</div></div>`;
+
+  const abas = {contas:'Contas do mês', receitas:'Recebimentos e descontos', quinzenas:'Quinzenas', previsao:'Previsão 12 meses'};
+  document.getElementById('gpViews').innerHTML = Object.keys(abas).map(k=>`<button type="button" role="tab" aria-selected="${gpAba===k}" class="${gpAba===k?'on':''}" onclick="setGpAba('${k}')">${abas[k]}</button>`).join('');
+  const box = document.getElementById('gpView');
+  if (gpAba==='receitas') box.innerHTML = gpViewReceitas(M);
+  else if (gpAba==='quinzenas') box.innerHTML = gpViewQuinzenas(M);
+  else if (gpAba==='previsao') box.innerHTML = gpViewPrevisao(mes);
+  else box.innerHTML = gpViewContas(M, lista);
+}
+
+function gpViewContas(M, lista){
+  const mes = M.ym;
+  if (!lista.length) return `<div class="gp-vazio"><b>Nenhuma conta cadastrada ainda.</b><br>Toque em <b>+ Conta / parcela</b> para adicionar a primeira.</div>`;
+  const ocMap = new Map(M.itens.map(x=>[x.it.id, x.oc]));
+  const visiveis = gpMostrar==='todos' ? lista : lista.filter(it=>ocMap.has(it.id));
+  const grupos = {};
+  visiveis.forEach(it=>{ (grupos[it.grupo||'Outros'] = grupos[it.grupo||'Outros'] || []).push(it); });
+  const nomes = Object.keys(grupos).sort((a,b)=>{
+    const da = gpGrupoCfg(a).dia||99, db = gpGrupoCfg(b).dia||99;
+    return da-db || a.localeCompare(b,'pt-BR');
+  });
+  const chips = `<div class="gp-sub"><button type="button" class="${gpMostrar==='mes'?'on':''}" onclick="setGpMostrar('mes')">Só o que vence neste mês</button><button type="button" class="${gpMostrar==='todos'?'on':''}" onclick="setGpMostrar('todos')">Todas, inclusive quitadas</button></div>`;
+  if (!nomes.length) return chips + `<div class="gp-vazio">Nenhuma conta vence em ${esc(monthLabel(mes))}.</div>`;
+  return chips + `<div class="gp-list">` + nomes.map(nome=>{
+    const cfg = gpGrupoCfg(nome);
+    const its = grupos[nome].slice().sort((a,b)=>(ocMap.has(b.id)-ocMap.has(a.id)) || b.valor-a.valor);
+    const doMes = its.filter(it=>ocMap.has(it.id));
+    const aPagar = doMes.filter(it=>it.forma!=='folha');
+    const total = round2(doMes.reduce((t,it)=>t+it.valor,0));
+    const todosPagos = aPagar.length>0 && aPagar.every(it=>gpPago(it, mes));
+    const soFolha = doMes.length>0 && !aPagar.length;
+    const formaGrupo = cfg.forma ? GP_FORMAS[cfg.forma] : '';
+    return `<div class="gp-card ${todosPagos?'quitado':''}">
+      <div class="topo">
+        <div><div class="nome">${esc(nome)}</div>
+          <div class="onde">${esc(formaGrupo||'')}${formaGrupo?' · ':''}${cfg.dia?'vence dia '+cfg.dia:'<button type="button" class="gp-link" data-grupo="'+esc(nome)+'" onclick="editarGrupoGp(this.dataset.grupo)">definir dia de vencimento</button>'}</div></div>
+        <div class="valor">${brl(total)}<small>no mês</small></div>
+      </div>
+      <div class="gp-rows">${its.map(it=>{
+        const oc = ocMap.get(it.id);
+        return `<button type="button" class="gp-row ${oc?'':'fora'}" onclick="openParcelamentoForm('${it.id}')">
+          <span class="d">${esc(it.descricao)}<small>${gpChipRec(it, oc)}${it.forma==='folha'?' · <b class="folha">desconto em folha</b>':''}${it.onde?' · '+esc(it.onde):''}</small></span>
+          <span class="v">${brl(it.valor)}</span></button>`;
+      }).join('')}</div>
+      <div class="rodape">
+        ${aPagar.length ? `<div class="pay-toggle">
+            <button class="pay-switch ${todosPagos?'on':''}" title="${todosPagos?'Pago — toque para desmarcar':'Marcar tudo deste grupo como pago neste mês'}" data-grupo="${esc(nome)}" onclick="toggleGrupoGpPago(this.dataset.grupo)"><span class="knob"></span></button>
+            <span class="txt ${todosPagos?'ok':'danger'}">${todosPagos?'Pago':'Pendente'}</span>
+          </div>` : `<span class="badge ${soFolha?'info':'muted'}">${soFolha?'Descontado do salário':'Nada neste mês'}</span>`}
+        <button class="btn sm ghost" data-grupo="${esc(nome)}" onclick="editarGrupoGp(this.dataset.grupo)">Editar grupo</button>
+      </div>
+    </div>`;
+  }).join('') + `</div>`;
+}
+
+function gpViewReceitas(M){
+  const mes = M.ym;
+  const rows = DB.receitas.slice().sort((a,b)=>(a.dia||99)-(b.dia||99));
+  const recTxt = r => r.recorrencia==='unico' ? 'só em '+monthLabelShort(r.mesInicio) : r.recorrencia==='periodico' ? 'a cada '+r.intervalo+' meses' : 'todo mês'+(r.mesFim?' até '+monthLabelShort(r.mesFim):'');
+  const recebidos = rows.length ? rows.map(r=>{
+    const ocorre = gpReceitaOcorre(r, mes);
+    const ok = (r.recebidoMeses||[]).includes(mes);
+    return `<div class="gp-rec ${ocorre?'':'fora'}">
+      <button type="button" class="gp-row" onclick="openReceitaForm('${r.id}')">
+        <span class="d">${esc(r.descricao||r.fonte)}<small>${esc(r.fonte)} · ${recTxt(r)} · ${r.dia?'dia '+r.dia+' ('+gpQuinzena(r.dia)+'ª quinzena)':'sem dia'}${r.descontaFolha?' · <b class="folha">sofre os descontos em folha</b>':''}</small></span>
+        <span class="v">${brl(r.valor)}</span>
+      </button>
+      ${ocorre?`<div class="pay-toggle"><button class="pay-switch ${ok?'on':''}" title="Marcar como recebido neste mês" onclick="toggleReceitaGp('${r.id}')"><span class="knob"></span></button><span class="txt ${ok?'ok':'info'}">${ok?'Recebido':'Previsto'}</span></div>`:'<span class="badge muted">fora deste mês</span>'}
+    </div>`;
+  }).join('') : `<div class="gp-vazio">Nenhum recebimento cadastrado. Toque em <b>+ Recebimento</b> e coloque seu salário, social media, freela…</div>`;
+  const porFonte = {};
+  M.receitas.forEach(r=>{ porFonte[r.fonte] = round2((porFonte[r.fonte]||0)+r.valor); });
+  const coopera = round2(M.folha.filter(x=>/coopera/i.test((x.it.onde||'')+' '+x.it.descricao+' '+x.it.grupo)).reduce((t,x)=>t+x.it.valor,0));
+  const liquido = M.salario ? round2(M.salario.valor - M.totFolha) : null;
+  return `
+    <div class="gp-duo">
+      <div class="gp-card">
+        <div class="topo"><div><div class="nome">Recebimentos</div><div class="onde">${esc(monthLabel(mes))}</div></div><div class="valor">${brl(M.entradas)}<small>previsto</small></div></div>
+        ${Object.keys(porFonte).length?`<div class="gp-fontes">${Object.keys(porFonte).map(f=>`<span>${esc(f)} <b>${brl(porFonte[f])}</b></span>`).join('')}</div>`:''}
+        <div class="gp-rows">${recebidos}</div>
+        <div class="rodape"><span class="hint">Toque em um recebimento para editar.</span><button class="btn sm primary" onclick="openReceitaForm()">+ Recebimento</button></div>
+      </div>
+      <div class="gp-card">
+        <div class="topo"><div><div class="nome">Descontos em folha</div><div class="onde">saem direto do salário</div></div><div class="valor">${brl(M.totFolha)}<small>no mês</small></div></div>
+        <div class="gp-rows">${M.folha.length ? M.folha.map(({it,oc})=>`<button type="button" class="gp-row" onclick="openParcelamentoForm('${it.id}')"><span class="d">${esc(it.descricao)}<small>${esc(it.grupo)} · ${gpChipRec(it, oc)}${it.onde?' · '+esc(it.onde):''}</small></span><span class="v">${brl(it.valor)}</span></button>`).join('') : '<div class="gp-vazio" style="padding:18px">Nenhum desconto em folha neste mês.</div>'}</div>
+        <div class="gp-fontes"><span>Compras na Coopera <b>${brl(coopera)}</b></span>${liquido!=null?`<span>Salário líquido previsto <b>${brl(liquido)}</b></span>`:''}</div>
+        <div class="rodape"><span class="hint">${M.salario?`Descontado de: ${esc(M.salario.descricao||M.salario.fonte)}`:'Marque no seu salário "sofre os descontos em folha".'}</span><button class="btn sm primary" onclick="novaCompraCoopera()">+ Compra na Coopera</button></div>
+      </div>
+    </div>`;
+}
+
+function gpViewQuinzenas(M){
+  const q = n => {
+    const Q = M.quinz[n];
+    const sobra = round2(Q.ent - Q.folha - Q.sai);
+    const recs = M.receitas.filter(r=>gpQuinzena(r.dia)===n);
+    const gruposQ = {};
+    M.contas.filter(x=>gpQuinzena(gpDia(x.it))===n).forEach(x=>{ const k=x.it.grupo; gruposQ[k]=gruposQ[k]||{t:0,dia:gpDia(x.it)}; gruposQ[k].t=round2(gruposQ[k].t+x.it.valor); });
+    const titulo = n===1 ? '1ª quinzena · dia 1 a 15' : n===2 ? '2ª quinzena · dia 16 a 31' : 'Sem dia de vencimento';
+    return `<div class="gp-card gp-q">
+      <div class="topo"><div class="nome">${titulo}</div><div class="valor ${sobra<0?'neg':''}">${sobra<0?'−':''}${brl(Math.abs(sobra))}<small>${sobra<0?'falta':'sobra'}</small></div></div>
+      <div class="gp-qlin"><span>Entra</span><b>${brl(round2(Q.ent))}</b></div>
+      ${recs.map(r=>`<div class="gp-qsub"><span>${esc(r.descricao||r.fonte)} · dia ${r.dia||'—'}</span><span>${brl(r.valor)}</span></div>`).join('')}
+      ${Q.folha?`<div class="gp-qlin"><span>Descontos em folha</span><b>− ${brl(Q.folha)}</b></div>`:''}
+      <div class="gp-qlin"><span>Contas a pagar</span><b>− ${brl(round2(Q.sai))}</b></div>
+      ${Object.keys(gruposQ).sort((a,b)=>(gruposQ[a].dia||0)-(gruposQ[b].dia||0)).map(k=>`<div class="gp-qsub"><span>${esc(k)}${gruposQ[k].dia?' · dia '+gruposQ[k].dia:''}</span><span>${brl(gruposQ[k].t)}</span></div>`).join('')}
+    </div>`;
+  };
+  const semDia = M.quinz[0];
+  const aviso = (semDia.sai || semDia.ent) ? `<p class="hint" style="margin:0 0 12px;color:var(--gp-coral)">Tem conta ou recebimento sem dia definido. Para cair na quinzena certa, toque em <b>Editar grupo</b> (em Contas do mês) e coloque o dia de vencimento de cada cartão.</p>` : '';
+  return aviso + `<div class="gp-duo">${q(1)}${q(2)}</div>${(semDia.sai||semDia.ent)?`<div style="margin-top:12px">${q(0)}</div>`:''}`;
+}
+
+function gpViewPrevisao(mesIni){
+  const meses = Array.from({length:12}, (_,i)=>ymAdd(mesIni, i));
+  let acum = 0;
+  const linhas = meses.map((m,i)=>{
+    const M = gpMes(m);
+    acum = round2(acum + M.sobra);
+    const terminam = gpPrep().filter(it=>it.recorrencia==='parcelado' && gpUltimo(it)===ymAdd(m,-1));
+    const alivio = round2(terminam.reduce((t,it)=>t+it.valor,0));
+    return {m, M, acum, terminam, alivio};
+  });
+  const vermelhos = linhas.filter(l=>l.M.sobra<0);
+  let azulDesde = null;
+  for (let i=linhas.length-1;i>=0;i--){ if (linhas[i].M.sobra<0) break; azulDesde = linhas[i].m; }
+  const pior = linhas.reduce((a,b)=>b.M.sobra<a.M.sobra?b:a, linhas[0]);
+  const precisa = round2(vermelhos.reduce((t,l)=>t-l.M.sobra,0));
+  const semEntradas = !DB.receitas.length;
+  const resumo = `
+    <div class="gp-resumo">
+      ${semEntradas?`<div class="alerta">Ainda não há recebimentos cadastrados, então todos os meses aparecem no vermelho. Cadastre seu salário e as outras entradas em <b>Recebimentos e descontos</b>.</div>`:''}
+      <div><span>Primeiro mês no vermelho</span><b>${vermelhos.length?esc(monthLabel(vermelhos[0].m))+' · falta '+brl(-vermelhos[0].M.sobra):'nenhum nos próximos 12 meses'}</b></div>
+      <div><span>Mês mais apertado</span><b>${pior && pior.M.sobra<0?esc(monthLabel(pior.m))+' · falta '+brl(-pior.M.sobra):'nenhum'}</b></div>
+      <div><span>Quanto vai precisar (soma do que falta)</span><b>${brl(precisa)}</b></div>
+      <div><span>Desaperta (fica no azul de vez) em</span><b>${azulDesde?esc(monthLabel(azulDesde)):'ainda não, nos próximos 12 meses'}</b></div>
+    </div>`;
+  const max = Math.max(1, ...linhas.map(l=>Math.max(l.M.entradas, l.M.saidas+l.M.totFolha)));
+  const tabela = `<div class="table-wrap"><table class="table gp-prev">
+    <thead><tr><th>Mês</th><th class="num">Entradas</th><th class="num">Folha</th><th class="num">Contas</th><th class="num">Sobra / falta</th><th class="num">Acumulado</th><th>O que muda</th></tr></thead>
+    <tbody>${linhas.map(l=>`<tr class="${l.M.sobra<0?'neg':''}">
+      <td data-label="Mês"><b>${esc(monthLabelShort(l.m))}</b><div class="gp-mini"><span class="e" style="width:${Math.round(100*l.M.entradas/max)}%"></span><span class="s" style="width:${Math.round(100*(l.M.saidas+l.M.totFolha)/max)}%"></span></div></td>
+      <td data-label="Entradas" class="num">${brl(l.M.entradas)}</td>
+      <td data-label="Folha" class="num">${brl(l.M.totFolha)}</td>
+      <td data-label="Contas" class="num">${brl(l.M.saidas)}</td>
+      <td data-label="Sobra / falta" class="num sobra">${l.M.sobra<0?'−':'+'}${brl(Math.abs(l.M.sobra))}</td>
+      <td data-label="Acumulado" class="num">${l.acum<0?'−':''}${brl(Math.abs(l.acum))}</td>
+      <td data-label="O que muda">${l.terminam.length?`<span class="gp-alivio">+${brl(l.alivio)} livre: ${l.terminam.map(it=>esc(it.descricao)).join(', ')} terminou</span>`:'—'}</td>
+    </tr>`).join('')}</tbody></table></div>
+    <p class="hint" style="margin:10px 2px 0">Acumulado = se a sobra de cada mês ficar guardada para o mês seguinte. Entradas em verde e saídas em coral na barrinha de cada mês.</p>`;
+  return resumo + tabela;
+}
+
+window.toggleGrupoGpPago = function(nome){
+  const mes = DB.mesAtual;
+  const its = gpPrep().filter(it=>it.grupo===nome && it.forma!=='folha' && gpOcorre(it, mes));
+  const todos = its.every(it=>gpPago(it, mes));
+  its.forEach(it=>{
+    const s = new Set(it.pagosMeses||[]);
+    if (todos) s.delete(mes); else s.add(mes);
+    it.pagosMeses = Array.from(s).sort();
+  });
+  saveDB(); renderGestao();
+};
+window.toggleReceitaGp = function(id){
+  const r = DB.receitas.find(x=>x.id===id); if(!r) return;
+  const s = new Set(r.recebidoMeses||[]);
+  if (s.has(DB.mesAtual)) s.delete(DB.mesAtual); else s.add(DB.mesAtual);
+  r.recebidoMeses = Array.from(s).sort();
   saveDB(); renderGestao();
 };
 
-function openParcelamentoForm(id){
-  const atual = id ? gpLista().find(x=>x.id===id) : null;
-  const mes = DB.mesAtual;
-  const p = atual || {descricao:'', tipo:'Cartão de crédito', onde:'', parcelas:10, valorParcela:'', primeiroVencimento: mes+'-10', pagosMeses:null, obs:''};
-  const idxAtual = parcelaIdx(String(p.primeiroVencimento).slice(0,7), mes);
-  const diaAtual = Number(String(p.primeiroVencimento).slice(8,10)) || 10;
-  const tipos = TIPOS_PARCELAMENTO.slice(); if (p.tipo && !tipos.includes(p.tipo)) tipos.push(p.tipo);
+window.editarGrupoGp = function(nome){
+  const cfg = gpGrupoCfg(nome);
+  const qtd = gpPrep().filter(it=>it.grupo===nome).length;
   openModal(`
-    <div class="modal-head"><h3>${id?'Editar parcelamento':'Novo parcelamento'}</h3><button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div>
+    <div class="modal-head"><h3>Grupo: ${esc(nome)}</h3><button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div>
+    <form id="formGrupoGp" class="form-grid">
+      <div class="field" style="grid-column:1/-1"><label>Nome do grupo (cartão, banco…)</label><input required name="nome" value="${esc(nome)}"></div>
+      <div class="field"><label>Dia de vencimento</label><input type="number" min="1" max="31" name="dia" value="${cfg.dia||''}" placeholder="ex.: 10"><span class="hint">Vale para as ${qtd} conta(s) do grupo que não têm dia próprio.</span></div>
+      <div class="field"><label>Forma de pagamento</label><select name="forma"><option value="">—</option>${Object.keys(GP_FORMAS).map(k=>`<option value="${k}" ${cfg.forma===k?'selected':''}>${GP_FORMAS[k]}</option>`).join('')}</select><span class="hint">Só informativo no grupo. Cada conta tem a sua forma.</span></div>
+      <div class="form-actions" style="grid-column:1/-1">
+        <button type="button" class="btn ghost" onclick="closeModal()">Cancelar</button>
+        <button type="submit" class="btn primary">Salvar</button>
+      </div>
+    </form>`);
+  document.getElementById('formGrupoGp').addEventListener('submit', e=>{
+    e.preventDefault();
+    const f = new FormData(e.target);
+    const novoNome = (f.get('nome')||'').trim() || nome;
+    const dia = Math.min(31, Math.max(0, parseInt(f.get('dia'))||0)) || null;
+    delete DB.gpGrupos[nome];
+    DB.gpGrupos[novoNome] = {dia, forma: f.get('forma')||''};
+    gpPrep().forEach(it=>{ if (it.grupo===nome) it.grupo = novoNome; });
+    saveDB(); closeModal(); renderGestao(); toast('Grupo salvo.');
+  });
+};
+
+function openParcelamentoForm(id, preset){
+  const atual = id ? gpPrep().find(x=>x.id===id) : null;
+  const mes = DB.mesAtual;
+  const p = atual || Object.assign({descricao:'', grupo:'', onde:'', forma:'cartao', recorrencia:'parcelado', parcelas:10, intervalo:2, valor:'', mesInicio:mes, mesFim:'', dia:'', pagosMeses:null, obs:''}, preset||{});
+  const idxAtual = ymDiff(mes, p.mesInicio)+1;
+  const grupos = Array.from(new Set(gpPrep().map(it=>it.grupo).concat(Object.keys(DB.gpGrupos)))).filter(Boolean).sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  openModal(`
+    <div class="modal-head"><h3>${id?'Editar conta':'Nova conta / parcela'}</h3><button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div>
     <form id="formParcelamento" class="form-grid">
-      <div class="field span2" style="grid-column:1/-1"><label>O que é*</label><input required name="descricao" placeholder="Ex.: Geladeira, Celular novo, Empréstimo banco" value="${esc(p.descricao)}"></div>
-      <div class="field"><label>Tipo</label><select name="tipo">${tipos.map(t=>`<option ${t===p.tipo?'selected':''}>${esc(t)}</option>`).join('')}</select></div>
-      <div class="field"><label>Onde / cartão</label><input name="onde" placeholder="Ex.: Nubank, Magalu" value="${esc(p.onde||'')}"></div>
-      <div class="field"><label>Nº de parcelas*</label><input required type="number" min="1" max="600" step="1" name="parcelas" value="${p.parcelas}"></div>
-      <div class="field"><label>Valor da parcela (R$)*</label><input required type="number" step="0.01" min="0" name="valorParcela" value="${p.valorParcela}">
-        <span class="hint" id="gpTotalHint"></span></div>
-      <div class="field"><label>Em ${esc(monthLabel(mes))}, está na parcela nº</label><input required type="number" step="1" min="-60" max="600" name="idx" value="${idxAtual}">
-        <span class="hint">Use 0 se a 1ª parcela vence só no mês que vem.</span></div>
-      <div class="field"><label>Vence todo dia</label><input required type="number" min="1" max="31" step="1" name="dia" value="${diaAtual}"></div>
-      <div class="field" style="grid-column:1/-1">
+      <div class="field" style="grid-column:1/-1"><label>O que é*</label><input required name="descricao" placeholder="Ex.: Ar-condicionado, Spotify, Academia" value="${esc(p.descricao)}"></div>
+      <div class="field"><label>Grupo / cartão*</label><input required name="grupo" list="gpGruposList" placeholder="Ex.: Cartão Ester, Assinaturas" value="${esc(p.grupo)}"><datalist id="gpGruposList">${grupos.map(g=>`<option value="${esc(g)}">`).join('')}</datalist></div>
+      <div class="field"><label>Como é pago</label><select name="forma">${Object.keys(GP_FORMAS).map(k=>`<option value="${k}" ${p.forma===k?'selected':''}>${GP_FORMAS[k]}</option>`).join('')}</select></div>
+      <div class="field"><label>Tipo</label><select name="recorrencia">${Object.keys(GP_RECORRENCIAS).map(k=>`<option value="${k}" ${p.recorrencia===k?'selected':''}>${GP_RECORRENCIAS[k]}</option>`).join('')}</select></div>
+      <div class="field"><label>Valor (R$)*</label><input required type="number" step="0.01" min="0" name="valor" value="${p.valor}"><span class="hint" id="gpTotalHint"></span></div>
+      <div class="field gp-so-parc"><label>Nº de parcelas</label><input type="number" min="1" max="600" step="1" name="parcelas" value="${p.parcelas||1}"></div>
+      <div class="field gp-so-parc"><label>Em ${esc(monthLabel(mes))}, está na parcela nº</label><input type="number" step="1" min="-60" max="600" name="idx" value="${idxAtual}"><span class="hint">Use 0 se a 1ª parcela vence só no mês que vem.</span></div>
+      <div class="field gp-so-per"><label>Repete a cada quantos meses</label><input type="number" min="1" max="24" step="1" name="intervalo" value="${p.intervalo||2}"></div>
+      <div class="field gp-so-mes"><label id="gpMesLabel">Começa em</label><input type="month" name="mesInicio" value="${p.mesInicio}"></div>
+      <div class="field gp-so-fixo"><label>Até (opcional)</label><input type="month" name="mesFim" value="${p.mesFim||''}"><span class="hint">Deixe vazio se não tem data para acabar.</span></div>
+      <div class="field"><label>Dia de vencimento</label><input type="number" min="1" max="31" step="1" name="dia" value="${p.dia||''}" placeholder="usa o do grupo"></div>
+      <div class="field"><label>Onde (opcional)</label><input name="onde" placeholder="Ex.: Coopera, Shopee" value="${esc(p.onde||'')}"></div>
+      <div class="field gp-so-parc" style="grid-column:1/-1">
         <label>Parcelas já pagas</label>
         <div id="gpMesesPagos" class="meses-chips"></div>
-        <span class="hint">Toque para marcar ou desmarcar. ${id?'':'As parcelas dos meses anteriores já vêm marcadas.'}</span>
+        <span class="hint">Toque para marcar ou desmarcar.${id?'':' As dos meses anteriores já vêm marcadas.'}</span>
       </div>
       <div class="field" style="grid-column:1/-1"><label>Observações</label><textarea name="obs">${esc(p.obs||'')}</textarea></div>
       <div class="form-actions" style="grid-column:1/-1">
@@ -2452,74 +2675,216 @@ function openParcelamentoForm(id){
     </form>
   `);
   const form = document.getElementById('formParcelamento');
-  let pagos = new Set(atual ? mesesPagosConta(atual) : []);
-  let mexeuNosPagos = !!atual;
+  let pagos = new Set(atual ? (atual.pagosMeses||[]) : []);
+  let mexeu = !!atual;
   const dados = () => {
     const f = new FormData(form);
-    const parcelas = Math.min(600, Math.max(1, parseInt(f.get('parcelas'))||1));
-    const idx = parseInt(f.get('idx')); const i = isNaN(idx) ? 1 : idx;
-    const dia = Math.min(31, Math.max(1, parseInt(f.get('dia'))||1));
-    return {parcelas, valorParcela: round2(parseFloat(f.get('valorParcela'))||0), primeiroVencimento: ymAdd(mes, -(i-1)) + '-' + String(dia).padStart(2,'0')};
+    const rec = f.get('recorrencia');
+    const d = {recorrencia: rec, valor: round2(parseFloat(f.get('valor'))||0)};
+    if (rec==='parcelado'){
+      d.parcelas = Math.min(600, Math.max(1, parseInt(f.get('parcelas'))||1));
+      const i = parseInt(f.get('idx')); d.mesInicio = ymAdd(mes, -((isNaN(i)?1:i)-1));
+    } else {
+      d.parcelas = 1;
+      d.mesInicio = /^\d{4}-\d{2}$/.test(f.get('mesInicio')||'') ? f.get('mesInicio') : mes;
+    }
+    d.intervalo = Math.max(1, parseInt(f.get('intervalo'))||1);
+    d.mesFim = (rec==='fixo'||rec==='periodico') && /^\d{4}-\d{2}$/.test(f.get('mesFim')||'') ? f.get('mesFim') : '';
+    return d;
   };
   function render(){
     const d = dados();
-    const meses = mesesDasParcelas(d);
-    if (!mexeuNosPagos) pagos = new Set(meses.filter(m=>ymDiff(m, mes)<0));
-    document.getElementById('gpMesesPagos').innerHTML = meses.map((m,i)=>
-      `<button type="button" class="mes-chip ${pagos.has(m)?'on':''}" aria-pressed="${pagos.has(m)}" data-mes="${m}">${i+1}ª · ${monthLabelShort(m)}</button>`).join('');
-    document.getElementById('gpTotalHint').textContent = d.valorParcela ? `Total: ${brl(round2(d.valorParcela*d.parcelas))} · termina em ${monthLabel(meses[meses.length-1])}` : '';
+    form.querySelectorAll('.gp-so-parc').forEach(el=>el.style.display = d.recorrencia==='parcelado'?'':'none');
+    form.querySelectorAll('.gp-so-per').forEach(el=>el.style.display = d.recorrencia==='periodico'?'':'none');
+    form.querySelectorAll('.gp-so-mes').forEach(el=>el.style.display = d.recorrencia==='parcelado'?'none':'');
+    form.querySelectorAll('.gp-so-fixo').forEach(el=>el.style.display = (d.recorrencia==='fixo'||d.recorrencia==='periodico')?'':'none');
+    document.getElementById('gpMesLabel').textContent = d.recorrencia==='unico' ? 'Mês da compra' : 'Começa em';
+    const hint = document.getElementById('gpTotalHint');
+    if (d.recorrencia==='parcelado'){
+      const ms = gpMesesParcelas(d);
+      if (!mexeu) pagos = new Set(ms.filter(m=>ymDiff(m, mes)<0));
+      document.getElementById('gpMesesPagos').innerHTML = ms.map((m,i)=>`<button type="button" class="mes-chip ${pagos.has(m)?'on':''}" aria-pressed="${pagos.has(m)}" data-mes="${m}">${i+1}ª · ${monthLabelShort(m)}</button>`).join('');
+      hint.textContent = d.valor ? `Total ${brl(round2(d.valor*d.parcelas))} · termina em ${monthLabel(ms[ms.length-1])}` : '';
+    } else if (d.recorrencia==='fixo') hint.textContent = d.valor ? `${brl(round2(d.valor*12))} por ano` : '';
+    else hint.textContent = '';
   }
   document.getElementById('gpMesesPagos').addEventListener('click', e=>{
     const b = e.target.closest('.mes-chip'); if(!b) return;
-    mexeuNosPagos = true;
+    mexeu = true;
     const m = b.dataset.mes; if (pagos.has(m)) pagos.delete(m); else pagos.add(m);
     render();
   });
   form.addEventListener('input', render);
+  form.addEventListener('change', render);
   render();
   form.addEventListener('submit', e=>{
     e.preventDefault();
     const f = new FormData(form);
     const d = dados();
-    const validos = new Set(mesesDasParcelas(d));
+    const validos = d.recorrencia==='parcelado' ? new Set(gpMesesParcelas(d)) : null;
+    const pagosAntes = atual ? (atual.pagosMeses||[]) : [];
     const novo = Object.assign(d, {
       descricao: (f.get('descricao')||'').trim(),
-      tipo: f.get('tipo'),
+      grupo: (f.get('grupo')||'').trim() || 'Outros',
+      forma: f.get('forma'),
+      dia: Math.min(31, Math.max(0, parseInt(f.get('dia'))||0)) || null,
       onde: (f.get('onde')||'').trim(),
       obs: (f.get('obs')||'').trim(),
-      pagosMeses: Array.from(pagos).filter(m=>validos.has(m)).sort()
+      pagosMeses: validos ? Array.from(pagos).filter(m=>validos.has(m)).sort() : pagosAntes.slice()
     });
-    novo.parcelasPagas = novo.pagosMeses.length;
-    if (atual) Object.assign(atual, novo); else gpLista().push(Object.assign({id:uid()}, novo));
-    saveDB(); closeModal(); renderGestao(); toast('Parcelamento salvo.');
+    if (atual) Object.assign(atual, novo); else gpPrep().push(Object.assign({id:uid()}, novo));
+    saveDB(); closeModal(); renderGestao(); toast('Conta salva.');
   });
 }
 window.openParcelamentoForm = openParcelamentoForm;
-window.deleteParcelamento = function(id){
-  if (!confirm('Excluir este parcelamento?')) return;
-  DB.parcelamentos = gpLista().filter(p=>p.id!==id);
-  saveDB(); closeModal(); renderGestao(); toast('Parcelamento excluído.');
+window.novaCompraCoopera = function(){
+  openParcelamentoForm(null, {grupo:'Coopera', onde:'Coopera', forma:'folha', recorrencia:'unico', descricao:'Compra na Coopera'});
 };
-window.baixarPlanilhaParcelas = function(){
-  const lista = gpLista();
-  if (!lista.length){ toast('Nenhum parcelamento cadastrado ainda.'); return; }
+window.deleteParcelamento = function(id){
+  if (!confirm('Excluir esta conta?')) return;
+  DB.parcelamentos = gpPrep().filter(p=>p.id!==id);
+  saveDB(); closeModal(); renderGestao(); toast('Conta excluída.');
+};
+
+function openReceitaForm(id){
+  const atual = id ? DB.receitas.find(x=>x.id===id) : null;
   const mes = DB.mesAtual;
-  const linhas = [['O que é','Tipo','Onde','Valor da parcela','Nº de parcelas','Parcela neste mês','Pagas','Faltam','Saldo devedor','Vence dia','Última parcela','Situação']];
-  const sitNome = {ativo:'Em dia', atrasado:'Atrasado', futuro:'Começa depois', quitado:'Quitado'};
-  let saldo = 0;
-  lista.forEach(p=>{
-    const g = gpCalc(p, mes); saldo += g.saldo;
-    linhas.push([p.descricao, p.tipo, p.onde||'', p.valorParcela, p.parcelas, g.emRange?g.parcelaLabel:'—', g.nPagas, g.restantes, g.saldo, Number(p.primeiroVencimento.slice(8,10)), g.ultimo?monthLabel(g.ultimo):'', sitNome[g.situacao]]);
+  const r = atual || {descricao:'', fonte:'Salário', valor:'', recorrencia:'fixo', intervalo:1, mesInicio:mes, mesFim:'', dia:'', descontaFolha:true, obs:''};
+  openModal(`
+    <div class="modal-head"><h3>${id?'Editar recebimento':'Novo recebimento'}</h3><button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div>
+    <form id="formReceita" class="form-grid">
+      <div class="field"><label>De onde vem</label><select name="fonte">${GP_FONTES.concat(r.fonte && !GP_FONTES.includes(r.fonte)?[r.fonte]:[]).map(f=>`<option ${f===r.fonte?'selected':''}>${esc(f)}</option>`).join('')}</select></div>
+      <div class="field"><label>Descrição</label><input name="descricao" placeholder="Ex.: Salário empresa, Cliente X" value="${esc(r.descricao)}"></div>
+      <div class="field"><label>Valor (R$)*</label><input required type="number" step="0.01" min="0" name="valor" value="${r.valor}"></div>
+      <div class="field"><label>Dia em que cai</label><input type="number" min="1" max="31" name="dia" value="${r.dia||''}" placeholder="ex.: 5"><span class="hint">Define a quinzena: dia 1 a 15 ou 16 a 31.</span></div>
+      <div class="field"><label>Repete</label><select name="recorrencia">
+        <option value="fixo" ${r.recorrencia==='fixo'?'selected':''}>Todo mês</option>
+        <option value="unico" ${r.recorrencia==='unico'?'selected':''}>Só uma vez</option>
+        <option value="periodico" ${r.recorrencia==='periodico'?'selected':''}>A cada X meses</option>
+      </select></div>
+      <div class="field gp-r-per"><label>A cada quantos meses</label><input type="number" min="1" max="24" name="intervalo" value="${r.intervalo||2}"></div>
+      <div class="field"><label id="gpRecMesLabel">A partir de</label><input type="month" name="mesInicio" value="${r.mesInicio}"></div>
+      <div class="field gp-r-fim"><label>Até (opcional)</label><input type="month" name="mesFim" value="${r.mesFim||''}"></div>
+      <label class="lista-sai" style="grid-column:1/-1;border:none"><input type="checkbox" name="descontaFolha" ${r.descontaFolha?'checked':''}><span>Os descontos em folha (academia, Coopera…) saem deste recebimento<br><span class="hint">Marque só no seu salário.</span></span></label>
+      <div class="field" style="grid-column:1/-1"><label>Observações</label><textarea name="obs">${esc(r.obs||'')}</textarea></div>
+      <div class="form-actions" style="grid-column:1/-1">
+        ${id?`<button type="button" class="btn danger" onclick="deleteReceita('${id}')">Excluir</button>`:''}
+        <button type="button" class="btn ghost" onclick="closeModal()">Cancelar</button>
+        <button type="submit" class="btn primary">Salvar</button>
+      </div>
+    </form>`);
+  const form = document.getElementById('formReceita');
+  let mexeuFolha = !!atual;
+  const render = () => {
+    const rec = form.recorrencia.value;
+    form.querySelector('.gp-r-per').style.display = rec==='periodico'?'':'none';
+    form.querySelector('.gp-r-fim').style.display = rec==='unico'?'none':'';
+    document.getElementById('gpRecMesLabel').textContent = rec==='unico' ? 'Mês' : 'A partir de';
+    if (!mexeuFolha) form.descontaFolha.checked = form.fonte.value==='Salário';
+  };
+  form.descontaFolha.addEventListener('change', ()=>{ mexeuFolha = true; });
+  form.addEventListener('change', render);
+  render();
+  form.addEventListener('submit', e=>{
+    e.preventDefault();
+    const f = new FormData(form);
+    const mi = /^\d{4}-\d{2}$/.test(f.get('mesInicio')||'') ? f.get('mesInicio') : mes;
+    const rec = f.get('recorrencia');
+    const novo = {
+      fonte: f.get('fonte'), descricao: (f.get('descricao')||'').trim(),
+      valor: round2(parseFloat(f.get('valor'))||0),
+      dia: Math.min(31, Math.max(0, parseInt(f.get('dia'))||0)) || null,
+      recorrencia: rec, intervalo: Math.max(1, parseInt(f.get('intervalo'))||1),
+      mesInicio: mi, mesFim: rec!=='unico' && /^\d{4}-\d{2}$/.test(f.get('mesFim')||'') ? f.get('mesFim') : '',
+      descontaFolha: !!f.get('descontaFolha'), obs: (f.get('obs')||'').trim()
+    };
+    if (atual) Object.assign(atual, novo); else DB.receitas.push(Object.assign({id:uid(), recebidoMeses:[]}, novo));
+    saveDB(); closeModal(); gpAba = 'receitas'; renderGestao(); toast('Recebimento salvo.');
   });
-  linhas.push([]);
-  linhas.push(['','','','','','','','Total', round2(saldo)]);
-  const ws = XLSX.utils.aoa_to_sheet(linhas);
-  ws['!cols'] = [{wch:24},{wch:18},{wch:14},{wch:14},{wch:12},{wch:14},{wch:8},{wch:8},{wch:14},{wch:9},{wch:18},{wch:14}];
+}
+window.openReceitaForm = openReceitaForm;
+window.deleteReceita = function(id){
+  if (!confirm('Excluir este recebimento?')) return;
+  DB.receitas = DB.receitas.filter(r=>r.id!==id);
+  saveDB(); closeModal(); renderGestao(); toast('Recebimento excluído.');
+};
+
+window.baixarPlanilhaParcelas = function(){
+  const lista = gpPrep();
+  if (!lista.length && !DB.receitas.length){ toast('Nada cadastrado ainda.'); return; }
+  const mes = DB.mesAtual;
+  const l1 = [['Grupo','O que é','Como é pago','Tipo','Valor','Neste mês','Dia','Até','Saldo devedor','Onde']];
+  lista.slice().sort((a,b)=>a.grupo.localeCompare(b.grupo,'pt-BR')).forEach(it=>{
+    const oc = gpOcorre(it, mes);
+    l1.push([it.grupo, it.descricao, GP_FORMAS[it.forma]||'', GP_RECORRENCIAS[it.recorrencia]||'', it.valor, oc?oc.label:'—', gpDia(it)||'', gpUltimo(it)?monthLabel(gpUltimo(it)):'', gpSaldo(it), it.onde||'']);
+  });
+  const l2 = [['De onde vem','Descrição','Valor','Dia','Repete','A partir de','Sofre descontos']];
+  DB.receitas.forEach(r=>l2.push([r.fonte, r.descricao, r.valor, r.dia||'', r.recorrencia==='unico'?'Só uma vez':r.recorrencia==='periodico'?'A cada '+r.intervalo+' meses':'Todo mês', monthLabel(r.mesInicio), r.descontaFolha?'Sim':'']));
+  const l3 = [['Mês','Entradas','Descontos em folha','Contas','Sobra / falta','1ª quinzena','2ª quinzena']];
+  let ac=0;
+  for (let i=0;i<12;i++){ const M = gpMes(ymAdd(mes,i)); ac+=M.sobra;
+    const q = n => round2(M.quinz[n].ent - M.quinz[n].folha - M.quinz[n].sai);
+    l3.push([monthLabel(M.ym), M.entradas, M.totFolha, M.saidas, M.sobra, q(1), q(2)]); }
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Parcelamentos');
+  const ws1 = XLSX.utils.aoa_to_sheet(l1); ws1['!cols']=[{wch:18},{wch:26},{wch:18},{wch:14},{wch:10},{wch:12},{wch:6},{wch:16},{wch:12},{wch:12}];
+  const ws2 = XLSX.utils.aoa_to_sheet(l2); ws2['!cols']=[{wch:16},{wch:24},{wch:10},{wch:6},{wch:16},{wch:16},{wch:10}];
+  const ws3 = XLSX.utils.aoa_to_sheet(l3); ws3['!cols']=[{wch:18},{wch:12},{wch:16},{wch:12},{wch:12},{wch:12},{wch:12}];
+  XLSX.utils.book_append_sheet(wb, ws1, 'Contas');
+  XLSX.utils.book_append_sheet(wb, ws2, 'Recebimentos');
+  XLSX.utils.book_append_sheet(wb, ws3, 'Previsão 12 meses');
   XLSX.writeFile(wb, `gestao-de-parcelas-${mes}.xlsx`);
   toast('Planilha baixada.');
 };
+
+/* Link de cadastro: #gestao=<json em base64url> adiciona contas/recebimentos de uma vez (depois de confirmar) */
+function gpImportarDoLink(){
+  const m = location.hash.match(/^#gestao=([A-Za-z0-9_\-]+)/);
+  if (!m) return;
+  history.replaceState(null, '', location.pathname + location.search);
+  let pacote;
+  try{
+    const b64 = m[1].replace(/-/g,'+').replace(/_/g,'/');
+    const bin = atob(b64 + '==='.slice((b64.length+3)%4));
+    pacote = JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, ch=>ch.charCodeAt(0))));
+  }catch(e){ toast('Não consegui ler o link de cadastro.'); return; }
+  const lista = gpPrep();
+  const refPac = pacote.mesRef || DB.mesAtual;
+  (pacote.contas||[]).forEach(c=>{
+    c.recorrencia = c.recorrencia || 'fixo';
+    c.parcelas = c.parcelas || 1; c.intervalo = c.intervalo || 1;
+    c.mesInicio = c.mesInicio || refPac; c.dia = c.dia || null;
+    c.onde = c.onde || ''; c.obs = c.obs || ''; c.mesFim = c.mesFim || '';
+    if (!Array.isArray(c.pagosMeses)) c.pagosMeses = pacote.pagarAnteriores ? gpMesesParcelas(c).filter(m=>ymDiff(m, refPac)<0) : [];
+  });
+  (pacote.receitas||[]).forEach(r=>{ r.recebidoMeses = r.recebidoMeses || []; r.mesInicio = r.mesInicio || refPac; r.recorrencia = r.recorrencia || 'fixo'; });
+  const existentes = new Set(lista.map(x=>x.id).concat(DB.receitas.map(x=>x.id)));
+  const novas = (pacote.contas||[]).filter(c=>!existentes.has(c.id));
+  const novasRec = (pacote.receitas||[]).filter(r=>!existentes.has(r.id));
+  const tabBtn = document.querySelector('.tab-btn[data-tab="gestao"]'); if (tabBtn) tabBtn.click();
+  const ref = pacote.mesRef || DB.mesAtual;
+  const porGrupo = {};
+  novas.forEach(c=>{ const g=porGrupo[c.grupo]=porGrupo[c.grupo]||{n:0,t:0}; g.n++; if (gpOcorre(c, ref)) g.t=round2(g.t+c.valor); });
+  openModal(`
+    <div class="modal-head"><h3>Adicionar à Gestão de Parcelas</h3><button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div>
+    ${novas.length||novasRec.length ? `
+      <div class="lista-resumo"><b>${novas.length} conta(s)</b>${novasRec.length?` e <b>${novasRec.length} recebimento(s)</b>`:''} novas. Valores de ${esc(monthLabel(ref))}:</div>
+      ${Object.keys(porGrupo).map(g=>`<div class="lista-item"><div><b>${esc(g)}</b> · ${porGrupo[g].n} conta(s)</div><div class="val">${brl(porGrupo[g].t)}</div></div>`).join('')}
+      <div class="lista-item"><div><b>Total de ${esc(monthLabel(ref))}</b></div><div class="val">${brl(round2(Object.values(porGrupo).reduce((t,g)=>t+g.t,0)))}</div></div>
+      <p class="hint" style="margin:12px 0 0">${(pacote.contas||[]).length-novas.length ? ((pacote.contas||[]).length-novas.length)+' conta(s) do link já estavam cadastradas e não serão repetidas. ' : ''}Nada das vendas, cobranças ou Minhas Contas muda.</p>
+      <div class="form-actions">
+        <button type="button" class="btn ghost" onclick="closeModal()">Cancelar</button>
+        <button type="button" class="btn primary" id="gpImportOk">Adicionar</button>
+      </div>` : `<p>Tudo deste link já está cadastrado. Nada foi repetido.</p><div class="form-actions"><button type="button" class="btn primary" onclick="closeModal()">Ok</button></div>`}
+  `);
+  const ok = document.getElementById('gpImportOk');
+  if (ok) ok.addEventListener('click', ()=>{
+    novas.forEach(c=>lista.push(c));
+    novasRec.forEach(r=>DB.receitas.push(r));
+    Object.keys(pacote.grupos||{}).forEach(g=>{ if (!DB.gpGrupos[g]) DB.gpGrupos[g] = pacote.grupos[g]; });
+    saveDB(); closeModal(); gpAba='contas'; renderGestao();
+    toast(`${novas.length} conta(s) adicionadas.${ymDiff(ref, DB.mesAtual)!==0?' Use ▶ lá em cima para ver '+monthLabel(ref)+'.':''}`);
+  });
+}
 
 /* ===================== RENDER ALL ===================== */
 function renderAll(){
@@ -2557,6 +2922,8 @@ function abrirListaDoLink(){
 }
 abrirListaDoLink();
 window.addEventListener('hashchange', abrirListaDoLink);
+gpImportarDoLink();
+window.addEventListener('hashchange', gpImportarDoLink);
 
 /* ===================== PWA (best-effort) ===================== */
 if ('serviceWorker' in navigator) {
