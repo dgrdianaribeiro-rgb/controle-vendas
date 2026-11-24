@@ -407,6 +407,138 @@
   input[type=file]{display:none;}
 
   footer.appfoot{padding:30px 0 40px;text-align:center;color:var(--ink-35);font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.06em;}
+
+  /* =====================================================================
+     GESTÃO DE PARCELAS — visual de app de banco + organização para TDAH
+     (fundo claro, cartões brancos sem borda, azul-marinho, verde = bom,
+      vermelho = atenção; uma coisa principal por tela, pouco texto)
+     ===================================================================== */
+  body.tema-gestao{
+    --volt:#2F54EB; --volt-deep:#1D39C4; --acid:#E8EEFF;
+    --paper:#F3F5F9; --paper-dim:#E9EDF4;
+    --ink-60:#475467; --ink-45:#667085; --ink-35:#98A2B3;
+    --border:rgba(16,24,40,.08);
+    --ok:#12A150; --ok-bg:#E8F7EE;
+    --danger:#E5484D; --danger-bg:#FDECEC;
+    --warn:#B54708; --warn-bg:#FEF4E6;
+    --info-bg:#EEF2FF;
+    --gp-coral:#E5484D; --gp-coral-bg:#FDECEC;
+    --gp-navy:#0B1B4D; --gp-navy2:#1D39C4;
+    --gp-sombra:0 1px 2px rgba(16,24,40,.05), 0 6px 16px rgba(16,24,40,.06);
+    background:var(--paper);
+  }
+  body.tema-gestao .topbar{background:rgba(243,245,249,.92);}
+  body.tema-gestao .brand-mark{background:var(--gp-navy);}
+  body.tema-gestao .brand-mark span{color:#fff;}
+  body.tema-gestao .tab-btn.active, body.tema-gestao .tab-btn.tab-gestao.active{background:var(--gp-navy);border-color:var(--gp-navy);color:#fff;}
+  .tab-btn.tab-gestao{border-color:rgba(29,57,196,.35);color:#1D39C4;}
+  body.tema-gestao .month-switch{border:none;box-shadow:var(--gp-sombra);}
+  body.tema-gestao .month-switch button:hover{background:var(--acid);}
+  body.tema-gestao .fab{background:var(--gp-navy);box-shadow:0 12px 24px -10px rgba(11,27,77,.6);}
+  body.tema-gestao .fab-item span.ic{background:var(--acid);}
+  body.tema-gestao .btn{border-radius:12px;}
+  body.tema-gestao .btn.ghost{border-color:transparent;background:#fff;box-shadow:var(--gp-sombra);color:var(--ink-60);}
+  body.tema-gestao .modal{border-radius:24px 24px 0 0;}
+  @media (min-width:640px){ body.tema-gestao .modal{border-radius:24px;} }
+  body.tema-gestao .field input, body.tema-gestao .field select, body.tema-gestao .field textarea{border:1px solid var(--border);background:#F8FAFC;border-radius:12px;}
+  body.tema-gestao .field label{font-family:'Manrope',sans-serif;text-transform:none;letter-spacing:0;font-size:.8rem;font-weight:700;color:var(--ink-60);}
+  body.tema-gestao .mes-chip{font-family:'Manrope',sans-serif;border:1px solid var(--border);}
+  body.tema-gestao .mes-chip.on{background:var(--volt);border-color:var(--volt);}
+
+  #tab-gestao{font-variant-numeric:tabular-nums;}
+  #tab-gestao h2{font-family:'Manrope',sans-serif;font-weight:800;letter-spacing:-.02em;font-size:clamp(1.2rem,5vw,1.5rem);}
+  .gp-topo{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;}
+  .gp-topo p{margin:2px 0 0;color:var(--ink-45);font-size:.9rem;}
+  .gp-add{padding:12px 18px;font-size:12px;}
+
+  /* navegação em 5 partes, estilo controle segmentado */
+  .gp-seg{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;background:#E4E8F0;border-radius:16px;padding:4px;margin-bottom:18px;}
+  .gp-seg button{display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:transparent;border-radius:12px;padding:8px 2px;font:600 .74rem 'Manrope',sans-serif;color:var(--ink-45);cursor:pointer;}
+  .gp-seg button svg{width:18px;height:18px;}
+  .gp-seg button.on{background:#fff;color:var(--gp-navy);box-shadow:0 1px 3px rgba(16,24,40,.12);}
+  @media (min-width:700px){ .gp-seg{grid-template-columns:repeat(5,auto);justify-content:start;} .gp-seg button{flex-direction:row;padding:9px 16px;font-size:.86rem;gap:7px;} }
+  .gp-toggle{display:inline-flex;background:#E4E8F0;border-radius:12px;padding:3px;margin-bottom:14px;}
+  .gp-toggle button{border:none;background:transparent;border-radius:10px;padding:7px 14px;font:600 .84rem 'Manrope',sans-serif;color:var(--ink-45);cursor:pointer;}
+  .gp-toggle button.on{background:#fff;color:var(--gp-navy);box-shadow:0 1px 3px rgba(16,24,40,.12);}
+  .gp-h3{font:800 1rem 'Manrope',sans-serif;margin:22px 2px 10px;letter-spacing:-.01em;color:#101828;}
+  .gp-h3.ruim{color:var(--danger);}
+
+  /* cartão principal: o número do mês */
+  .gp-hero2{background:linear-gradient(135deg,#0B1B4D 0%,#1D39C4 100%);color:#fff;border-radius:24px;padding:22px 22px 18px;display:flex;flex-direction:column;gap:4px;box-shadow:0 14px 30px -16px rgba(11,27,77,.7);}
+  .gp-hero2.neg{background:linear-gradient(135deg,#3A0D12 0%,#B42318 100%);}
+  .gp-hero2 .eti{font-size:.9rem;opacity:.85;font-weight:600;}
+  .gp-hero2 .num{font:800 clamp(2.2rem,9vw,3.2rem) 'Manrope',sans-serif;letter-spacing:-.03em;line-height:1.05;}
+  .gp-hero2 .sub{font-size:.86rem;opacity:.85;}
+  .gp-hero2 .barra{height:8px;background:rgba(255,255,255,.2);border-radius:999px;overflow:hidden;margin:10px 0 2px;}
+  .gp-hero2 .barra span{display:block;height:100%;background:#fff;border-radius:999px;}
+  .gp-link-claro{align-self:flex-start;margin-top:10px;background:rgba(255,255,255,.14);border:none;color:#fff;border-radius:10px;padding:8px 12px;font:600 .8rem 'Manrope',sans-serif;cursor:pointer;}
+  .gp-mini3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px;}
+  .gp-mini3 div{background:#fff;border-radius:16px;padding:12px;box-shadow:var(--gp-sombra);min-width:0;}
+  .gp-mini3 span{display:block;font-size:.74rem;color:var(--ink-45);font-weight:600;}
+  .gp-mini3 b{font:800 .98rem 'Manrope',sans-serif;white-space:nowrap;}
+  .gp-mini3 b.pos{color:var(--ok);}
+  .gp-avisos{display:flex;flex-direction:column;gap:6px;margin-top:12px;}
+  .gp-avisos div{border-radius:14px;padding:10px 12px 10px 36px;font-size:.88rem;font-weight:600;position:relative;}
+  .gp-avisos div::before{position:absolute;left:12px;top:9px;font-size:.95rem;}
+  .gp-avisos .ruim{background:var(--danger-bg);color:#912018;} .gp-avisos .ruim::before{content:'!';font-weight:900;width:16px;height:16px;border-radius:50%;background:var(--danger);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.7rem;top:12px;}
+  .gp-avisos .atencao{background:var(--warn-bg);color:#93370D;} .gp-avisos .atencao::before{content:'•';color:#F79009;font-size:1.4rem;top:2px;}
+  .gp-bloco{background:#fff;border-radius:20px;padding:6px 14px;box-shadow:var(--gp-sombra);}
+  .gp-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);}
+  .gp-item:last-of-type{border-bottom:none;}
+  .gp-item .d{flex:1;min-width:0;display:flex;flex-direction:column;}
+  .gp-item .d b{font-size:.94rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .gp-item .d span{font-size:.78rem;color:var(--ink-45);}
+  .gp-item .v{font-weight:800;white-space:nowrap;}
+  .gp-check{flex:none;width:28px;height:28px;border-radius:50%;border:2px solid #D0D5DD;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:transparent;padding:0;}
+  .gp-check svg{width:15px;height:15px;}
+  .gp-check.on{background:var(--ok);border-color:var(--ok);color:#fff;}
+  .gp-calmo{margin:14px 0;color:var(--ink-45);text-align:center;}
+  .gp-atalhos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:14px;}
+  .gp-atalhos button{background:#fff;border:none;border-radius:16px;padding:12px 6px;box-shadow:var(--gp-sombra);font:700 .8rem 'Manrope',sans-serif;color:#101828;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;}
+  .gp-atalhos button b{width:30px;height:30px;border-radius:50%;background:var(--acid);color:var(--volt);display:flex;align-items:center;justify-content:center;font-size:1rem;}
+  .gp-cheio{width:100%;justify-content:center;margin:10px 0 8px;padding:13px;}
+  .gp-ops{display:flex;flex-direction:column;gap:8px;}
+  .gp-op{display:flex;align-items:center;gap:14px;text-align:left;background:#F8FAFC;border:none;border-radius:16px;padding:14px;cursor:pointer;font:inherit;color:inherit;}
+  .gp-op:hover{background:var(--acid);}
+  .gp-op .ic{width:42px;height:42px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex:none;box-shadow:var(--gp-sombra);}
+  .gp-op b{display:block;font-size:.95rem;} .gp-op small{color:var(--ink-45);font-size:.8rem;}
+
+  /* tirar bordas e linhas grossas dos blocos antigos dentro da Gestão */
+  #tab-gestao .gp-card, #tab-gestao .gp-dia, #tab-gestao .gp-resumo > div, #tab-gestao .gp-numero, #tab-gestao .gp-vazio, #tab-gestao .table-wrap{border:none !important;border-radius:20px;box-shadow:var(--gp-sombra);background:#fff;}
+  #tab-gestao .gp-card.quitado{opacity:.6;}
+  #tab-gestao .gp-vazio{color:var(--ink-60);}
+  #tab-gestao .gp-resumo .alerta{background:var(--warn-bg);box-shadow:none;color:#93370D;}
+  #tab-gestao .label, #tab-gestao .onde, #tab-gestao .gp-resumo span, #tab-gestao .gp-dia-tot span, #tab-gestao .num-dia span, #tab-gestao .gp-liq span, #tab-gestao .lista-dia, #tab-gestao .table th, #tab-gestao .gp-card .valor small{font-family:'Manrope',sans-serif !important;text-transform:none !important;letter-spacing:0 !important;font-size:.78rem !important;font-weight:600;color:var(--ink-45);}
+  #tab-gestao .gp-card .nome{font-weight:800;}
+  #tab-gestao .gp-card .valor, #tab-gestao .num-dia b, #tab-gestao .gp-numero .valor{font-family:'Manrope',sans-serif;font-weight:800;letter-spacing:-.02em;}
+  #tab-gestao .gp-row .v, #tab-gestao .gp-dia-it .v, #tab-gestao .gp-dia-tot b, #tab-gestao .gp-numero .conta b, #tab-gestao .gp-qlin b, #tab-gestao .table .num, #tab-gestao .gp-liq b{font-family:'Manrope',sans-serif;font-weight:800;}
+  #tab-gestao .gp-bar{background:#EEF1F6;height:8px;}
+  #tab-gestao .gp-bar span{background:var(--volt);}
+  #tab-gestao .gp-cat.alerta .gp-bar span{background:#F79009;}
+  #tab-gestao .gp-cat.estourou .gp-bar span{background:var(--danger);}
+  #tab-gestao .gp-numero{padding:18px;}
+  #tab-gestao .gp-numero .valor{color:var(--gp-navy2);}
+  #tab-gestao .gp-numero.neg .valor{color:var(--danger);}
+  #tab-gestao .gp-dia.neg .gp-dia-tot b.neg{color:var(--danger);}
+  #tab-gestao .gp-dia-tot b.ent, #tab-gestao .gp-dia-it.ent .v, #tab-gestao .gp-dia-it.ent .seta, #tab-gestao .gp-alivio, #tab-gestao .gp-prev td.sobra, #tab-gestao .gp-row .d small b.folha{color:var(--ok);}
+  #tab-gestao .gp-prev tr.neg td.sobra, #tab-gestao b.corte, #tab-gestao .gp-q .valor.neg{color:var(--danger);}
+  #tab-gestao .gp-sub button{border:none;background:#E4E8F0;font-family:'Manrope',sans-serif;}
+  #tab-gestao .gp-sub button.on{background:var(--gp-navy);color:#fff;}
+  #tab-gestao .gp-link{color:var(--volt);}
+  #tab-gestao .gp-mes, #tab-gestao .gp-saldo-ini, #tab-gestao .gp-meta{border:1px solid var(--border);}
+  #tab-gestao .gp-alertas .ruim{background:var(--danger-bg);} #tab-gestao .gp-alertas .bom{background:var(--ok-bg);}
+  #tab-gestao .gp-hist .r{background:var(--ok);} #tab-gestao .gp-hist .e{background:#F79009;} #tab-gestao .gp-hist .d{background:var(--danger);}
+  #tab-gestao .gp-legenda .r::before{background:var(--ok);} #tab-gestao .gp-legenda .e::before{background:#F79009;} #tab-gestao .gp-legenda .d::before{background:var(--danger);}
+  #tab-gestao .gp-mini .e{background:var(--ok);} #tab-gestao .gp-mini .s{background:var(--danger);}
+  #tab-gestao .pay-switch.on{background:var(--ok);}
+  #tab-gestao .badge{font-family:'Manrope',sans-serif;text-transform:none;letter-spacing:0;font-size:.74rem;}
+  #tab-gestao .gp-fontes span{background:#F2F4F7;}
+  #tab-gestao .gp-duo{gap:12px;}
+  #tab-gestao .hint{font-size:.8rem;}
+  .gp-det summary{cursor:pointer;list-style:none;font:600 .84rem 'Manrope',sans-serif;color:var(--volt,#2F54EB);padding:4px 0;}
+  .gp-det summary::-webkit-details-marker{display:none;}
+  .gp-det summary::after{content:' ▾';}
+  .gp-det[open] summary::after{content:' ▴';}
 </style>
 </head>
 <body>
@@ -638,27 +770,17 @@
 
   <!-- GESTÃO DE PARCELAS (orçamento pessoal, separado das vendas) -->
   <section class="tabpanel" id="tab-gestao">
-    <div class="panel-head">
+    <div class="gp-topo">
       <div>
         <h2>Gestão de Parcelas</h2>
-        <p>Seu orçamento pessoal: cartões, parcelas, contas fixas, assinaturas, descontos em folha e o que você recebe. Separado das vendas, cobranças e Minhas Contas.</p>
+        <p>Seu dinheiro pessoal, separado das vendas.</p>
       </div>
-      <div class="head-btns">
-        <button class="btn ghost" onclick="baixarPlanilhaParcelas()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"></path></svg>
-          Planilha
-        </button>
-        <button class="btn ghost" onclick="importarBudget()">Ler Budget</button>
-        <button class="btn ghost" onclick="novaCompraCoopera()">+ Coopera</button>
-        <button class="btn ghost" onclick="openReceitaForm()">+ Recebimento</button>
-        <button class="btn primary" onclick="openParcelamentoForm()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
-          Conta / parcela
-        </button>
-      </div>
+      <button class="btn primary gp-add" onclick="abrirMenuAdicionarGp()" aria-label="Adicionar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+        Adicionar
+      </button>
     </div>
-    <div id="gpHero" class="gp-hero"></div>
-    <div class="gp-filtros" id="gpViews" role="tablist"></div>
+    <nav class="gp-seg" id="gpViews" role="tablist" aria-label="Seções da gestão"></nav>
     <div id="gpView"></div>
   </section>
 
@@ -2401,7 +2523,7 @@ window.saveSettings = function(){
 const GP_FORMAS = {cartao:'Cartão de crédito', debito:'Débito automático', boleto:'Boleto / Pix', folha:'Desconto em folha'};
 const GP_RECORRENCIAS = {parcelado:'Parcelado', fixo:'Fixo todo mês', periodico:'A cada X meses', unico:'Só uma vez'};
 const GP_FONTES = ['Salário','Adiantamento','Social media','Freela','13º salário','Empréstimo','Reembolso','Outro'];
-let gpAba = 'analise';
+let gpAba = 'inicio';
 let gpMostrar = 'mes';
 
 function gpPrep(){
@@ -2514,32 +2636,108 @@ function gpChipRec(it, oc){
   return 'fixo' + (it.mesFim ? ' · até '+esc(monthLabelShort(it.mesFim)) : '');
 }
 
+let gpContasModo = 'cartao';
+window.setGpContasModo = function(m){ gpContasModo = m; renderGestao(); };
+const GP_ABAS = {
+  inicio:  {nome:'Início',   icone:'<path d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z"/>'},
+  contas:  {nome:'Contas',   icone:'<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18"/>'},
+  entradas:{nome:'Entradas', icone:'<path d="M12 19V5M6 11l6-6 6 6"/>'},
+  gastos:  {nome:'Gastos',   icone:'<path d="M12 5v14M6 13l6 6 6-6"/>'},
+  analise: {nome:'Análise',  icone:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>'}
+};
+const GP_ABA_ANTIGA = {analise:'inicio', receitas:'entradas', quinzenas:'entradas', data:'contas', diaadia:'gastos', previsao:'analise'};
 function renderGestao(){
   const lista = gpPrep();
   const mes = DB.mesAtual;
   const M = gpMes(mes);
+  if (!GP_ABAS[gpAba] || (GP_ABA_ANTIGA[gpAba] && gpAba!=='analise')) { if (gpAba==='data') gpContasModo='data'; gpAba = GP_ABA_ANTIGA[gpAba] || 'inicio'; }
+  document.getElementById('gpViews').innerHTML = Object.keys(GP_ABAS).map(k=>`<button type="button" role="tab" aria-selected="${gpAba===k}" class="${gpAba===k?'on':''}" onclick="setGpAba('${k}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${GP_ABAS[k].icone}</svg><span>${GP_ABAS[k].nome}</span></button>`).join('');
+  const box = document.getElementById('gpView');
+  if (gpAba==='inicio') box.innerHTML = gpViewInicio(M, lista);
+  else if (gpAba==='contas') box.innerHTML = `<div class="gp-toggle"><button type="button" class="${gpContasModo==='cartao'?'on':''}" onclick="setGpContasModo('cartao')">Por cartão</button><button type="button" class="${gpContasModo==='data'?'on':''}" onclick="setGpContasModo('data')">Por data</button></div>` + (gpContasModo==='data' ? gpViewData(M) : gpViewContas(M, lista));
+  else if (gpAba==='entradas') box.innerHTML = gpViewReceitas(M) + `<h3 class="gp-h3">Por quinzena</h3>` + gpViewQuinzenas(M);
+  else if (gpAba==='gastos') box.innerHTML = gpViewDiaADia(M);
+  else box.innerHTML = gpViewAnalise(M, 'analise') + `<h3 class="gp-h3">Próximos 12 meses</h3>` + gpViewPrevisao(mes);
+}
+
+/* Início: uma coisa de cada vez — o número do mês, o que vence agora e no máximo 3 avisos */
+function gpViewInicio(M, lista){
+  const mes = M.ym;
+  const hoje = new Date(); const ehAtual = currentYM()===mes; const dHoje = hoje.getDate();
+  const [yy,mm] = mes.split('-').map(Number); const ultimo = new Date(yy, mm, 0).getDate();
+  const contas = M.contas.map(x=>({it:x.it, dia: Math.min(gpDia(x.it)||99, ultimo)}));
+  const atrasadas = ehAtual ? contas.filter(c=>c.dia<dHoje && !gpPago(c.it, mes)) : [];
+  const proximas = contas.filter(c=>!gpPago(c.it, mes) && c.dia<99 && (ehAtual ? (c.dia>=dHoje && c.dia<=dHoje+7) : true)).sort((a,b)=>a.dia-b.dia);
+  const semDia = contas.filter(c=>c.dia===99).length;
+  // agrupa por cartão + dia: uma linha por fatura, menos coisa para ler
+  const agrupar = arr => { const g = {}; arr.forEach(c=>{ const k = c.it.grupo+'|'+c.dia; (g[k]=g[k]||{grupo:c.it.grupo, dia:c.dia, itens:[]}).itens.push(c.it); }); return Object.values(g).sort((a,b)=>a.dia-b.dia); };
+  const linha = g => {
+    const tot = round2(g.itens.reduce((t,it)=>t+it.valor,0));
+    const pago = g.itens.every(it=>gpPago(it, mes));
+    const titulo = g.itens.length===1 ? g.itens[0].descricao : g.grupo;
+    const sub = g.itens.length===1 ? `${g.grupo} · dia ${g.dia<99?g.dia:'?'}` : `dia ${g.dia<99?g.dia:'?'} · ${g.itens.length} itens`;
+    return `<div class="gp-item"><button type="button" class="gp-check ${pago?'on':''}" title="Marcar como pago" aria-label="Marcar ${esc(titulo)} como pago" data-ids="${g.itens.map(it=>it.id).join(',')}" onclick="toggleItensGpPago(this.dataset.ids)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></button>
+      <div class="d"><b>${esc(titulo)}</b><span>${esc(sub)}</span></div><div class="v">${brl(tot)}</div></div>`;
+  };
+  // avisos (no máximo 3)
+  const avisos = [];
+  if (atrasadas.length) avisos.push({t:'ruim', m:`${atrasadas.length} conta(s) vencida(s) sem marcar como paga.`});
+  const P = gpPlanoDoMes(M);
+  const estouradas = M.porCat.filter(x=>Number(x.c.limite) && x.gasto>x.c.limite);
+  if (estouradas.length) avisos.push({t:'ruim', m:`Passou do limite em ${estouradas.map(x=>esc(x.c.nome)).join(', ')}.`});
+  const totalGasto = round2(M.gastosMes.reduce((t,g)=>t+g.valor,0));
+  if (!M.receitas.length) avisos.push({t:'atencao', m:'Cadastre o que você recebe em Entradas.'});
+  if (semDia) avisos.push({t:'atencao', m:`${semDia} conta(s) sem dia de vencimento.`});
   let saldoDevedor = 0, fim = '';
   lista.forEach(it=>{ saldoDevedor += gpSaldo(it); if (it.recorrencia==='parcelado' && gpSaldo(it)>0 && gpUltimo(it)>fim) fim = gpUltimo(it); });
-  const mesNome = MONTH_NAMES[Number(mes.slice(5,7))-1];
-  document.getElementById('gpHero').innerHTML = `
-    <div><div class="label">Entradas de ${esc(mesNome)}</div><div class="value">${brl(M.entradas)}</div><div class="sub">${M.receitas.length?M.receitas.length+' recebimento(s)':'cadastre em Recebimentos'}</div></div>
-    <div><div class="label">Descontos em folha</div><div class="value">${brl(M.totFolha)}</div><div class="sub">academia, Coopera…</div></div>
-    <div><div class="label">Contas do mês</div><div class="value">${brl(M.saidas)}</div><div class="sub">já pago ${brl(M.pago)}</div></div>
-    <div><div class="label">Dia a dia</div><div class="value">${brl(M.totDia)}</div><div class="sub">${M.porCat.some(x=>x.c.limite)?'gasto '+brl(round2(M.gastosMes.reduce((t,g)=>t+g.valor,0)))+' até agora':'defina os limites em Dia a dia'}</div></div>
-    <div class="${M.sobra<0?'negativo':'destaque'}"><div class="label">${M.sobra<0?'Falta no mês':'Sobra no mês'}</div><div class="value">${brl(Math.abs(M.sobra))}</div><div class="sub">entradas − folha − contas − dia a dia</div></div>
-    <div><div class="label">Saldo devedor parcelado</div><div class="value">${brl(round2(saldoDevedor))}</div><div class="sub">${fim?'livre de parcelas em '+esc(monthLabelShort(ymAdd(fim,1))):'nenhuma parcela em aberto'}</div></div>`;
-
-  const abas = {analise:'Painel do mês', contas:'Contas do mês', data:'Por data', quinzenas:'Quinzenas', receitas:'Recebimentos e descontos', diaadia:'Dia a dia', previsao:'Previsão 12 meses'};
-  document.getElementById('gpViews').innerHTML = Object.keys(abas).map(k=>`<button type="button" role="tab" aria-selected="${gpAba===k}" class="${gpAba===k?'on':''}" onclick="setGpAba('${k}')">${abas[k]}</button>`).join('');
-  const box = document.getElementById('gpView');
-  if (gpAba==='receitas') box.innerHTML = gpViewReceitas(M);
-  else if (gpAba==='data') box.innerHTML = gpViewData(M);
-  else if (gpAba==='diaadia') box.innerHTML = gpViewDiaADia(M);
-  else if (gpAba==='analise') box.innerHTML = gpViewAnalise(M);
-  else if (gpAba==='quinzenas') box.innerHTML = gpViewQuinzenas(M);
-  else if (gpAba==='previsao') box.innerHTML = gpViewPrevisao(mes);
-  else box.innerHTML = gpViewContas(M, lista);
+  const nomeMes = MONTH_NAMES[mm-1];
+  const ok = P.disponivel>0;
+  const semanas = ultimo/7;
+  return `
+    <section class="gp-hero2 ${ok?'':'neg'}">
+      <span class="eti">${ok?`Para gastar em ${esc(nomeMes)}`:`Falta em ${esc(nomeMes)}`}</span>
+      <div class="num">${brl(Math.abs(P.disponivel))}</div>
+      <span class="sub">${ok?`${brl(round2(P.disponivel/semanas))} por semana · ${brl(round2(P.disponivel/ultimo))} por dia`:'antes de comida, bebida e Uber'}</span>
+      ${totalGasto&&ok?`<div class="barra"><span style="width:${Math.min(100,Math.round(100*totalGasto/P.disponivel))}%"></span></div><span class="sub">Já usou ${brl(totalGasto)} · resta ${brl(Math.max(0,round2(P.disponivel-totalGasto)))}</span>`:''}
+      <button type="button" class="gp-link-claro" onclick="setGpAba('analise')">Ver como chegamos nesse número</button>
+    </section>
+    <div class="gp-mini3">
+      <div><span>Entra</span><b class="pos">${brl(round2(P.entra))}</b></div>
+      <div><span>Sai</span><b>${brl(round2(M.saidas+M.totFolha))}</b></div>
+      <div><span>Livre de parcelas</span><b>${fim?esc(monthLabelShort(ymAdd(fim,1))):'—'}</b></div>
+    </div>
+    ${avisos.length?`<div class="gp-avisos">${avisos.slice(0,3).map(a=>`<div class="${a.t}">${a.m}</div>`).join('')}</div>`:''}
+    ${atrasadas.length?`<h3 class="gp-h3 ruim">Vencidas</h3><div class="gp-bloco">${agrupar(atrasadas).map(linha).join('')}</div>`:''}
+    <h3 class="gp-h3">${ehAtual?'Vence nos próximos 7 dias':'Primeiros vencimentos de '+esc(nomeMes)}</h3>
+    <div class="gp-bloco">${proximas.length?agrupar(proximas).slice(0,6).map(linha).join(''):'<p class="gp-calmo">Nada para pagar agora. 🎉</p>'}</div>
+    <div class="gp-atalhos">
+      <button type="button" onclick="openGastoForm()"><b>+</b>Lançar gasto</button>
+      <button type="button" onclick="novaCompraCoopera()"><b>+</b>Compra Coopera</button>
+      <button type="button" onclick="setGpAba('contas')"><b>→</b>Todas as contas</button>
+    </div>
+    ${P.aperto || ok ? `<h3 class="gp-h3">Quanto separar</h3>${gpBlocoDivisao(M, P)}` : ''}`;
 }
+function gpBlocoDivisao(M, P){
+  const [yy,mm] = M.ym.split('-').map(Number); const semanas = new Date(yy, mm, 0).getDate()/7;
+  return `<div class="gp-bloco">
+    ${P.aperto && P.faltaComMinimo>0?`<div class="gp-avisos" style="margin:0 0 8px"><div class="ruim">Mês apertado: mesmo só com o essencial, faltam ${brl(P.faltaComMinimo)}.</div></div>`:''}
+    ${P.plano.map(p=>`<div class="gp-item"><div class="d"><b>${esc(p.c.nome)}</b><span>${p.limite?brl(round2(p.limite/semanas))+' por semana':'R$ 0 neste mês'}${p.media?' · média '+brl(p.media):''}</span></div><div class="v">${brl(p.limite)}</div></div>`).join('')}
+    <button type="button" class="btn primary gp-cheio" onclick="aplicarPlanoGp()">Usar esses limites</button>
+  </div>`;
+}
+window.abrirMenuAdicionarGp = function(){
+  const op = (fn, titulo, sub, ic) => `<button type="button" class="gp-op" onclick="closeModal(); ${fn}"><span class="ic">${ic}</span><span><b>${titulo}</b><small>${sub}</small></span></button>`;
+  openModal(`
+    <div class="modal-head"><h3>Adicionar</h3><button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div>
+    <div class="gp-ops">
+      ${op('openGastoForm()','Gasto do dia a dia','comida, bebida, Uber…','💸')}
+      ${op('openParcelamentoForm()','Conta ou parcela','cartão, assinatura, boleto','🧾')}
+      ${op('novaCompraCoopera()','Compra na Coopera','descontada do salário','🛒')}
+      ${op('openReceitaForm()','Recebimento','salário, social media, freela','💰')}
+      ${op('importarBudget()','Ler planilha do Budget','atualiza a análise do mês','📊')}
+      ${op('baixarPlanilhaParcelas()','Baixar planilha','tudo em Excel','⬇️')}
+    </div>`);
+};
 
 function gpViewContas(M, lista){
   const mes = M.ym;
@@ -2571,12 +2769,12 @@ function gpViewContas(M, lista){
           <div class="onde">${esc(formaGrupo||'')}${formaGrupo?' · ':''}${cfg.dia?'vence dia '+cfg.dia:(semDiaNenhum && diasItens.length?'dias '+diasItens.join(', '):'<button type="button" class="gp-link" data-grupo="'+esc(nome)+'" onclick="editarGrupoGp(this.dataset.grupo)">definir dia de vencimento</button>')}</div></div>
         <div class="valor">${brl(total)}<small>no mês</small></div>
       </div>
-      <div class="gp-rows">${its.map(it=>{
+      <details class="gp-det"><summary>${its.length} ${its.length===1?'item':'itens'}</summary><div class="gp-rows">${its.map(it=>{
         const oc = ocMap.get(it.id);
         return `<button type="button" class="gp-row ${oc?'':'fora'}" onclick="openParcelamentoForm('${it.id}')">
           <span class="d">${esc(it.descricao)}<small>${gpChipRec(it, oc)}${it.dia&&it.dia!==cfg.dia?' · dia '+it.dia:''}${it.forma==='folha'?' · <b class="folha">desconto em folha</b>':''}${it.onde?' · '+esc(it.onde):''}</small></span>
           <span class="v">${brl(it.valor)}</span></button>`;
-      }).join('')}</div>
+      }).join('')}</div></details>
       <div class="rodape">
         ${aPagar.length ? `<div class="pay-toggle">
             <button class="pay-switch ${todosPagos?'on':''}" title="${todosPagos?'Pago — toque para desmarcar':'Marcar tudo deste grupo como pago neste mês'}" data-grupo="${esc(nome)}" onclick="toggleGrupoGpPago(this.dataset.grupo)"><span class="knob"></span></button>
@@ -2685,7 +2883,7 @@ function gpViewPrevisao(mesIni){
       <td data-label="Acumulado" class="num">${l.acum<0?'−':''}${brl(Math.abs(l.acum))}</td>
       <td data-label="O que muda">${l.terminam.length?`<span class="gp-alivio">+${brl(l.alivio)} livre: ${l.terminam.map(it=>esc(it.descricao)).join(', ')} terminou</span>`:'—'}</td>
     </tr>`).join('')}</tbody></table></div>
-    <p class="hint" style="margin:10px 2px 0">Acumulado = se a sobra de cada mês ficar guardada para o mês seguinte. Entradas em verde e saídas em coral na barrinha de cada mês.</p>`;
+    <p class="hint" style="margin:10px 2px 0">Acumulado = se a sobra de cada mês ficar guardada para o mês seguinte. Na barrinha de cada mês: verde é o que entra, vermelho o que sai.</p>`;
   return resumo + tabela;
 }
 
@@ -2693,6 +2891,13 @@ function gpViewPrevisao(mesIni){
 window.setSaldoIniGp = function(v){
   const n = round2(parseFloat(String(v).replace(/\./g,'').replace(',','.'))||0);
   if (n) DB.gpSaldoIni[DB.mesAtual] = n; else delete DB.gpSaldoIni[DB.mesAtual];
+  saveDB(); renderGestao();
+};
+window.toggleItensGpPago = function(csv){
+  const ids = String(csv||'').split(',').filter(Boolean);
+  const its = gpPrep().filter(x=>ids.includes(x.id));
+  const todos = its.every(it=>gpPago(it, DB.mesAtual));
+  its.forEach(it=>{ const s=new Set(it.pagosMeses||[]); if (todos) s.delete(DB.mesAtual); else s.add(DB.mesAtual); it.pagosMeses=Array.from(s).sort(); });
   saveDB(); renderGestao();
 };
 window.toggleItemGpPago = function(id){
@@ -2823,7 +3028,7 @@ function openGastoForm(id, catId){
     const f = new FormData(e.target);
     const novo = {categoriaId: cat, valor: round2(parseFloat(f.get('valor'))||0), data: f.get('data') || hoje, obs: (f.get('obs')||'').trim()};
     if (atual) Object.assign(atual, novo); else DB.gpGastos.push(Object.assign({id:uid()}, novo));
-    saveDB(); closeModal(); gpAba='diaadia'; renderGestao(); toast('Gasto lançado.');
+    saveDB(); closeModal(); renderGestao(); toast('Gasto lançado.');
   });
 }
 window.openGastoForm = openGastoForm;
@@ -2851,7 +3056,7 @@ window.salvarLimitesGp = function(){
     return {id: el.dataset.id || uid(), nome, limite: round2(parseFloat(el.querySelector('[name=limite]').value)||0), regras: ant ? ant.regras : [nome]};
   }).filter(c=>c.nome);
   DB.gpCategorias = novas;
-  saveDB(); closeModal(); gpAba='diaadia'; renderGestao(); toast('Limites salvos.');
+  saveDB(); closeModal(); gpAba='gastos'; renderGestao(); toast('Limites salvos.');
 };
 
 /* ===================== LEITOR DO BUDGET (.xlsx) + PAINEL DO MÊS ===================== */
@@ -3006,7 +3211,7 @@ window.aplicarPlanoGp = function(){
   P.plano.forEach(p=>{ const c = DB.gpCategorias.find(x=>x.id===p.c.id); if (c) c.limite = p.limite; });
   saveDB(); renderGestao(); toast('Limites do dia a dia atualizados.');
 };
-function gpViewAnalise(M){
+function gpViewAnalise(M, parte){
   const ym = M.ym, B = DB.gpBudget;
   const [yy,mm] = ym.split('-').map(Number);
   const diasMes = new Date(yy, mm, 0).getDate();
@@ -3041,7 +3246,7 @@ function gpViewAnalise(M){
     ${P.sobraExtra>0?`<p class="hint" style="margin:0">Ainda sobram ${brl(P.sobraExtra)} além da sua média: dá para guardar.</p>`:''}
     <div class="rodape"><span class="hint">Os limites viram a meta da aba Dia a dia.</span><button class="btn sm primary" onclick="aplicarPlanoGp()">Usar esses limites</button></div>
   </div>` : `<div class="gp-card"><div class="nome">O que fazer neste mês</div><p style="margin:0;font-size:.9rem">Com as contas de ${esc(nomeMes)}, não sobra dinheiro para o dia a dia. Para não pegar empréstimo, você precisaria de <b>${brl(Math.abs(P.disponivel))}</b> a mais só para as contas, mais o que gastar com comida e transporte (sua média: <b>${brl(P.somaBase)}</b>/mês). Veja abaixo onde dá para cortar e a aba Previsão para o mês em que desaperta.</p></div>`;
-  if (!B) return importar + numero + divisao + `<div class="gp-vazio" style="margin-top:12px"><b>Importe a planilha do Budget</b> para eu mostrar onde você passou do limite e onde dá para economizar.<br><span class="hint">No app Budget: exportar → Excel (.xlsx). Depois toque em "Importar planilha do Budget" aqui em cima. Todo mês, é só importar de novo.</span></div>`;
+  if (!B) return `<h3 class="gp-h3">Como chegamos no número</h3>` + numero + importar + `<div class="gp-vazio" style="margin-top:12px"><b>Leia a planilha do Budget</b> para ver onde você passou e onde dá para economizar.<br><span class="hint">No Budget: exportar → Excel. Depois toque no botão acima.</span></div>`;
   // 3. onde falhou: último mês fechado com dados
   const ultimoFechado = gpUltimoFechado();
   const mf = ymDiff(ym, ultimoFechado) > 0 ? ultimoFechado : ymAdd(ym, -1);
@@ -3082,7 +3287,7 @@ function gpViewAnalise(M){
       <small>${esc(monthLabelShort(h.m))}</small></div>`; }).join('')}</div>
     <div class="gp-legenda"><span class="r">recebeu</span><span class="e">empréstimo</span><span class="d">gastou</span></div>
   </div>`;
-  return importar + numero + `<div class="gp-duo" style="margin-top:12px">${divisao}${falhou}</div><div class="gp-duo" style="margin-top:12px">${melhorar}${historico}</div>`;
+  return `<h3 class="gp-h3">Como chegamos no número</h3>` + numero + `<h3 class="gp-h3">O que aprender com ${esc(monthLabel(mf))}</h3>` + importar + `<div class="gp-duo">${falhou}${melhorar}</div><div style="margin-top:12px">${historico}</div>`;
 }
 
 window.toggleGrupoGpPago = function(nome){
@@ -3293,7 +3498,7 @@ function openReceitaForm(id){
       descontaFolha: !!f.get('descontaFolha'), obs: (f.get('obs')||'').trim()
     };
     if (atual) Object.assign(atual, novo); else DB.receitas.push(Object.assign({id:uid(), recebidoMeses:[]}, novo));
-    saveDB(); closeModal(); gpAba = 'receitas'; renderGestao(); toast('Recebimento salvo.');
+    saveDB(); closeModal(); gpAba = 'entradas'; renderGestao(); toast('Recebimento salvo.');
   });
 }
 window.openReceitaForm = openReceitaForm;
@@ -3369,9 +3574,9 @@ function gpImportarDoLink(){
   openModal(`
     <div class="modal-head"><h3>Adicionar à Gestão de Parcelas</h3><button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div>
     ${novas.length||novasRec.length||ajustes.length||gruposMudam.length ? `
-      <div class="lista-resumo"><b>${novas.length} conta(s)</b>${novasRec.length?` e <b>${novasRec.length} recebimento(s)</b>`:''} novo(s)${ajustes.length||gruposMudam.length?` · <b>${ajustes.length+gruposMudam.length} ajuste(s)</b> de vencimento`:''}. Valores de ${esc(monthLabel(ref))}:</div>
+      <div class="lista-resumo"><b>${novas.length} conta(s)</b>${novasRec.length?` e <b>${novasRec.length} recebimento(s)</b>`:''} novo(s)${ajustes.length||gruposMudam.length?` · <b>${ajustes.length+gruposMudam.length} ajuste(s)</b>`:''}. Valores de ${esc(monthLabel(ref))}:</div>
       ${gruposMudam.map(g=>`<div class="lista-item"><div><b>${esc(g)}</b> · <span class="hint">vence todo dia</span></div><div class="val">dia ${pacote.gruposSet[g].dia}</div></div>`).join('')}
-      ${ajustes.map(x=>`<div class="lista-item"><div>${esc(x.it.descricao)} · <span class="hint">${esc(x.it.grupo)}</span></div><div class="val">${x.a.set.dia?'dia '+x.a.set.dia:'ajuste'}</div></div>`).join('')}
+      ${ajustes.map(x=>`<div class="lista-item"><div>${esc(x.it.descricao)} · <span class="hint">${esc(x.it.grupo)}</span></div><div class="val">${[x.a.set.valor!=null?brl(x.a.set.valor):'', x.a.set.dia?'dia '+x.a.set.dia:''].filter(Boolean).join(' · ')||'ajuste'}</div></div>`).join('')}
       ${Object.keys(porGrupo).map(g=>`<div class="lista-item"><div><b>${esc(g)}</b> · ${porGrupo[g].n} conta(s)</div><div class="val">${brl(porGrupo[g].t)}</div></div>`).join('')}
       ${novas.length?`<div class="lista-item"><div><b>Contas de ${esc(monthLabel(ref))}</b></div><div class="val">${brl(round2(Object.values(porGrupo).reduce((t,g)=>t+g.t,0)))}</div></div>`:''}
       ${novasRec.map(r=>`<div class="lista-item"><div>${esc(r.descricao||r.fonte)} · <span class="hint">${esc(r.fonte)} · dia ${r.dia||'—'}</span></div><div class="val">${brl(r.valor)}</div></div>`).join('')}
