@@ -346,6 +346,33 @@
   .gp-cat.estourou{border-left-color:var(--gp-coral,#e8603c);} .gp-cat.estourou .gp-bar span{background:var(--gp-coral,#e8603c);}
   .gp-lim{display:grid;grid-template-columns:1fr 120px auto;gap:8px;margin-bottom:8px;}
   .gp-lim input{padding:9px 11px;border:1.5px solid var(--border);border-radius:10px;font:inherit;font-size:.9rem;min-width:0;}
+  .gp-numero{background:#fff;border:2px solid #0f766e;border-radius:22px;padding:20px clamp(16px,3vw,26px);margin-bottom:4px;}
+  .gp-numero.neg{border-color:var(--gp-coral,#e8603c);}
+  .gp-numero .frase{font-size:1rem;color:var(--ink-60);}
+  .gp-numero .valor{font-family:'Unbounded',sans-serif;font-weight:800;font-size:clamp(2rem,7vw,3rem);color:#0f766e;letter-spacing:-.03em;line-height:1.1;margin:4px 0;}
+  .gp-numero.neg .valor{color:var(--gp-coral,#e8603c);}
+  .gp-numero .sub{font-size:.9rem;color:var(--ink-60);}
+  .gp-numero .conta{display:grid;grid-template-columns:1fr auto;gap:6px 14px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);font-size:.86rem;align-items:center;}
+  .gp-numero .conta b{font-family:'JetBrains Mono',monospace;text-align:right;}
+  .gp-numero .conta span:nth-last-child(2), .gp-numero .conta b:last-child{border-top:1px solid var(--border);padding-top:6px;}
+  .gp-numero .conta small{color:var(--ink-45);font-size:.74rem;}
+  .gp-meta{width:90px;padding:4px 8px;border:1.5px solid var(--border);border-radius:8px;font-family:'JetBrains Mono',monospace;margin-left:6px;}
+  b.corte{color:var(--gp-coral,#e8603c);}
+  .gp-alertas{display:flex;flex-direction:column;gap:6px;}
+  .gp-alertas div{font-size:.86rem;padding:8px 10px;border-radius:10px;}
+  .gp-alertas .ruim{background:var(--gp-coral-bg,rgba(232,96,60,.12));}
+  .gp-alertas .bom{background:var(--info-bg);}
+  .gp-alertas small{color:var(--ink-60);}
+  .gp-hist{display:flex;gap:6px;align-items:flex-end;height:150px;overflow-x:auto;padding-bottom:2px;}
+  .gp-hist .col{flex:1;min-width:26px;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;}
+  .gp-hist .barras{flex:1;width:100%;display:flex;align-items:flex-end;justify-content:center;gap:2px;}
+  .gp-hist .barras span{width:7px;border-radius:3px 3px 0 0;display:block;}
+  .gp-hist .r{background:#0f766e;} .gp-hist .e{background:#e0a030;} .gp-hist .d{background:var(--gp-coral,#e8603c);}
+  .gp-hist small{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--ink-45);}
+  .gp-hist .col.neg small{color:var(--gp-coral,#e8603c);font-weight:700;}
+  .gp-legenda{display:flex;gap:12px;font-size:.74rem;color:var(--ink-60);}
+  .gp-legenda span::before{content:'';display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:-1px;}
+  .gp-legenda .r::before{background:#0f766e;} .gp-legenda .e::before{background:#e0a030;} .gp-legenda .d::before{background:var(--gp-coral,#e8603c);}
   .gp-alivio{font-size:.76rem;color:#0f766e;font-weight:700;}
   .gp-vazio{background:#fff;border:1.5px dashed var(--border);border-radius:18px;padding:34px 20px;text-align:center;color:var(--ink-60);}
 
@@ -621,6 +648,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"></path></svg>
           Planilha
         </button>
+        <button class="btn ghost" onclick="importarBudget()">Ler Budget</button>
         <button class="btn ghost" onclick="novaCompraCoopera()">+ Coopera</button>
         <button class="btn ghost" onclick="openReceitaForm()">+ Recebimento</button>
         <button class="btn primary" onclick="openParcelamentoForm()">
@@ -917,7 +945,7 @@ function planilhaSheetRows(wb, nomes){
 function cell(row, ...chaves){ for(const c of chaves){ if(row[c]!==undefined && row[c]!=='') return row[c]; } return ''; }
 
 function importarPlanilha(wb){
-  const novo = { clientes:[], compras:[], pagamentos:[], contas:[], produtos: SEED_PRODUTOS.slice(), mesAtual: DB.mesAtual, pixKey: DB.pixKey, diasVencimento: DB.diasVencimento, modelosMensagem: DB.modelosMensagem, recados: DB.recados, parcelamentos: DB.parcelamentos||[], receitas: DB.receitas||[], gpGrupos: DB.gpGrupos||{}, gpCategorias: DB.gpCategorias, gpGastos: DB.gpGastos||[], gpSaldoIni: DB.gpSaldoIni||{} };
+  const novo = { clientes:[], compras:[], pagamentos:[], contas:[], produtos: SEED_PRODUTOS.slice(), mesAtual: DB.mesAtual, pixKey: DB.pixKey, diasVencimento: DB.diasVencimento, modelosMensagem: DB.modelosMensagem, recados: DB.recados, parcelamentos: DB.parcelamentos||[], receitas: DB.receitas||[], gpGrupos: DB.gpGrupos||{}, gpCategorias: DB.gpCategorias, gpGastos: DB.gpGastos||[], gpSaldoIni: DB.gpSaldoIni||{}, gpBudget: DB.gpBudget, gpMetaGuardar: DB.gpMetaGuardar, gpIncluirVendas: DB.gpIncluirVendas };
   function clienteIdPorNome(nomeRaw){
     const nome = String(nomeRaw||'').trim(); if(!nome) return null;
     let c = novo.clientes.find(x=>normNome(x.nome)===normNome(nome));
@@ -2258,12 +2286,12 @@ function aplicarImportJson(texto){
     if(!data || typeof data!=='object') throw new Error('formato inválido');
     if(!confirm('Importar vai substituir todos os dados atuais deste navegador. Continuar?')) return;
     const parcelamentosAtuais = DB.parcelamentos||[], receitasAtuais = DB.receitas||[], gruposAtuais = DB.gpGrupos||{};
-    const atuaisGp = {gpCategorias: DB.gpCategorias, gpGastos: DB.gpGastos, gpSaldoIni: DB.gpSaldoIni};
+    const atuaisGp = {gpCategorias: DB.gpCategorias, gpGastos: DB.gpGastos, gpSaldoIni: DB.gpSaldoIni, gpBudget: DB.gpBudget, gpMetaGuardar: DB.gpMetaGuardar, gpIncluirVendas: DB.gpIncluirVendas};
     DB = Object.assign({ compras:[], contas:[], pagamentos:[], clientes:[], produtos: SEED_PRODUTOS.slice(), mesAtual: currentYM(), pixKey:'', diasVencimento:5 }, data);
     if (!Array.isArray(data.parcelamentos)) DB.parcelamentos = parcelamentosAtuais;
     if (!Array.isArray(data.receitas)) DB.receitas = receitasAtuais;
     if (!data.gpGrupos) DB.gpGrupos = gruposAtuais;
-    ['gpCategorias','gpGastos','gpSaldoIni'].forEach(k=>{ if (data[k]===undefined) DB[k] = atuaisGp[k]; });
+    ['gpCategorias','gpGastos','gpSaldoIni','gpBudget','gpMetaGuardar','gpIncluirVendas'].forEach(k=>{ if (data[k]===undefined) DB[k] = atuaisGp[k]; });
     saveDB(); closeModal(); renderAll(); toast('Dados importados com sucesso.');
   }catch(err){ toast('Não deu para importar: ' + err.message); }
 }
@@ -2373,7 +2401,7 @@ window.saveSettings = function(){
 const GP_FORMAS = {cartao:'Cartão de crédito', debito:'Débito automático', boleto:'Boleto / Pix', folha:'Desconto em folha'};
 const GP_RECORRENCIAS = {parcelado:'Parcelado', fixo:'Fixo todo mês', periodico:'A cada X meses', unico:'Só uma vez'};
 const GP_FONTES = ['Salário','Adiantamento','Social media','Freela','13º salário','Empréstimo','Reembolso','Outro'];
-let gpAba = 'contas';
+let gpAba = 'analise';
 let gpMostrar = 'mes';
 
 function gpPrep(){
@@ -2382,6 +2410,8 @@ function gpPrep(){
   if (!DB.gpGrupos || typeof DB.gpGrupos!=='object') DB.gpGrupos = {};
   if (!Array.isArray(DB.gpCategorias)) DB.gpCategorias = [{id:'cat-comida',nome:'Comida',limite:0},{id:'cat-bebida',nome:'Bebida',limite:0},{id:'cat-uber',nome:'Uber',limite:0}];
   if (!Array.isArray(DB.gpGastos)) DB.gpGastos = [];
+  const regrasPadrao = {'cat-comida':['Comida & Bebida','!Comida & Bebida/Álcool'], 'cat-bebida':['Comida & Bebida/Álcool'], 'cat-uber':['Transporte']};
+  DB.gpCategorias.forEach(c=>{ if (!Array.isArray(c.regras)) c.regras = regrasPadrao[c.id] ? regrasPadrao[c.id].slice() : [c.nome]; });
   if (!DB.gpSaldoIni || typeof DB.gpSaldoIni!=='object') DB.gpSaldoIni = {};
   let mudou = false;
   DB.parcelamentos.forEach(p=>{
@@ -2463,12 +2493,12 @@ function gpMes(ym){
     return {q, sal, bruto, desc, liquido: round2(bruto-desc)};
   }).filter(Boolean);
   // dia a dia (comida, bebida, Uber…): conta o limite do mês, ou o que já foi gasto se passou do limite
-  const gastosMes = DB.gpGastos.filter(g=>String(g.data||'').slice(0,7)===ym);
+  const gastosMes = gpGastosDoMes(ym);
   const porCat = DB.gpCategorias.map(c=>{
     const gasto = round2(gastosMes.filter(g=>g.categoriaId===c.id).reduce((t,g)=>t+g.valor,0));
     return {c, gasto, previsto: round2(Math.max(Number(c.limite)||0, gasto))};
   });
-  const semCat = round2(gastosMes.filter(g=>!DB.gpCategorias.some(c=>c.id===g.categoriaId)).reduce((t,g)=>t+g.valor,0));
+  const semCat = 0;
   const totDia = round2(porCat.reduce((t,x)=>t+x.previsto,0) + semCat);
   quinz[1].dia = round2(totDia/2); quinz[2].dia = round2(totDia - quinz[1].dia); quinz[0].dia = 0;
   return {ym, itens, contas, folha, receitas, entradas, totFolha, saidas, pago, totDia, porCat, gastosMes, sobra: round2(entradas-totFolha-saidas-totDia), quinz, qFolha, qDoDesconto, salario, salarios, liquidos};
@@ -2499,12 +2529,13 @@ function renderGestao(){
     <div class="${M.sobra<0?'negativo':'destaque'}"><div class="label">${M.sobra<0?'Falta no mês':'Sobra no mês'}</div><div class="value">${brl(Math.abs(M.sobra))}</div><div class="sub">entradas − folha − contas − dia a dia</div></div>
     <div><div class="label">Saldo devedor parcelado</div><div class="value">${brl(round2(saldoDevedor))}</div><div class="sub">${fim?'livre de parcelas em '+esc(monthLabelShort(ymAdd(fim,1))):'nenhuma parcela em aberto'}</div></div>`;
 
-  const abas = {contas:'Contas do mês', data:'Por data', quinzenas:'Quinzenas', receitas:'Recebimentos e descontos', diaadia:'Dia a dia', previsao:'Previsão 12 meses'};
+  const abas = {analise:'Painel do mês', contas:'Contas do mês', data:'Por data', quinzenas:'Quinzenas', receitas:'Recebimentos e descontos', diaadia:'Dia a dia', previsao:'Previsão 12 meses'};
   document.getElementById('gpViews').innerHTML = Object.keys(abas).map(k=>`<button type="button" role="tab" aria-selected="${gpAba===k}" class="${gpAba===k?'on':''}" onclick="setGpAba('${k}')">${abas[k]}</button>`).join('');
   const box = document.getElementById('gpView');
   if (gpAba==='receitas') box.innerHTML = gpViewReceitas(M);
   else if (gpAba==='data') box.innerHTML = gpViewData(M);
   else if (gpAba==='diaadia') box.innerHTML = gpViewDiaADia(M);
+  else if (gpAba==='analise') box.innerHTML = gpViewAnalise(M);
   else if (gpAba==='quinzenas') box.innerHTML = gpViewQuinzenas(M);
   else if (gpAba==='previsao') box.innerHTML = gpViewPrevisao(mes);
   else box.innerHTML = gpViewContas(M, lista);
@@ -2750,7 +2781,7 @@ function gpViewDiaADia(M){
         <div class="valor">${brl(gasto)}<small>gasto no mês</small></div></div>
       ${lim?`<div class="gp-bar"><span style="width:${pct}%"></span></div>
       <div class="gp-info"><div>${resta>=0?'Ainda pode gastar':'Passou do limite'}<br><b>${brl(Math.abs(resta))}</b></div><div>${diasRest>0&&resta>0?'Por dia até o fim do mês':'Usado'}<br><b>${diasRest>0&&resta>0?brl(porDia):pct+'%'}</b></div></div>`:`<p class="hint" style="margin:0">Defina um limite para acompanhar.</p>`}
-      ${ult.length?`<div class="gp-rows">${ult.map(g=>`<button type="button" class="gp-row" onclick="openGastoForm('${g.id}')"><span class="d">${esc(g.obs||c.nome)}<small>${fmtDateObj(new Date(g.data+'T12:00:00'))}</small></span><span class="v">${brl(g.valor)}</span></button>`).join('')}</div>`:''}
+      ${ult.length?`<div class="gp-rows">${ult.map(g=>`<button type="button" class="gp-row" ${g.id?`onclick="openGastoForm('${g.id}')"`:'disabled'}><span class="d">${esc(g.obs||c.nome)}<small>${fmtDateObj(new Date(g.data+'T12:00:00'))}${g.budget?' · do Budget':''}</small></span><span class="v">${brl(g.valor)}</span></button>`).join('')}</div>`:''}
       <div class="rodape"><span class="hint">${M.gastosMes.filter(g=>g.categoriaId===c.id).length} lançamento(s)</span><button class="btn sm primary" data-cat="${esc(c.id)}" onclick="openGastoForm(null, this.dataset.cat)">+ Gasto</button></div>
     </div>`;
   }).join('');
@@ -2814,14 +2845,245 @@ window.openLimitesGp = function(){
     </div>`);
 };
 window.salvarLimitesGp = function(){
-  const novas = Array.from(document.querySelectorAll('#gpLimites .gp-lim')).map(el=>({
-    id: el.dataset.id || uid(),
-    nome: (el.querySelector('[name=nome]').value||'').trim(),
-    limite: round2(parseFloat(el.querySelector('[name=limite]').value)||0)
-  })).filter(c=>c.nome);
+  const novas = Array.from(document.querySelectorAll('#gpLimites .gp-lim')).map(el=>{
+    const ant = DB.gpCategorias.find(c=>c.id===el.dataset.id);
+    const nome = (el.querySelector('[name=nome]').value||'').trim();
+    return {id: el.dataset.id || uid(), nome, limite: round2(parseFloat(el.querySelector('[name=limite]').value)||0), regras: ant ? ant.regras : [nome]};
+  }).filter(c=>c.nome);
   DB.gpCategorias = novas;
   saveDB(); closeModal(); gpAba='diaadia'; renderGestao(); toast('Limites salvos.');
 };
+
+/* ===================== LEITOR DO BUDGET (.xlsx) + PAINEL DO MÊS ===================== */
+const GP_TIPO_BUDGET_PADRAO = {
+  'comida & bebida':'dia','transporte':'dia','compras':'dia','diversos & presente':'dia','shows e eventos':'dia','cigarro':'dia',
+  'cuidados':'dia','viagens':'dia','carro':'dia','pet':'dia','tatuagem':'dia','❤️‍🩹':'dia'
+};
+function gpNormCat(s){ return normNome(s).replace(/\s+/g,' '); }
+function gpRegraBate(regra, cat, sub){
+  const [rc, rs] = String(regra).replace(/^!/,'').split('/');
+  if (gpNormCat(rc)!==gpNormCat(cat)) return false;
+  return rs===undefined || gpNormCat(rs)===gpNormCat(sub||'');
+}
+function gpCategoriaDoRegistro(cat, sub){
+  for (const c of DB.gpCategorias){
+    const regras = c.regras||[];
+    if (regras.some(r=>r.startsWith('!') && gpRegraBate(r, cat, sub))) continue;
+    if (regras.some(r=>!r.startsWith('!') && gpRegraBate(r, cat, sub))) return c.id;
+  }
+  return null;
+}
+/* gastos do dia a dia de um mês: Budget importado + lançados à mão depois da última data do Budget */
+function gpGastosDoMes(ym){
+  const B = DB.gpBudget;
+  const out = [];
+  if (B && Array.isArray(B.regs)){
+    B.regs.forEach(r=>{
+      if (r[1]!=='d' || r[0].slice(0,7)!==ym) return;
+      const cid = gpCategoriaDoRegistro(r[2], r[3]);
+      if (cid) out.push({data:r[0], categoriaId:cid, valor:r[4], obs:(r[3]||r[2]), budget:true});
+    });
+  }
+  const corte = B && B.ate ? B.ate : '';
+  DB.gpGastos.forEach(g=>{ if (String(g.data||'').slice(0,7)===ym && (!corte || g.data>corte)) out.push(g); });
+  return out;
+}
+function gpLerBudget(wb){
+  const ws = wb.Sheets['Records'];
+  if (!ws) throw new Error('não achei a aba "Records". Exporte do Budget em Excel (.xlsx).');
+  const linhas = XLSX.utils.sheet_to_json(ws, {defval:''});
+  const num = v => typeof v==='number' ? v : (parseFloat(String(v).replace(/\./g,'').replace(',','.'))||0);
+  const regs = [];
+  linhas.forEach(l=>{
+    if (l.ignore===true || l.ignore==='TRUE' || l.ignore_from_expend===true || l.ignore_from_expend==='TRUE') return;
+    const data = String(l['Data']||'').slice(0,10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) return;
+    const tipo = (l.record_type==='income' || /renda|receita/i.test(l['Transação'])) ? 'r' : 'd';
+    const valor = round2(Math.abs(l.system_amount!==''&&l.system_amount!=null ? num(l.system_amount) : num(l['Preço'])));
+    if (!valor) return;
+    regs.push([data, tipo, String(l['Categoria']||'').trim(), String(l['Subcategoria']||'').trim(), valor]);
+  });
+  if (!regs.length) throw new Error('a planilha não tem lançamentos.');
+  regs.sort((a,b)=>a[0].localeCompare(b[0]));
+  return {importadoEm: new Date().toISOString(), de: regs[0][0], ate: regs[regs.length-1][0], regs};
+}
+window.importarBudget = function(){
+  let inp = document.getElementById('gpBudgetFile');
+  if (!inp){
+    inp = document.createElement('input'); inp.type='file'; inp.id='gpBudgetFile'; inp.accept='.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'; inp.style.display='none';
+    document.body.appendChild(inp);
+    inp.addEventListener('change', e=>{
+      const file = e.target.files[0]; if(!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try{
+          const wb = XLSX.read(new Uint8Array(reader.result), {type:'array'});
+          gpAplicarBudget(gpLerBudget(wb));
+        }catch(err){ toast('Não deu para ler: ' + err.message); }
+        inp.value = '';
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  }
+  inp.click();
+};
+function gpAplicarBudget(novo){
+  gpPrep();
+  DB.gpBudget = novo;
+  // categorias extras do Budget que ainda não têm onde cair
+  const temRegra = (cat) => DB.gpCategorias.some(c=>(c.regras||[]).some(r=>!r.startsWith('!') && gpNormCat(r.split('/')[0])===gpNormCat(cat)));
+  if (!temRegra('Compras')) DB.gpCategorias.push({id:'cat-compras', nome:'Compras', limite:0, regras:['Compras']});
+  const lazer = ['Shows e Eventos','Diversos & Presente','Cigarro','Cuidados','Viagens','Carro','Pet','Tatuagem','❤️‍🩹'].filter(c=>!temRegra(c) && novo.regs.some(r=>gpNormCat(r[2])===gpNormCat(c)));
+  if (lazer.length){
+    const ex = DB.gpCategorias.find(c=>c.id==='cat-lazer');
+    if (ex) ex.regras = Array.from(new Set((ex.regras||[]).concat(lazer)));
+    else DB.gpCategorias.push({id:'cat-lazer', nome:'Lazer e outros', limite:0, regras:lazer});
+  }
+  saveDB(); gpAba='analise'; renderGestao();
+  toast(`Budget lido: ${novo.regs.length} lançamentos, de ${fmtDateObj(new Date(novo.de+'T12:00:00'))} a ${fmtDateObj(new Date(novo.ate+'T12:00:00'))}.`);
+}
+window.setMetaGuardarGp = function(v){ DB.gpMetaGuardar = Math.max(0, round2(parseFloat(String(v).replace(/\./g,'').replace(',','.'))||0)); saveDB(); renderGestao(); };
+window.setIncluirVendasGp = function(v){ DB.gpIncluirVendas = !!v; saveDB(); renderGestao(); };
+function gpVendasDoMes(ym){
+  const recebe = round2((DB.compras||[]).reduce((t,c)=>t+valorMesCompra(c, ym),0));
+  const pedidos = round2((DB.contas||[]).filter(c=>grupoDaConta(c)==='pedidos').reduce((t,c)=>t+contaCalc(c, ym).valorMes,0));
+  return {recebe, pedidos, liquido: round2(recebe-pedidos)};
+}
+function gpBudgetMes(ym){
+  const B = DB.gpBudget; const r = {renda:0, emprestimo:0, despesa:0, dia:0, porCatBudget:{}, porSub:{}};
+  if (!B) return r;
+  B.regs.forEach(x=>{
+    if (x[0].slice(0,7)!==ym) return;
+    if (x[1]==='r'){ r.renda += x[4]; if (/empr[eé]stimo/i.test(x[3])) r.emprestimo += x[4]; return; }
+    r.despesa += x[4];
+    const cid = gpCategoriaDoRegistro(x[2], x[3]);
+    if (cid){ r.dia += x[4]; const k = cid+'|'+(x[3]||x[2]); r.porSub[k] = (r.porSub[k]||0) + x[4]; }
+    r.porCatBudget[x[2]] = (r.porCatBudget[x[2]]||0) + x[4];
+  });
+  ['renda','emprestimo','despesa','dia'].forEach(k=>r[k]=round2(r[k]));
+  return r;
+}
+function gpMediaCategoria(cid, ateYm, n){
+  let soma = 0, meses = 0;
+  for (let i=1;i<=n;i++){
+    const m = ymAdd(ateYm, -i);
+    if (DB.gpBudget && m < DB.gpBudget.de.slice(0,7)) break;
+    soma += gpGastosDoMes(m).filter(g=>g.categoriaId===cid).reduce((t,g)=>t+g.valor,0); meses++;
+  }
+  return meses ? round2(soma/meses) : 0;
+}
+function gpUltimoFechado(){
+  const B = DB.gpBudget; if (!B) return null;
+  const ym = B.ate.slice(0,7), [y,m] = ym.split('-').map(Number);
+  return Number(B.ate.slice(8,10)) >= new Date(y, m, 0).getDate() ? ym : ymAdd(ym, -1);
+}
+function gpPlanoDoMes(M){
+  const ym = M.ym;
+  const vendas = gpVendasDoMes(ym);
+  const usarVendas = DB.gpIncluirVendas!==false;
+  const meta = Number(DB.gpMetaGuardar)||0;
+  const entra = round2(M.entradas + (usarVendas ? vendas.liquido : 0));
+  const disponivel = round2(entra - M.totFolha - M.saidas - meta);
+  const uf = gpUltimoFechado();
+  const refMedia = uf && ymDiff(ym, ymAdd(uf,1))>0 ? ymAdd(uf,1) : ym;
+  const base = DB.gpCategorias.map(c=>({c, media: gpMediaCategoria(c.id, refMedia, 3)}));
+  const somaBase = round2(base.reduce((t,b)=>t+b.media,0));
+  const fator = somaBase>0 ? Math.min(1, Math.max(0, disponivel)/somaBase) : 0;
+  // mês que não fecha: limites mínimos (só o essencial) e quanto falta para cobri-los
+  const aperto = disponivel - somaBase*0.35 <= 0;
+  const minimo = {'cat-comida':0.6, 'cat-uber':0.5};
+  const plano = base.map(b=>{
+    let limite;
+    if (!aperto) limite = somaBase>0 ? Math.floor(b.media*fator/5)*5 : Math.floor(disponivel/Math.max(1,base.length)/5)*5;
+    else limite = Math.floor(b.media*(minimo[b.c.id]||0)/5)*5;
+    return {c:b.c, media:b.media, limite};
+  });
+  const totalPlano = round2(plano.reduce((t,p)=>t+p.limite,0));
+  return {vendas, usarVendas, meta, entra, disponivel, plano, totalPlano, somaBase, aperto, faltaComMinimo: round2(Math.max(0, totalPlano - disponivel)), sobraExtra: round2(Math.max(0, disponivel - totalPlano))};
+}
+window.aplicarPlanoGp = function(){
+  const P = gpPlanoDoMes(gpMes(DB.mesAtual));
+  P.plano.forEach(p=>{ const c = DB.gpCategorias.find(x=>x.id===p.c.id); if (c) c.limite = p.limite; });
+  saveDB(); renderGestao(); toast('Limites do dia a dia atualizados.');
+};
+function gpViewAnalise(M){
+  const ym = M.ym, B = DB.gpBudget;
+  const [yy,mm] = ym.split('-').map(Number);
+  const diasMes = new Date(yy, mm, 0).getDate();
+  const semanas = diasMes/7;
+  const P = gpPlanoDoMes(M);
+  const nomeMes = MONTH_NAMES[mm-1];
+  const importar = `<div class="gp-sub"><button type="button" class="on" onclick="importarBudget()">${B?'Atualizar com novo Budget (.xlsx)':'Importar planilha do Budget (.xlsx)'}</button>${B?`<span class="hint" style="align-self:center">Lido em ${fmtDateObj(new Date(B.importadoEm))} · ${B.regs.length} lançamentos de ${esc(monthLabelShort(B.de.slice(0,7)))} a ${fmtDateObj(new Date(B.ate+'T12:00:00'))}</span>`:''}</div>`;
+  // 1. o número do mês
+  const ok = P.disponivel > 0;
+  const numero = `<div class="gp-numero ${ok?'':'neg'}">
+    <div class="frase">Diana, em <b>${esc(nomeMes)}</b> ${ok?'você pode gastar no dia a dia':'as contas já passam do que entra. Falta'}</div>
+    <div class="valor">${brl(Math.abs(P.disponivel))}</div>
+    ${ok?`<div class="sub">≈ <b>${brl(round2(P.disponivel/semanas))}</b> por semana · <b>${brl(round2(P.disponivel/diasMes))}</b> por dia</div>`:`<div class="sub">antes de qualquer gasto com comida, bebida ou Uber</div>`}
+    <div class="conta">
+      <span>Entra (salário, social media…)</span><b>${brl(M.entradas)}</b>
+      <span><label><input type="checkbox" ${P.usarVendas?'checked':''} onchange="setIncluirVendasGp(this.checked)"> Lucro das vendas</label> <small>clientes ${brl(P.vendas.recebe)} − pedidos ${brl(P.vendas.pedidos)}</small></span><b>${P.usarVendas?(P.vendas.liquido<0?'−':'+')+brl(Math.abs(P.vendas.liquido)):'—'}</b>
+      <span>Descontos em folha</span><b>−${brl(M.totFolha)}</b>
+      <span>Contas e parcelas do mês</span><b>−${brl(M.saidas)}</b>
+      <span>Quero guardar <input class="gp-meta" inputmode="decimal" value="${P.meta?String(P.meta).replace('.',','):''}" placeholder="0" onchange="setMetaGuardarGp(this.value)"></span><b>−${brl(P.meta)}</b>
+      <span><b>Livre para o dia a dia</b></span><b>${P.disponivel<0?'−':''}${brl(Math.abs(P.disponivel))}</b>
+    </div>
+  </div>`;
+  // 2. divisão sugerida
+  const temHist = P.somaBase>0;
+  const divisao = (ok || P.aperto) ? `<div class="gp-card">
+    <div class="topo"><div><div class="nome">${P.aperto?'Mês apertado: só o essencial':'Quanto separar para cada coisa'}</div><div class="onde">${P.aperto?'comida e transporte reduzidos, o resto zerado neste mês':(temHist?'proporcional ao seu gasto médio dos últimos 3 meses':'divisão igual (importe o Budget para usar seu histórico)')}</div></div><div class="valor">${brl(P.totalPlano)}<small>no mês</small></div></div>
+    ${P.aperto && P.faltaComMinimo>0?`<div class="gp-alertas"><div class="ruim">Mesmo só com o essencial, faltam <b>${brl(P.faltaComMinimo)}</b> em ${esc(nomeMes)}. Esse valor precisa vir de vendas extras, freela, 13º ou de cortar alguma conta, para não pegar empréstimo.</div></div>`:''}
+    <div class="gp-rows">${P.plano.map(p=>{
+      const corte = p.media>0 ? Math.round(100*(1-p.limite/p.media)) : 0;
+      return `<div class="gp-row" style="cursor:default"><span class="d">${esc(p.c.nome)}<small>${p.media?'média '+brl(p.media)+'/mês'+(corte>0?` · <b class="corte">${corte}% a menos</b>`:''):'sem histórico'}${p.limite?' · '+brl(round2(p.limite/semanas))+'/semana':''}</small></span><span class="v">${brl(p.limite)}</span></div>`;
+    }).join('')}</div>
+    ${P.sobraExtra>0?`<p class="hint" style="margin:0">Ainda sobram ${brl(P.sobraExtra)} além da sua média: dá para guardar.</p>`:''}
+    <div class="rodape"><span class="hint">Os limites viram a meta da aba Dia a dia.</span><button class="btn sm primary" onclick="aplicarPlanoGp()">Usar esses limites</button></div>
+  </div>` : `<div class="gp-card"><div class="nome">O que fazer neste mês</div><p style="margin:0;font-size:.9rem">Com as contas de ${esc(nomeMes)}, não sobra dinheiro para o dia a dia. Para não pegar empréstimo, você precisaria de <b>${brl(Math.abs(P.disponivel))}</b> a mais só para as contas, mais o que gastar com comida e transporte (sua média: <b>${brl(P.somaBase)}</b>/mês). Veja abaixo onde dá para cortar e a aba Previsão para o mês em que desaperta.</p></div>`;
+  if (!B) return importar + numero + divisao + `<div class="gp-vazio" style="margin-top:12px"><b>Importe a planilha do Budget</b> para eu mostrar onde você passou do limite e onde dá para economizar.<br><span class="hint">No app Budget: exportar → Excel (.xlsx). Depois toque em "Importar planilha do Budget" aqui em cima. Todo mês, é só importar de novo.</span></div>`;
+  // 3. onde falhou: último mês fechado com dados
+  const ultimoFechado = gpUltimoFechado();
+  const mf = ymDiff(ym, ultimoFechado) > 0 ? ultimoFechado : ymAdd(ym, -1);
+  const bf = gpBudgetMes(mf);
+  const falhas = DB.gpCategorias.map(c=>{
+    const gasto = round2(gpGastosDoMes(mf).filter(g=>g.categoriaId===c.id).reduce((t,g)=>t+g.valor,0));
+    const media = gpMediaCategoria(c.id, mf, 3);
+    const ref = Number(c.limite)||media;
+    const subs = Object.entries(bf.porSub).filter(([k])=>k.startsWith(c.id+'|')).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([k,v])=>`${esc(k.split('|')[1])} ${brl(round2(v))}`);
+    return {c, gasto, media, ref, acima: round2(gasto-ref), subs};
+  }).filter(f=>f.gasto>0).sort((a,b)=>b.acima-a.acima);
+  const semEmprestimo = round2(bf.renda - bf.emprestimo);
+  const falhou = `<div class="gp-card">
+    <div class="topo"><div><div class="nome">Onde você falhou em ${esc(monthLabel(mf))}</div><div class="onde">comparando com ${falhas.some(f=>Number(f.c.limite))?'seus limites':'a sua média dos 3 meses anteriores'}</div></div></div>
+    <div class="gp-alertas">
+      ${bf.despesa>semEmprestimo?`<div class="ruim">Você gastou <b>${brl(bf.despesa)}</b> e recebeu <b>${brl(semEmprestimo)}</b>${bf.emprestimo?` (sem contar ${brl(bf.emprestimo)} de empréstimo)`:''}: <b>${brl(round2(bf.despesa-semEmprestimo))} no vermelho</b>.</div>`:`<div class="bom">Você gastou <b>${brl(bf.despesa)}</b> e recebeu <b>${brl(semEmprestimo)}</b> sem empréstimo: fechou no azul.</div>`}
+      ${falhas.map(f=>`<div class="${f.acima>0?'ruim':'bom'}"><b>${esc(f.c.nome)}</b>: ${brl(f.gasto)} ${f.acima>0?`— <b>${brl(f.acima)} acima</b>`:'— dentro'} (${Number(f.c.limite)?'limite':'média'} ${brl(f.ref)})${f.subs.length?`<br><small>Maiores: ${f.subs.join(' · ')}</small>`:''}</div>`).join('')}
+    </div>
+  </div>`;
+  // 4. onde melhorar: maiores subcategorias de dia a dia (média de 3 meses fechados)
+  const acum = {};
+  for (let i=0;i<3;i++){ const bm = gpBudgetMes(ymAdd(mf,-i)); Object.entries(bm.porSub).forEach(([k,v])=>{ acum[k]=(acum[k]||0)+v; }); }
+  const ops = Object.entries(acum).map(([k,v])=>({cat:(DB.gpCategorias.find(c=>c.id===k.split('|')[0])||{}).nome, sub:k.split('|')[1], media: round2(v/3)})).sort((a,b)=>b.media-a.media).slice(0,6);
+  const totalEco = round2(ops.reduce((t,o)=>t+o.media*0.3,0));
+  const melhorar = `<div class="gp-card">
+    <div class="topo"><div><div class="nome">Onde dá para melhorar</div><div class="onde">seus maiores gastos do dia a dia · média de 3 meses</div></div><div class="valor">${brl(totalEco)}<small>por mês se cortar 30%</small></div></div>
+    <div class="gp-rows">${ops.map(o=>`<div class="gp-row" style="cursor:default"><span class="d">${esc(o.sub)}<small>${esc(o.cat||'')} · cortar 30% = <b class="corte">${brl(round2(o.media*0.3))}/mês</b></small></span><span class="v">${brl(o.media)}</span></div>`).join('')}</div>
+  </div>`;
+  // 5. histórico 12 meses
+  const hist = Array.from({length:12},(_,i)=>ymAdd(mf, i-11)).filter(m=>m>=B.de.slice(0,7)).map(m=>({m, b:gpBudgetMes(m)}));
+  const maxH = Math.max(1, ...hist.map(h=>Math.max(h.b.renda, h.b.despesa)));
+  const vermelhos = hist.filter(h=>h.b.despesa > h.b.renda - h.b.emprestimo).length;
+  const totEmp = round2(hist.reduce((t,h)=>t+h.b.emprestimo,0));
+  const historico = `<div class="gp-card">
+    <div class="topo"><div><div class="nome">Seus últimos ${hist.length} meses</div><div class="onde">${vermelhos} mês(es) no vermelho sem empréstimo · ${brl(totEmp)} em empréstimos</div></div></div>
+    <div class="gp-hist">${hist.map(h=>{ const semE = h.b.renda-h.b.emprestimo; return `<div class="col ${h.b.despesa>semE?'neg':''}" title="${esc(monthLabel(h.m))}: recebeu ${brl(round2(semE))} + empréstimo ${brl(h.b.emprestimo)} · gastou ${brl(h.b.despesa)} (dia a dia ${brl(h.b.dia)})">
+      <div class="barras"><span class="r" style="height:${Math.round(100*semE/maxH)}%"></span><span class="e" style="height:${Math.round(100*h.b.emprestimo/maxH)}%"></span><span class="d" style="height:${Math.round(100*h.b.despesa/maxH)}%"></span></div>
+      <small>${esc(monthLabelShort(h.m))}</small></div>`; }).join('')}</div>
+    <div class="gp-legenda"><span class="r">recebeu</span><span class="e">empréstimo</span><span class="d">gastou</span></div>
+  </div>`;
+  return importar + numero + `<div class="gp-duo" style="margin-top:12px">${divisao}${falhou}</div><div class="gp-duo" style="margin-top:12px">${melhorar}${historico}</div>`;
+}
 
 window.toggleGrupoGpPago = function(nome){
   const mes = DB.mesAtual;
