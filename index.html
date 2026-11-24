@@ -251,7 +251,7 @@
   .tab-btn.tab-gestao{border-color:rgba(15,118,110,.45);color:#0f766e;}
   .tab-btn.tab-gestao.active{background:#0f766e;border-color:#0f766e;color:#fff;}
   .gp-hero{background:linear-gradient(135deg,#0f766e 0%,#0a524d 100%);color:#fff;border-radius:22px;padding:22px clamp(18px,3vw,28px);margin-bottom:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;}
-  @media (max-width:520px){ .gp-hero{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px 12px;padding:18px 16px;} .gp-hero .value{font-size:.98rem;white-space:nowrap;} }
+  @media (max-width:520px){ .gp-hero{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px 12px;padding:18px 16px;} #gpHero .value{font-size:.86rem;white-space:nowrap;} #gpHero > div{min-width:0;} }
   .gp-hero .label{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.7);}
   .gp-hero .value{font-family:'Unbounded',sans-serif;font-weight:700;font-size:1.35rem;margin-top:6px;letter-spacing:-.02em;}
   .gp-hero .sub{font-size:.76rem;color:rgba(255,255,255,.75);margin-top:2px;}
@@ -321,6 +321,31 @@
   .gp-liq span{display:block;font-family:'JetBrains Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-45);}
   .gp-liq b{font-family:'JetBrains Mono',monospace;font-size:.84rem;}
   .gp-liq small{display:block;font-size:.72rem;color:var(--ink-45);}
+  .gp-dias{display:flex;flex-direction:column;gap:10px;}
+  .gp-dia{background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:12px 14px;border-left:6px solid #0f766e;}
+  .gp-dia.neg{border-left-color:var(--gp-coral,#e8603c);}
+  .gp-dia.passou{opacity:.6;}
+  .gp-dia-topo{display:flex;gap:14px;align-items:center;}
+  .num-dia{flex:none;width:52px;text-align:center;}
+  .num-dia b{display:block;font-family:'Unbounded',sans-serif;font-size:1.4rem;line-height:1;}
+  .num-dia span{font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;color:var(--ink-45);}
+  .gp-dia-tot{flex:1;display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:6px 12px;}
+  .gp-dia-tot span{display:block;font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-45);}
+  .gp-dia-tot b{font-family:'JetBrains Mono',monospace;font-size:.9rem;}
+  .gp-dia-tot b.ent{color:#0f766e;} .gp-dia-tot b.neg{color:var(--gp-coral,#e8603c);} .gp-dia-tot b.ok{color:var(--ok);text-decoration:line-through;}
+  .gp-dia-itens{margin-top:8px;border-top:1px solid var(--border);padding-top:6px;}
+  .gp-dia-it{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:.84rem;}
+  .gp-dia-it .d{flex:1;min-width:0;} .gp-dia-it small{color:var(--ink-45);}
+  .gp-dia-it .v{font-family:'JetBrains Mono',monospace;font-weight:700;white-space:nowrap;}
+  .gp-dia-it .seta{width:30px;text-align:center;font-weight:800;color:var(--ink-45);flex:none;}
+  .gp-dia-it.ent .seta,.gp-dia-it.ent .v{color:#0f766e;}
+  .gp-dia-it.folha{color:var(--ink-60);}
+  .pay-switch.sm{width:30px;height:18px;flex:none;} .pay-switch.sm .knob{width:12px;height:12px;} .pay-switch.sm.on .knob{transform:translateX(12px);}
+  .gp-saldo-ini{width:100%;margin-top:4px;padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'JetBrains Mono',monospace;}
+  .gp-cat.alerta{border-left-color:#e0a030;} .gp-cat.alerta .gp-bar span{background:#e0a030;}
+  .gp-cat.estourou{border-left-color:var(--gp-coral,#e8603c);} .gp-cat.estourou .gp-bar span{background:var(--gp-coral,#e8603c);}
+  .gp-lim{display:grid;grid-template-columns:1fr 120px auto;gap:8px;margin-bottom:8px;}
+  .gp-lim input{padding:9px 11px;border:1.5px solid var(--border);border-radius:10px;font:inherit;font-size:.9rem;min-width:0;}
   .gp-alivio{font-size:.76rem;color:#0f766e;font-weight:700;}
   .gp-vazio{background:#fff;border:1.5px dashed var(--border);border-radius:18px;padding:34px 20px;text-align:center;color:var(--ink-60);}
 
@@ -892,7 +917,7 @@ function planilhaSheetRows(wb, nomes){
 function cell(row, ...chaves){ for(const c of chaves){ if(row[c]!==undefined && row[c]!=='') return row[c]; } return ''; }
 
 function importarPlanilha(wb){
-  const novo = { clientes:[], compras:[], pagamentos:[], contas:[], produtos: SEED_PRODUTOS.slice(), mesAtual: DB.mesAtual, pixKey: DB.pixKey, diasVencimento: DB.diasVencimento, modelosMensagem: DB.modelosMensagem, recados: DB.recados, parcelamentos: DB.parcelamentos||[], receitas: DB.receitas||[], gpGrupos: DB.gpGrupos||{} };
+  const novo = { clientes:[], compras:[], pagamentos:[], contas:[], produtos: SEED_PRODUTOS.slice(), mesAtual: DB.mesAtual, pixKey: DB.pixKey, diasVencimento: DB.diasVencimento, modelosMensagem: DB.modelosMensagem, recados: DB.recados, parcelamentos: DB.parcelamentos||[], receitas: DB.receitas||[], gpGrupos: DB.gpGrupos||{}, gpCategorias: DB.gpCategorias, gpGastos: DB.gpGastos||[], gpSaldoIni: DB.gpSaldoIni||{} };
   function clienteIdPorNome(nomeRaw){
     const nome = String(nomeRaw||'').trim(); if(!nome) return null;
     let c = novo.clientes.find(x=>normNome(x.nome)===normNome(nome));
@@ -2233,10 +2258,12 @@ function aplicarImportJson(texto){
     if(!data || typeof data!=='object') throw new Error('formato inválido');
     if(!confirm('Importar vai substituir todos os dados atuais deste navegador. Continuar?')) return;
     const parcelamentosAtuais = DB.parcelamentos||[], receitasAtuais = DB.receitas||[], gruposAtuais = DB.gpGrupos||{};
+    const atuaisGp = {gpCategorias: DB.gpCategorias, gpGastos: DB.gpGastos, gpSaldoIni: DB.gpSaldoIni};
     DB = Object.assign({ compras:[], contas:[], pagamentos:[], clientes:[], produtos: SEED_PRODUTOS.slice(), mesAtual: currentYM(), pixKey:'', diasVencimento:5 }, data);
     if (!Array.isArray(data.parcelamentos)) DB.parcelamentos = parcelamentosAtuais;
     if (!Array.isArray(data.receitas)) DB.receitas = receitasAtuais;
     if (!data.gpGrupos) DB.gpGrupos = gruposAtuais;
+    ['gpCategorias','gpGastos','gpSaldoIni'].forEach(k=>{ if (data[k]===undefined) DB[k] = atuaisGp[k]; });
     saveDB(); closeModal(); renderAll(); toast('Dados importados com sucesso.');
   }catch(err){ toast('Não deu para importar: ' + err.message); }
 }
@@ -2353,6 +2380,9 @@ function gpPrep(){
   if (!Array.isArray(DB.parcelamentos)) DB.parcelamentos = [];
   if (!Array.isArray(DB.receitas)) DB.receitas = [];
   if (!DB.gpGrupos || typeof DB.gpGrupos!=='object') DB.gpGrupos = {};
+  if (!Array.isArray(DB.gpCategorias)) DB.gpCategorias = [{id:'cat-comida',nome:'Comida',limite:0},{id:'cat-bebida',nome:'Bebida',limite:0},{id:'cat-uber',nome:'Uber',limite:0}];
+  if (!Array.isArray(DB.gpGastos)) DB.gpGastos = [];
+  if (!DB.gpSaldoIni || typeof DB.gpSaldoIni!=='object') DB.gpSaldoIni = {};
   let mudou = false;
   DB.parcelamentos.forEach(p=>{
     if (p.recorrencia) return;
@@ -2432,7 +2462,16 @@ function gpMes(ym){
     const desc = round2(folha.filter(x=>qDoDesconto(x.it)===q).reduce((t,x)=>t+x.it.valor,0));
     return {q, sal, bruto, desc, liquido: round2(bruto-desc)};
   }).filter(Boolean);
-  return {ym, itens, contas, folha, receitas, entradas, totFolha, saidas, pago, sobra: round2(entradas-totFolha-saidas), quinz, qFolha, qDoDesconto, salario, salarios, liquidos};
+  // dia a dia (comida, bebida, Uber…): conta o limite do mês, ou o que já foi gasto se passou do limite
+  const gastosMes = DB.gpGastos.filter(g=>String(g.data||'').slice(0,7)===ym);
+  const porCat = DB.gpCategorias.map(c=>{
+    const gasto = round2(gastosMes.filter(g=>g.categoriaId===c.id).reduce((t,g)=>t+g.valor,0));
+    return {c, gasto, previsto: round2(Math.max(Number(c.limite)||0, gasto))};
+  });
+  const semCat = round2(gastosMes.filter(g=>!DB.gpCategorias.some(c=>c.id===g.categoriaId)).reduce((t,g)=>t+g.valor,0));
+  const totDia = round2(porCat.reduce((t,x)=>t+x.previsto,0) + semCat);
+  quinz[1].dia = round2(totDia/2); quinz[2].dia = round2(totDia - quinz[1].dia); quinz[0].dia = 0;
+  return {ym, itens, contas, folha, receitas, entradas, totFolha, saidas, pago, totDia, porCat, gastosMes, sobra: round2(entradas-totFolha-saidas-totDia), quinz, qFolha, qDoDesconto, salario, salarios, liquidos};
 }
 
 window.setGpAba = function(a){ gpAba = a; renderGestao(); };
@@ -2456,13 +2495,16 @@ function renderGestao(){
     <div><div class="label">Entradas de ${esc(mesNome)}</div><div class="value">${brl(M.entradas)}</div><div class="sub">${M.receitas.length?M.receitas.length+' recebimento(s)':'cadastre em Recebimentos'}</div></div>
     <div><div class="label">Descontos em folha</div><div class="value">${brl(M.totFolha)}</div><div class="sub">academia, Coopera…</div></div>
     <div><div class="label">Contas do mês</div><div class="value">${brl(M.saidas)}</div><div class="sub">já pago ${brl(M.pago)}</div></div>
-    <div class="${M.sobra<0?'negativo':'destaque'}"><div class="label">${M.sobra<0?'Falta no mês':'Sobra no mês'}</div><div class="value">${brl(Math.abs(M.sobra))}</div><div class="sub">entradas − folha − contas</div></div>
+    <div><div class="label">Dia a dia</div><div class="value">${brl(M.totDia)}</div><div class="sub">${M.porCat.some(x=>x.c.limite)?'gasto '+brl(round2(M.gastosMes.reduce((t,g)=>t+g.valor,0)))+' até agora':'defina os limites em Dia a dia'}</div></div>
+    <div class="${M.sobra<0?'negativo':'destaque'}"><div class="label">${M.sobra<0?'Falta no mês':'Sobra no mês'}</div><div class="value">${brl(Math.abs(M.sobra))}</div><div class="sub">entradas − folha − contas − dia a dia</div></div>
     <div><div class="label">Saldo devedor parcelado</div><div class="value">${brl(round2(saldoDevedor))}</div><div class="sub">${fim?'livre de parcelas em '+esc(monthLabelShort(ymAdd(fim,1))):'nenhuma parcela em aberto'}</div></div>`;
 
-  const abas = {contas:'Contas do mês', receitas:'Recebimentos e descontos', quinzenas:'Quinzenas', previsao:'Previsão 12 meses'};
+  const abas = {contas:'Contas do mês', data:'Por data', quinzenas:'Quinzenas', receitas:'Recebimentos e descontos', diaadia:'Dia a dia', previsao:'Previsão 12 meses'};
   document.getElementById('gpViews').innerHTML = Object.keys(abas).map(k=>`<button type="button" role="tab" aria-selected="${gpAba===k}" class="${gpAba===k?'on':''}" onclick="setGpAba('${k}')">${abas[k]}</button>`).join('');
   const box = document.getElementById('gpView');
   if (gpAba==='receitas') box.innerHTML = gpViewReceitas(M);
+  else if (gpAba==='data') box.innerHTML = gpViewData(M);
+  else if (gpAba==='diaadia') box.innerHTML = gpViewDiaADia(M);
   else if (gpAba==='quinzenas') box.innerHTML = gpViewQuinzenas(M);
   else if (gpAba==='previsao') box.innerHTML = gpViewPrevisao(mes);
   else box.innerHTML = gpViewContas(M, lista);
@@ -2490,16 +2532,18 @@ function gpViewContas(M, lista){
     const todosPagos = aPagar.length>0 && aPagar.every(it=>gpPago(it, mes));
     const soFolha = doMes.length>0 && !aPagar.length;
     const formaGrupo = cfg.forma ? GP_FORMAS[cfg.forma] : '';
+    const diasItens = Array.from(new Set(its.map(it=>Number(it.dia)).filter(Boolean))).sort((a,b)=>a-b);
+    const semDiaNenhum = its.every(it=>gpDia(it));
     return `<div class="gp-card ${todosPagos?'quitado':''}">
       <div class="topo">
         <div><div class="nome">${esc(nome)}</div>
-          <div class="onde">${esc(formaGrupo||'')}${formaGrupo?' · ':''}${cfg.dia?'vence dia '+cfg.dia:'<button type="button" class="gp-link" data-grupo="'+esc(nome)+'" onclick="editarGrupoGp(this.dataset.grupo)">definir dia de vencimento</button>'}</div></div>
+          <div class="onde">${esc(formaGrupo||'')}${formaGrupo?' · ':''}${cfg.dia?'vence dia '+cfg.dia:(semDiaNenhum && diasItens.length?'dias '+diasItens.join(', '):'<button type="button" class="gp-link" data-grupo="'+esc(nome)+'" onclick="editarGrupoGp(this.dataset.grupo)">definir dia de vencimento</button>')}</div></div>
         <div class="valor">${brl(total)}<small>no mês</small></div>
       </div>
       <div class="gp-rows">${its.map(it=>{
         const oc = ocMap.get(it.id);
         return `<button type="button" class="gp-row ${oc?'':'fora'}" onclick="openParcelamentoForm('${it.id}')">
-          <span class="d">${esc(it.descricao)}<small>${gpChipRec(it, oc)}${it.forma==='folha'?' · <b class="folha">desconto em folha</b>':''}${it.onde?' · '+esc(it.onde):''}</small></span>
+          <span class="d">${esc(it.descricao)}<small>${gpChipRec(it, oc)}${it.dia&&it.dia!==cfg.dia?' · dia '+it.dia:''}${it.forma==='folha'?' · <b class="folha">desconto em folha</b>':''}${it.onde?' · '+esc(it.onde):''}</small></span>
           <span class="v">${brl(it.valor)}</span></button>`;
       }).join('')}</div>
       <div class="rodape">
@@ -2553,7 +2597,7 @@ function gpViewReceitas(M){
 function gpViewQuinzenas(M){
   const q = n => {
     const Q = M.quinz[n];
-    const sobra = round2(Q.ent - Q.folha - Q.sai);
+    const sobra = round2(Q.ent - Q.folha - Q.sai - (Q.dia||0));
     const recs = M.receitas.filter(r=>gpQuinzena(r.dia)===n);
     const gruposQ = {};
     M.contas.filter(x=>gpQuinzena(gpDia(x.it))===n).forEach(x=>{ const k=x.it.grupo; gruposQ[k]=gruposQ[k]||{t:0,dia:gpDia(x.it)}; gruposQ[k].t=round2(gruposQ[k].t+x.it.valor); });
@@ -2563,6 +2607,7 @@ function gpViewQuinzenas(M){
       <div class="gp-qlin"><span>Entra</span><b>${brl(round2(Q.ent))}</b></div>
       ${recs.map(r=>`<div class="gp-qsub"><span>${esc(r.descricao||r.fonte)} · dia ${r.dia||'—'}</span><span>${brl(r.valor)}</span></div>`).join('')}
       ${Q.folha?`<div class="gp-qlin"><span>Descontos em folha</span><b>− ${brl(Q.folha)}</b></div>`:''}
+      ${Q.dia?`<div class="gp-qlin"><span>Dia a dia (metade do mês)</span><b>− ${brl(Q.dia)}</b></div>`:''}
       <div class="gp-qlin"><span>Contas a pagar</span><b>− ${brl(round2(Q.sai))}</b></div>
       ${Object.keys(gruposQ).sort((a,b)=>(gruposQ[a].dia||0)-(gruposQ[b].dia||0)).map(k=>`<div class="gp-qsub"><span>${esc(k)}${gruposQ[k].dia?' · dia '+gruposQ[k].dia:''}</span><span>${brl(gruposQ[k].t)}</span></div>`).join('')}
     </div>`;
@@ -2596,14 +2641,15 @@ function gpViewPrevisao(mesIni){
       <div><span>Quanto vai precisar (soma do que falta)</span><b>${brl(precisa)}</b></div>
       <div><span>Desaperta (fica no azul de vez) em</span><b>${azulDesde?esc(monthLabel(azulDesde)):'ainda não, nos próximos 12 meses'}</b></div>
     </div>`;
-  const max = Math.max(1, ...linhas.map(l=>Math.max(l.M.entradas, l.M.saidas+l.M.totFolha)));
+  const max = Math.max(1, ...linhas.map(l=>Math.max(l.M.entradas, l.M.saidas+l.M.totFolha+l.M.totDia)));
   const tabela = `<div class="table-wrap"><table class="table gp-prev">
-    <thead><tr><th>Mês</th><th class="num">Entradas</th><th class="num">Folha</th><th class="num">Contas</th><th class="num">Sobra / falta</th><th class="num">Acumulado</th><th>O que muda</th></tr></thead>
+    <thead><tr><th>Mês</th><th class="num">Entradas</th><th class="num">Folha</th><th class="num">Contas</th><th class="num">Dia a dia</th><th class="num">Sobra / falta</th><th class="num">Acumulado</th><th>O que muda</th></tr></thead>
     <tbody>${linhas.map(l=>`<tr class="${l.M.sobra<0?'neg':''}">
-      <td data-label="Mês"><b>${esc(monthLabelShort(l.m))}</b><div class="gp-mini"><span class="e" style="width:${Math.round(100*l.M.entradas/max)}%"></span><span class="s" style="width:${Math.round(100*(l.M.saidas+l.M.totFolha)/max)}%"></span></div></td>
+      <td data-label="Mês"><b>${esc(monthLabelShort(l.m))}</b><div class="gp-mini"><span class="e" style="width:${Math.round(100*l.M.entradas/max)}%"></span><span class="s" style="width:${Math.round(100*(l.M.saidas+l.M.totFolha+l.M.totDia)/max)}%"></span></div></td>
       <td data-label="Entradas" class="num">${brl(l.M.entradas)}</td>
       <td data-label="Folha" class="num">${brl(l.M.totFolha)}</td>
       <td data-label="Contas" class="num">${brl(l.M.saidas)}</td>
+      <td data-label="Dia a dia" class="num">${brl(l.M.totDia)}</td>
       <td data-label="Sobra / falta" class="num sobra">${l.M.sobra<0?'−':'+'}${brl(Math.abs(l.M.sobra))}</td>
       <td data-label="Acumulado" class="num">${l.acum<0?'−':''}${brl(Math.abs(l.acum))}</td>
       <td data-label="O que muda">${l.terminam.length?`<span class="gp-alivio">+${brl(l.alivio)} livre: ${l.terminam.map(it=>esc(it.descricao)).join(', ')} terminou</span>`:'—'}</td>
@@ -2611,6 +2657,171 @@ function gpViewPrevisao(mesIni){
     <p class="hint" style="margin:10px 2px 0">Acumulado = se a sobra de cada mês ficar guardada para o mês seguinte. Entradas em verde e saídas em coral na barrinha de cada mês.</p>`;
   return resumo + tabela;
 }
+
+/* ---------- Por data: quanto pagar em cada dia ---------- */
+window.setSaldoIniGp = function(v){
+  const n = round2(parseFloat(String(v).replace(/\./g,'').replace(',','.'))||0);
+  if (n) DB.gpSaldoIni[DB.mesAtual] = n; else delete DB.gpSaldoIni[DB.mesAtual];
+  saveDB(); renderGestao();
+};
+window.toggleItemGpPago = function(id){
+  const it = gpPrep().find(x=>x.id===id); if(!it) return;
+  const s = new Set(it.pagosMeses||[]);
+  if (s.has(DB.mesAtual)) s.delete(DB.mesAtual); else s.add(DB.mesAtual);
+  it.pagosMeses = Array.from(s).sort();
+  saveDB(); renderGestao();
+};
+function gpViewData(M){
+  const mes = M.ym;
+  const [yy,mm] = mes.split('-').map(Number);
+  const ultimo = new Date(yy, mm, 0).getDate();
+  const diaDe = d => Math.min(d, ultimo);
+  const dias = {};
+  const slot = d => (dias[d] = dias[d] || {ent:[], sai:[], folha:[]});
+  M.receitas.forEach(r=>slot(r.dia ? diaDe(r.dia) : 0).ent.push(r));
+  M.contas.forEach(x=>{ const d = gpDia(x.it); slot(d ? diaDe(d) : 0).sai.push(x.it); });
+  M.folha.forEach(x=>{ const q = M.qDoDesconto(x.it); const sal = M.salarios.find(r=>(gpQuinzena(r.dia)||2)===q); const d = Number(x.it.dia) || (sal && sal.dia) || ultimo; slot(diaDe(d)).folha.push(x.it); });
+  const saldoIni = Number(DB.gpSaldoIni[mes]) || 0;
+  let saldo = saldoIni, maiorDia = null, primeiroNeg = null, menorSaldo = Infinity;
+  const ordem = Object.keys(dias).map(Number).filter(d=>d>0).sort((a,b)=>a-b);
+  const soma = arr => round2(arr.reduce((t,x)=>t+x.valor,0));
+  const linhas = ordem.map(d=>{
+    const D = dias[d];
+    const ent = soma(D.ent), sai = soma(D.sai), fol = soma(D.folha);
+    const pagoDia = round2(D.sai.filter(it=>gpPago(it, mes)).reduce((t,it)=>t+it.valor,0));
+    saldo = round2(saldo + ent - fol - sai);
+    if (!maiorDia || sai>maiorDia.sai) maiorDia = {d, sai};
+    if (saldo<0 && !primeiroNeg) primeiroNeg = {d, saldo};
+    if (saldo<menorSaldo) menorSaldo = saldo;
+    return {d, D, ent, sai, fol, pagoDia, saldo};
+  });
+  const semDia = dias[0];
+  const hoje = new Date(); const ehMesAtual = currentYM()===mes;
+  const cards = linhas.map(l=>{
+    const passou = ehMesAtual && l.d < hoje.getDate();
+    const tudoPago = l.D.sai.length && l.D.sai.every(it=>gpPago(it, mes));
+    return `<div class="gp-dia ${l.saldo<0?'neg':''} ${passou?'passou':''}">
+      <div class="gp-dia-topo">
+        <div class="num-dia"><b>${String(l.d).padStart(2,'0')}</b><span>${esc(MONTH_NAMES[mm-1].slice(0,3))}</span></div>
+        <div class="gp-dia-tot">
+          ${l.sai?`<div><span>Pagar</span><b class="${tudoPago?'ok':''}">${brl(l.sai)}</b></div>`:''}
+          ${l.ent?`<div><span>Entra</span><b class="ent">+${brl(l.ent)}</b></div>`:''}
+          ${l.fol?`<div><span>Desconto folha</span><b>−${brl(l.fol)}</b></div>`:''}
+          <div><span>Saldo depois</span><b class="${l.saldo<0?'neg':'ent'}">${l.saldo<0?'−':''}${brl(Math.abs(l.saldo))}</b></div>
+        </div>
+      </div>
+      <div class="gp-dia-itens">
+        ${l.D.sai.map(it=>`<div class="gp-dia-it"><button type="button" class="pay-switch sm ${gpPago(it,mes)?'on':''}" title="Marcar como pago" onclick="toggleItemGpPago('${it.id}')"><span class="knob"></span></button><span class="d">${esc(it.descricao)} <small>${esc(it.grupo)}</small></span><span class="v">${brl(it.valor)}</span></div>`).join('')}
+        ${l.D.ent.map(r=>`<div class="gp-dia-it ent"><span class="seta">+</span><span class="d">${esc(r.descricao||r.fonte)} <small>${esc(r.fonte)}</small></span><span class="v">${brl(r.valor)}</span></div>`).join('')}
+        ${l.D.folha.map(it=>`<div class="gp-dia-it folha"><span class="seta">−</span><span class="d">${esc(it.descricao)} <small>descontado do salário</small></span><span class="v">${brl(it.valor)}</span></div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+  const resumo = `<div class="gp-resumo">
+    <div><span>Saldo em conta no dia 1º (opcional)</span><input class="gp-saldo-ini" inputmode="decimal" placeholder="0,00" value="${saldoIni?String(saldoIni).replace('.',','):''}" onchange="setSaldoIniGp(this.value)"></div>
+    <div><span>Total a pagar no mês (com data)</span><b>${brl(round2(linhas.reduce((t,l)=>t+l.sai,0)))}</b></div>
+    <div><span>Dia mais pesado</span><b>${maiorDia&&maiorDia.sai?'dia '+maiorDia.d+' · '+brl(maiorDia.sai):'—'}</b></div>
+    <div><span>${primeiroNeg?'Fica no vermelho no':'Saldo ao longo do mês'}</span><b>${primeiroNeg?'dia '+primeiroNeg.d+' · precisa de '+brl(-menorSaldo):'sempre positivo'}</b></div>
+  </div>
+  <p class="hint" style="margin:0 0 12px">Saldo depois = saldo do dia 1º + o que entrou − o que saiu até aquele dia, na ordem das datas. O dia a dia (comida, bebida, Uber) não entra aqui, porque não tem data fixa.</p>`;
+  const semDiaHtml = semDia && (semDia.sai.length||semDia.ent.length) ? `<div class="gp-dia neg"><div class="gp-dia-topo"><div class="num-dia"><b>?</b><span>sem dia</span></div><div class="gp-dia-tot"><div><span>Pagar</span><b>${brl(soma(semDia.sai))}</b></div></div></div>
+    <div class="gp-dia-itens">${semDia.sai.map(it=>`<div class="gp-dia-it"><span class="d">${esc(it.descricao)} <small>${esc(it.grupo)} · coloque o dia em Editar</small></span><span class="v">${brl(it.valor)}</span></div>`).join('')}${semDia.ent.map(r=>`<div class="gp-dia-it ent"><span class="seta">+</span><span class="d">${esc(r.descricao||r.fonte)}</span><span class="v">${brl(r.valor)}</span></div>`).join('')}</div></div>` : '';
+  return resumo + (linhas.length ? `<div class="gp-dias">${cards}${semDiaHtml}</div>` : `<div class="gp-vazio">Nada com data em ${esc(monthLabel(mes))}.</div>`);
+}
+
+/* ---------- Dia a dia: comida, bebida, Uber… com limite por mês ---------- */
+function gpViewDiaADia(M){
+  const mes = M.ym;
+  const [yy,mm] = mes.split('-').map(Number);
+  const ultimo = new Date(yy, mm, 0).getDate();
+  const ehMesAtual = currentYM()===mes;
+  const diasRest = ehMesAtual ? ultimo - new Date().getDate() + 1 : (ymDiff(mes, currentYM())>0 ? ultimo : 0);
+  const totLim = round2(DB.gpCategorias.reduce((t,c)=>t+(Number(c.limite)||0),0));
+  const totGasto = round2(M.gastosMes.reduce((t,g)=>t+g.valor,0));
+  const cards = M.porCat.map(({c, gasto})=>{
+    const lim = Number(c.limite)||0;
+    const resta = round2(lim - gasto);
+    const pct = lim ? Math.min(100, Math.round(100*gasto/lim)) : 0;
+    const estado = !lim ? '' : gasto>lim ? 'estourou' : pct>=80 ? 'alerta' : '';
+    const porDia = diasRest>0 && resta>0 ? round2(resta/diasRest) : 0;
+    const ult = M.gastosMes.filter(g=>g.categoriaId===c.id).sort((a,b)=>b.data.localeCompare(a.data)).slice(0,4);
+    return `<div class="gp-card gp-cat ${estado}">
+      <div class="topo"><div><div class="nome">${esc(c.nome)}</div><div class="onde">limite ${lim?brl(lim):'não definido'}</div></div>
+        <div class="valor">${brl(gasto)}<small>gasto no mês</small></div></div>
+      ${lim?`<div class="gp-bar"><span style="width:${pct}%"></span></div>
+      <div class="gp-info"><div>${resta>=0?'Ainda pode gastar':'Passou do limite'}<br><b>${brl(Math.abs(resta))}</b></div><div>${diasRest>0&&resta>0?'Por dia até o fim do mês':'Usado'}<br><b>${diasRest>0&&resta>0?brl(porDia):pct+'%'}</b></div></div>`:`<p class="hint" style="margin:0">Defina um limite para acompanhar.</p>`}
+      ${ult.length?`<div class="gp-rows">${ult.map(g=>`<button type="button" class="gp-row" onclick="openGastoForm('${g.id}')"><span class="d">${esc(g.obs||c.nome)}<small>${fmtDateObj(new Date(g.data+'T12:00:00'))}</small></span><span class="v">${brl(g.valor)}</span></button>`).join('')}</div>`:''}
+      <div class="rodape"><span class="hint">${M.gastosMes.filter(g=>g.categoriaId===c.id).length} lançamento(s)</span><button class="btn sm primary" data-cat="${esc(c.id)}" onclick="openGastoForm(null, this.dataset.cat)">+ Gasto</button></div>
+    </div>`;
+  }).join('');
+  return `<div class="gp-resumo">
+      <div><span>Limite do mês (dia a dia)</span><b>${brl(totLim)}</b></div>
+      <div><span>Gasto até agora</span><b>${brl(totGasto)}</b></div>
+      <div><span>${totLim-totGasto>=0?'Ainda pode gastar':'Passou do limite'}</span><b>${brl(Math.abs(round2(totLim-totGasto)))}</b></div>
+      <div><span>Entra na previsão como</span><b>${brl(M.totDia)}</b></div>
+    </div>
+    <div class="gp-sub"><button type="button" class="on" onclick="openLimitesGp()">Definir limites e categorias</button><button type="button" onclick="openGastoForm()">+ Lançar gasto</button></div>
+    <div class="gp-list">${cards}</div>
+    <p class="hint" style="margin:12px 2px 0">Na previsão, cada categoria conta pelo limite do mês, ou pelo que já foi gasto se passou dele. Assim os meses futuros já reservam esse dinheiro.</p>`;
+}
+function openGastoForm(id, catId){
+  const atual = id ? DB.gpGastos.find(g=>g.id===id) : null;
+  const hoje = new Date().toISOString().slice(0,10);
+  const g = atual || {data: currentYM()===DB.mesAtual ? hoje : DB.mesAtual+'-01', categoriaId: catId || (DB.gpCategorias[0]||{}).id, valor:'', obs:''};
+  openModal(`
+    <div class="modal-head"><h3>${id?'Editar gasto':'Lançar gasto'}</h3><button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div>
+    <form id="formGastoGp" class="form-grid">
+      <div class="field" style="grid-column:1/-1"><label>Categoria</label><div class="meses-chips" id="gpCatChips">${DB.gpCategorias.map(c=>`<button type="button" class="mes-chip ${c.id===g.categoriaId?'on':''}" data-id="${esc(c.id)}">${esc(c.nome)}</button>`).join('')}</div></div>
+      <div class="field"><label>Valor (R$)*</label><input required type="number" step="0.01" min="0" name="valor" value="${g.valor}" inputmode="decimal"></div>
+      <div class="field"><label>Data</label><input type="date" name="data" value="${g.data}"></div>
+      <div class="field" style="grid-column:1/-1"><label>O que foi (opcional)</label><input name="obs" placeholder="Ex.: almoço, Uber pro trabalho" value="${esc(g.obs||'')}"></div>
+      <div class="form-actions" style="grid-column:1/-1">
+        ${id?`<button type="button" class="btn danger" onclick="deleteGastoGp('${id}')">Excluir</button>`:''}
+        <button type="button" class="btn ghost" onclick="closeModal()">Cancelar</button>
+        <button type="submit" class="btn primary">Salvar</button>
+      </div>
+    </form>`);
+  let cat = g.categoriaId;
+  document.getElementById('gpCatChips').addEventListener('click', e=>{
+    const b = e.target.closest('.mes-chip'); if(!b) return;
+    cat = b.dataset.id;
+    document.querySelectorAll('#gpCatChips .mes-chip').forEach(x=>x.classList.toggle('on', x===b));
+  });
+  document.getElementById('formGastoGp').addEventListener('submit', e=>{
+    e.preventDefault();
+    const f = new FormData(e.target);
+    const novo = {categoriaId: cat, valor: round2(parseFloat(f.get('valor'))||0), data: f.get('data') || hoje, obs: (f.get('obs')||'').trim()};
+    if (atual) Object.assign(atual, novo); else DB.gpGastos.push(Object.assign({id:uid()}, novo));
+    saveDB(); closeModal(); gpAba='diaadia'; renderGestao(); toast('Gasto lançado.');
+  });
+}
+window.openGastoForm = openGastoForm;
+window.deleteGastoGp = function(id){
+  if (!confirm('Excluir este gasto?')) return;
+  DB.gpGastos = DB.gpGastos.filter(g=>g.id!==id);
+  saveDB(); closeModal(); renderGestao();
+};
+window.openLimitesGp = function(){
+  const linha = c => `<div class="gp-lim" data-id="${esc(c.id)}"><input name="nome" value="${esc(c.nome)}" placeholder="Categoria"><input name="limite" type="number" step="0.01" min="0" value="${c.limite||''}" placeholder="Limite R$"><button type="button" class="btn sm ghost" onclick="this.parentElement.remove()" title="Remover">✕</button></div>`;
+  openModal(`
+    <div class="modal-head"><h3>Limites do dia a dia</h3><button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div>
+    <p class="hint" style="margin:0 0 10px">Quanto você quer gastar por mês em cada categoria. Esse valor entra na previsão de todos os meses.</p>
+    <div id="gpLimites">${DB.gpCategorias.map(linha).join('')}</div>
+    <button type="button" class="btn sm ghost" style="margin-top:8px" onclick="document.getElementById('gpLimites').insertAdjacentHTML('beforeend', '<div class=&quot;gp-lim&quot; data-id=&quot;&quot;><input name=&quot;nome&quot; placeholder=&quot;Categoria&quot;><input name=&quot;limite&quot; type=&quot;number&quot; step=&quot;0.01&quot; min=&quot;0&quot; placeholder=&quot;Limite R$&quot;><button type=&quot;button&quot; class=&quot;btn sm ghost&quot; onclick=&quot;this.parentElement.remove()&quot;>✕</button></div>')">+ Categoria</button>
+    <div class="form-actions">
+      <button type="button" class="btn ghost" onclick="closeModal()">Cancelar</button>
+      <button type="button" class="btn primary" onclick="salvarLimitesGp()">Salvar</button>
+    </div>`);
+};
+window.salvarLimitesGp = function(){
+  const novas = Array.from(document.querySelectorAll('#gpLimites .gp-lim')).map(el=>({
+    id: el.dataset.id || uid(),
+    nome: (el.querySelector('[name=nome]').value||'').trim(),
+    limite: round2(parseFloat(el.querySelector('[name=limite]').value)||0)
+  })).filter(c=>c.nome);
+  DB.gpCategorias = novas;
+  saveDB(); closeModal(); gpAba='diaadia'; renderGestao(); toast('Limites salvos.');
+};
 
 window.toggleGrupoGpPago = function(nome){
   const mes = DB.mesAtual;
@@ -2832,7 +3043,7 @@ window.deleteReceita = function(id){
 
 window.baixarPlanilhaParcelas = function(){
   const lista = gpPrep();
-  if (!lista.length && !DB.receitas.length){ toast('Nada cadastrado ainda.'); return; }
+  if (!lista.length && !DB.receitas.length && !DB.gpGastos.length){ toast('Nada cadastrado ainda.'); return; }
   const mes = DB.mesAtual;
   const l1 = [['Grupo','O que é','Como é pago','Tipo','Valor','Neste mês','Dia','Até','Saldo devedor','Onde']];
   lista.slice().sort((a,b)=>a.grupo.localeCompare(b.grupo,'pt-BR')).forEach(it=>{
@@ -2841,11 +3052,11 @@ window.baixarPlanilhaParcelas = function(){
   });
   const l2 = [['De onde vem','Descrição','Valor','Dia','Repete','A partir de','Sofre descontos']];
   DB.receitas.forEach(r=>l2.push([r.fonte, r.descricao, r.valor, r.dia||'', r.recorrencia==='unico'?'Só uma vez':r.recorrencia==='periodico'?'A cada '+r.intervalo+' meses':'Todo mês', monthLabel(r.mesInicio), r.descontaFolha?'Sim':'']));
-  const l3 = [['Mês','Entradas','Descontos em folha','Contas','Sobra / falta','1ª quinzena','2ª quinzena']];
+  const l3 = [['Mês','Entradas','Descontos em folha','Contas','Dia a dia','Sobra / falta','1ª quinzena','2ª quinzena']];
   let ac=0;
   for (let i=0;i<12;i++){ const M = gpMes(ymAdd(mes,i)); ac+=M.sobra;
-    const q = n => round2(M.quinz[n].ent - M.quinz[n].folha - M.quinz[n].sai);
-    l3.push([monthLabel(M.ym), M.entradas, M.totFolha, M.saidas, M.sobra, q(1), q(2)]); }
+    const q = n => round2(M.quinz[n].ent - M.quinz[n].folha - M.quinz[n].sai - (M.quinz[n].dia||0));
+    l3.push([monthLabel(M.ym), M.entradas, M.totFolha, M.saidas, M.totDia, M.sobra, q(1), q(2)]); }
   const wb = XLSX.utils.book_new();
   const ws1 = XLSX.utils.aoa_to_sheet(l1); ws1['!cols']=[{wch:18},{wch:26},{wch:18},{wch:14},{wch:10},{wch:12},{wch:6},{wch:16},{wch:12},{wch:12}];
   const ws2 = XLSX.utils.aoa_to_sheet(l2); ws2['!cols']=[{wch:16},{wch:24},{wch:10},{wch:6},{wch:16},{wch:16},{wch:10}];
@@ -2853,6 +3064,10 @@ window.baixarPlanilhaParcelas = function(){
   XLSX.utils.book_append_sheet(wb, ws1, 'Contas');
   XLSX.utils.book_append_sheet(wb, ws2, 'Recebimentos');
   XLSX.utils.book_append_sheet(wb, ws3, 'Previsão 12 meses');
+  const nomeCat = id => (DB.gpCategorias.find(c=>c.id===id)||{}).nome || '—';
+  const l4 = [['Data','Categoria','Valor','O que foi']].concat(DB.gpGastos.slice().sort((a,b)=>a.data.localeCompare(b.data)).map(g=>[g.data.split('-').reverse().join('/'), nomeCat(g.categoriaId), g.valor, g.obs||'']));
+  const ws4 = XLSX.utils.aoa_to_sheet(l4); ws4['!cols']=[{wch:12},{wch:14},{wch:10},{wch:30}];
+  XLSX.utils.book_append_sheet(wb, ws4, 'Dia a dia');
   XLSX.writeFile(wb, `gestao-de-parcelas-${mes}.xlsx`);
   toast('Planilha baixada.');
 };
@@ -2881,14 +3096,20 @@ function gpImportarDoLink(){
   const existentes = new Set(lista.map(x=>x.id).concat(DB.receitas.map(x=>x.id)));
   const novas = (pacote.contas||[]).filter(c=>!existentes.has(c.id));
   const novasRec = (pacote.receitas||[]).filter(r=>!existentes.has(r.id));
+  // ajustes em contas já cadastradas (ex.: dia de vencimento) e dias dos grupos
+  const porId = new Map(lista.concat(novas).map(x=>[x.id, x]));
+  const ajustes = (pacote.ajustes||[]).map(a=>({a, it:porId.get(a.id)})).filter(x=>x.it && Object.keys(x.a.set||{}).some(k=>x.it[k]!==x.a.set[k]));
+  const gruposMudam = Object.keys(pacote.gruposSet||{}).filter(g=>{ const at=DB.gpGrupos[g]||{}; return Object.keys(pacote.gruposSet[g]).some(k=>at[k]!==pacote.gruposSet[g][k]); });
   const tabBtn = document.querySelector('.tab-btn[data-tab="gestao"]'); if (tabBtn) tabBtn.click();
   const ref = pacote.mesRef || DB.mesAtual;
   const porGrupo = {};
   novas.forEach(c=>{ const g=porGrupo[c.grupo]=porGrupo[c.grupo]||{n:0,t:0}; g.n++; if (gpOcorre(c, ref)) g.t=round2(g.t+c.valor); });
   openModal(`
     <div class="modal-head"><h3>Adicionar à Gestão de Parcelas</h3><button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div>
-    ${novas.length||novasRec.length ? `
-      <div class="lista-resumo"><b>${novas.length} conta(s)</b>${novasRec.length?` e <b>${novasRec.length} recebimento(s)</b>`:''} novo(s). Valores de ${esc(monthLabel(ref))}:</div>
+    ${novas.length||novasRec.length||ajustes.length||gruposMudam.length ? `
+      <div class="lista-resumo"><b>${novas.length} conta(s)</b>${novasRec.length?` e <b>${novasRec.length} recebimento(s)</b>`:''} novo(s)${ajustes.length||gruposMudam.length?` · <b>${ajustes.length+gruposMudam.length} ajuste(s)</b> de vencimento`:''}. Valores de ${esc(monthLabel(ref))}:</div>
+      ${gruposMudam.map(g=>`<div class="lista-item"><div><b>${esc(g)}</b> · <span class="hint">vence todo dia</span></div><div class="val">dia ${pacote.gruposSet[g].dia}</div></div>`).join('')}
+      ${ajustes.map(x=>`<div class="lista-item"><div>${esc(x.it.descricao)} · <span class="hint">${esc(x.it.grupo)}</span></div><div class="val">${x.a.set.dia?'dia '+x.a.set.dia:'ajuste'}</div></div>`).join('')}
       ${Object.keys(porGrupo).map(g=>`<div class="lista-item"><div><b>${esc(g)}</b> · ${porGrupo[g].n} conta(s)</div><div class="val">${brl(porGrupo[g].t)}</div></div>`).join('')}
       ${novas.length?`<div class="lista-item"><div><b>Contas de ${esc(monthLabel(ref))}</b></div><div class="val">${brl(round2(Object.values(porGrupo).reduce((t,g)=>t+g.t,0)))}</div></div>`:''}
       ${novasRec.map(r=>`<div class="lista-item"><div>${esc(r.descricao||r.fonte)} · <span class="hint">${esc(r.fonte)} · dia ${r.dia||'—'}</span></div><div class="val">${brl(r.valor)}</div></div>`).join('')}
@@ -2904,8 +3125,10 @@ function gpImportarDoLink(){
     novas.forEach(c=>lista.push(c));
     novasRec.forEach(r=>DB.receitas.push(r));
     Object.keys(pacote.grupos||{}).forEach(g=>{ if (!DB.gpGrupos[g]) DB.gpGrupos[g] = pacote.grupos[g]; });
+    Object.keys(pacote.gruposSet||{}).forEach(g=>{ DB.gpGrupos[g] = Object.assign({}, DB.gpGrupos[g]||{}, pacote.gruposSet[g]); });
+    ajustes.forEach(x=>Object.assign(x.it, x.a.set));
     saveDB(); closeModal(); gpAba='contas'; renderGestao();
-    toast(`${novas.length} conta(s) adicionadas.${ymDiff(ref, DB.mesAtual)!==0?' Use ▶ lá em cima para ver '+monthLabel(ref)+'.':''}`);
+    toast(`${novas.length} conta(s) adicionadas${ajustes.length+gruposMudam.length?', '+(ajustes.length+gruposMudam.length)+' ajuste(s)':''}.${ymDiff(ref, DB.mesAtual)!==0?' Use ▶ lá em cima para ver '+monthLabel(ref)+'.':''}`);
   });
 }
 
