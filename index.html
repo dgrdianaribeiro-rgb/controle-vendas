@@ -535,12 +535,8 @@
   #tab-gestao .gp-fontes span{background:#F2F4F7;}
   #tab-gestao .gp-duo{gap:12px;}
   #tab-gestao .hint{font-size:.8rem;}
-  .gp-aviso-btn{display:block;margin-top:8px;background:#fff;border:none;border-radius:10px;padding:6px 10px;font:700 .8rem 'Manrope',sans-serif;color:#912018;cursor:pointer;}
   .gp-mini3 b.neg{color:var(--danger);}
-  .gp-sinal{flex:none;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;color:#fff;}
-  .gp-sinal.ruim{background:var(--danger,#E5484D);} .gp-sinal.bom{background:var(--ok,#12A150);}
   .gp-item .v.neg{color:var(--danger,#E5484D);}
-  #tab-gestao .gp-dia-it.venda .seta{color:var(--danger);}
   .gp-det summary{cursor:pointer;list-style:none;font:600 .84rem 'Manrope',sans-serif;color:var(--volt,#2F54EB);padding:4px 0;}
   .gp-det summary::-webkit-details-marker{display:none;}
   .gp-det summary::after{content:' ▾';}
@@ -1073,7 +1069,7 @@ function planilhaSheetRows(wb, nomes){
 function cell(row, ...chaves){ for(const c of chaves){ if(row[c]!==undefined && row[c]!=='') return row[c]; } return ''; }
 
 function importarPlanilha(wb){
-  const novo = { clientes:[], compras:[], pagamentos:[], contas:[], produtos: SEED_PRODUTOS.slice(), mesAtual: DB.mesAtual, pixKey: DB.pixKey, diasVencimento: DB.diasVencimento, modelosMensagem: DB.modelosMensagem, recados: DB.recados, parcelamentos: DB.parcelamentos||[], receitas: DB.receitas||[], gpGrupos: DB.gpGrupos||{}, gpCategorias: DB.gpCategorias, gpGastos: DB.gpGastos||[], gpSaldoIni: DB.gpSaldoIni||{}, gpBudget: DB.gpBudget, gpMetaGuardar: DB.gpMetaGuardar, gpIncluirVendas: DB.gpIncluirVendas };
+  const novo = { clientes:[], compras:[], pagamentos:[], contas:[], produtos: SEED_PRODUTOS.slice(), mesAtual: DB.mesAtual, pixKey: DB.pixKey, diasVencimento: DB.diasVencimento, modelosMensagem: DB.modelosMensagem, recados: DB.recados, parcelamentos: DB.parcelamentos||[], receitas: DB.receitas||[], gpGrupos: DB.gpGrupos||{}, gpCategorias: DB.gpCategorias, gpGastos: DB.gpGastos||[], gpSaldoIni: DB.gpSaldoIni||{}, gpBudget: DB.gpBudget, gpMetaGuardar: DB.gpMetaGuardar };
   function clienteIdPorNome(nomeRaw){
     const nome = String(nomeRaw||'').trim(); if(!nome) return null;
     let c = novo.clientes.find(x=>normNome(x.nome)===normNome(nome));
@@ -2414,12 +2410,12 @@ function aplicarImportJson(texto){
     if(!data || typeof data!=='object') throw new Error('formato inválido');
     if(!confirm('Importar vai substituir todos os dados atuais deste navegador. Continuar?')) return;
     const parcelamentosAtuais = DB.parcelamentos||[], receitasAtuais = DB.receitas||[], gruposAtuais = DB.gpGrupos||{};
-    const atuaisGp = {gpCategorias: DB.gpCategorias, gpGastos: DB.gpGastos, gpSaldoIni: DB.gpSaldoIni, gpBudget: DB.gpBudget, gpMetaGuardar: DB.gpMetaGuardar, gpIncluirVendas: DB.gpIncluirVendas};
+    const atuaisGp = {gpCategorias: DB.gpCategorias, gpGastos: DB.gpGastos, gpSaldoIni: DB.gpSaldoIni, gpBudget: DB.gpBudget, gpMetaGuardar: DB.gpMetaGuardar};
     DB = Object.assign({ compras:[], contas:[], pagamentos:[], clientes:[], produtos: SEED_PRODUTOS.slice(), mesAtual: currentYM(), pixKey:'', diasVencimento:5 }, data);
     if (!Array.isArray(data.parcelamentos)) DB.parcelamentos = parcelamentosAtuais;
     if (!Array.isArray(data.receitas)) DB.receitas = receitasAtuais;
     if (!data.gpGrupos) DB.gpGrupos = gruposAtuais;
-    ['gpCategorias','gpGastos','gpSaldoIni','gpBudget','gpMetaGuardar','gpIncluirVendas'].forEach(k=>{ if (data[k]===undefined) DB[k] = atuaisGp[k]; });
+    ['gpCategorias','gpGastos','gpSaldoIni','gpBudget','gpMetaGuardar'].forEach(k=>{ if (data[k]===undefined) DB[k] = atuaisGp[k]; });
     saveDB(); closeModal(); renderAll(); toast('Dados importados com sucesso.');
   }catch(err){ toast('Não deu para importar: ' + err.message); }
 }
@@ -2629,13 +2625,8 @@ function gpMes(ym){
   const semCat = 0;
   const totDia = round2(porCat.reduce((t,x)=>t+x.previsto,0) + semCat);
   quinz[1].dia = round2(totDia/2); quinz[2].dia = round2(totDia - quinz[1].dia); quinz[0].dia = 0;
-  // vendas: o que as clientes vão pagar NÃO entra na soma; só entra o que vai FALTAR para os pedidos (Clarice/Boticário)
-  const vendasCaixa = gpVendasCaixa(ym);
-  const usarRepor = DB.gpIncluirVendas!==false;
-  const repor = usarRepor ? vendasCaixa.deficit : 0;
-  const diaRepor = repor>0.005 ? (vendasCaixa.diaFalta||15) : null;
-  if (repor>0.005) quinz[gpQuinzena(diaRepor)||2].sai += repor;
-  return {ym, itens, contas, folha, receitas, entradas, totFolha, saidas, pago, totDia, porCat, gastosMes, repor, diaRepor, vendasCaixa, sobra: round2(entradas-totFolha-saidas-totDia-repor), quinz, qFolha, qDoDesconto, salario, salarios, liquidos};
+  // a Gestão é só o dinheiro pessoal: vendas, clientes e pedidos de produtos ficam fora
+  return {ym, itens, contas, folha, receitas, entradas, totFolha, saidas, pago, totDia, porCat, gastosMes, sobra: round2(entradas-totFolha-saidas-totDia), quinz, qFolha, qDoDesconto, salario, salarios, liquidos};
 }
 
 window.setGpAba = function(a){ gpAba = a; renderGestao(); };
@@ -2694,12 +2685,6 @@ function gpViewInicio(M, lista){
   // avisos (no máximo 3)
   const avisos = [];
   const P = gpPlanoDoMes(M);
-  const VC = M.vendasCaixa;
-  if (M.repor>0.005){
-    const ehSal = r => r.descontaFolha || /sal[aá]rio/i.test(r.fonte||'');
-    const sal = M.receitas.filter(r=>r.dia && r.dia<=M.diaRepor && ehSal(r)).sort((a,b)=>b.dia-a.dia)[0] || M.receitas.filter(ehSal).sort((a,b)=>a.dia-b.dia)[0];
-    avisos.push({t:'ruim', m:`Separe ${brl(M.repor)} para a Clarice/Boticário até o dia ${M.diaRepor}${sal?` (do ${esc(sal.descricao||sal.fonte)})`:''}.`});
-  }
   if (atrasadas.length) avisos.push({t:'ruim', m:`${atrasadas.length} conta(s) vencida(s) sem marcar como paga.`});
   const estouradas = M.porCat.filter(x=>Number(x.c.limite) && x.gasto>x.c.limite);
   if (estouradas.length) avisos.push({t:'ruim', m:`Passou do limite em ${estouradas.map(x=>esc(x.c.nome)).join(', ')}.`});
@@ -2721,16 +2706,10 @@ function gpViewInicio(M, lista){
     </section>
     <div class="gp-mini3">
       <div><span>Entra</span><b class="pos">${brl(round2(P.entra))}</b></div>
-      <div><span>Sai</span><b>${brl(round2(M.saidas+M.totFolha+M.repor))}</b></div>
+      <div><span>Sai</span><b>${brl(round2(M.saidas+M.totFolha))}</b></div>
       <div><span>Livre de parcelas</span><b>${fim?esc(monthLabelShort(ymAdd(fim,1))):'—'}</b></div>
     </div>
     ${avisos.length?`<div class="gp-avisos">${avisos.slice(0,3).map(a=>`<div class="${a.t}">${a.m}${a.acao||''}</div>`).join('')}</div>`:''}
-    ${P.usarVendas && VC && VC.sai>0 ? `<h3 class="gp-h3">Clarice / Boticário</h3>
-    <div class="gp-bloco"><div class="gp-item">
-      <span class="gp-sinal ${M.repor>0.005?'ruim':'bom'}">${M.repor>0.005?'!':'✓'}</span>
-      <div class="d"><b>${M.repor>0.005?`Vai faltar no dia ${M.diaRepor}`:'Coberto pelas clientes'}</b><span>pedidos do mês ${brl(VC.sai)} · clientes devem pagar ${brl(VC.entra)}</span></div>
-      <div class="v ${M.repor>0.005?'neg':''}">${M.repor>0.005?brl(M.repor):'R$ 0,00'}</div>
-    </div></div>` : ''}
     ${atrasadas.length?`<h3 class="gp-h3 ruim">Vencidas</h3><div class="gp-bloco">${agrupar(atrasadas).map(linha).join('')}</div>`:''}
     <h3 class="gp-h3">${ehAtual?'Vence nos próximos 7 dias':'Primeiros vencimentos de '+esc(nomeMes)}</h3>
     <div class="gp-bloco">${proximas.length?agrupar(proximas).slice(0,6).map(linha).join(''):'<p class="gp-calmo">Nada para pagar agora. 🎉</p>'}</div>
@@ -2894,14 +2873,14 @@ function gpViewPrevisao(mesIni){
       <div><span>Quanto vai precisar (soma do que falta)</span><b>${brl(precisa)}</b></div>
       <div><span>Desaperta (fica no azul de vez) em</span><b>${azulDesde?esc(monthLabel(azulDesde)):'ainda não, nos próximos 12 meses'}</b></div>
     </div>`;
-  const max = Math.max(1, ...linhas.map(l=>Math.max(l.M.entradas, l.M.saidas+l.M.totFolha+l.M.totDia+l.M.repor)));
+  const max = Math.max(1, ...linhas.map(l=>Math.max(l.M.entradas, l.M.saidas+l.M.totFolha+l.M.totDia)));
   const tabela = `<div class="table-wrap"><table class="table gp-prev">
     <thead><tr><th>Mês</th><th class="num">Entradas</th><th class="num">Folha</th><th class="num">Contas</th><th class="num">Dia a dia</th><th class="num">Sobra / falta</th><th class="num">Acumulado</th><th>O que muda</th></tr></thead>
     <tbody>${linhas.map(l=>`<tr class="${l.M.sobra<0?'neg':''}">
-      <td data-label="Mês"><b>${esc(monthLabelShort(l.m))}</b><div class="gp-mini"><span class="e" style="width:${Math.round(100*l.M.entradas/max)}%"></span><span class="s" style="width:${Math.round(100*(l.M.saidas+l.M.totFolha+l.M.totDia+l.M.repor)/max)}%"></span></div></td>
+      <td data-label="Mês"><b>${esc(monthLabelShort(l.m))}</b><div class="gp-mini"><span class="e" style="width:${Math.round(100*l.M.entradas/max)}%"></span><span class="s" style="width:${Math.round(100*(l.M.saidas+l.M.totFolha+l.M.totDia)/max)}%"></span></div></td>
       <td data-label="Entradas" class="num">${brl(l.M.entradas)}</td>
       <td data-label="Folha" class="num">${brl(l.M.totFolha)}</td>
-      <td data-label="Contas" class="num">${brl(round2(l.M.saidas+l.M.repor))}</td>
+      <td data-label="Contas" class="num">${brl(l.M.saidas)}</td>
       <td data-label="Dia a dia" class="num">${brl(l.M.totDia)}</td>
       <td data-label="Sobra / falta" class="num sobra">${l.M.sobra<0?'−':'+'}${brl(Math.abs(l.M.sobra))}</td>
       <td data-label="Acumulado" class="num">${l.acum<0?'−':''}${brl(Math.abs(l.acum))}</td>
@@ -2940,7 +2919,6 @@ function gpViewData(M){
   const slot = d => (dias[d] = dias[d] || {ent:[], sai:[], folha:[]});
   M.receitas.forEach(r=>slot(r.dia ? diaDe(r.dia) : 0).ent.push(r));
   M.contas.forEach(x=>{ const d = gpDia(x.it); slot(d ? diaDe(d) : 0).sai.push(x.it); });
-  if (M.repor>0.005){ const D = slot(diaDe(M.diaRepor)); (D.vSai=D.vSai||[]).push({valor:-M.repor, desc:'Falta para a Clarice/Boticário', pago:false}); }
   M.folha.forEach(x=>{ const q = M.qDoDesconto(x.it); const sal = M.salarios.find(r=>(gpQuinzena(r.dia)||2)===q); const d = Number(x.it.dia) || (sal && sal.dia) || ultimo; slot(diaDe(d)).folha.push(x.it); });
   const saldoIni = Number(DB.gpSaldoIni[mes]) || 0;
   let saldo = saldoIni, maiorDia = null, primeiroNeg = null, menorSaldo = Infinity;
@@ -2948,8 +2926,7 @@ function gpViewData(M){
   const soma = arr => round2(arr.reduce((t,x)=>t+x.valor,0));
   const linhas = ordem.map(d=>{
     const D = dias[d];
-    const vEnt = round2((D.vEnt||[]).reduce((t,m)=>t+m.valor,0)), vSai = round2(-(D.vSai||[]).reduce((t,m)=>t+m.valor,0));
-    const ent = round2(soma(D.ent) + vEnt), sai = round2(soma(D.sai) + vSai), fol = soma(D.folha);
+    const ent = soma(D.ent), sai = soma(D.sai), fol = soma(D.folha);
     const pagoDia = round2(D.sai.filter(it=>gpPago(it, mes)).reduce((t,it)=>t+it.valor,0));
     saldo = round2(saldo + ent - fol - sai);
     if (!maiorDia || sai>maiorDia.sai) maiorDia = {d, sai};
@@ -2975,8 +2952,6 @@ function gpViewData(M){
       <div class="gp-dia-itens">
         ${l.D.sai.map(it=>`<div class="gp-dia-it"><button type="button" class="pay-switch sm ${gpPago(it,mes)?'on':''}" title="Marcar como pago" onclick="toggleItemGpPago('${it.id}')"><span class="knob"></span></button><span class="d">${esc(it.descricao)} <small>${esc(it.grupo)}</small></span><span class="v">${brl(it.valor)}</span></div>`).join('')}
         ${l.D.ent.map(r=>`<div class="gp-dia-it ent"><span class="seta">+</span><span class="d">${esc(r.descricao||r.fonte)} <small>${esc(r.fonte)}</small></span><span class="v">${brl(r.valor)}</span></div>`).join('')}
-        ${(l.D.vSai||[]).map(m=>`<div class="gp-dia-it venda"><span class="seta">!</span><span class="d">${esc(m.desc)} <small>o que as clientes não cobrem</small></span><span class="v">${brl(-m.valor)}</span></div>`).join('')}
-        ${(l.D.vEnt||[]).map(m=>`<div class="gp-dia-it ent"><span class="seta">+</span><span class="d">${esc(m.desc)} <small>${m.real?'cliente pagou':'previsto · vendas'}</small></span><span class="v">${brl(m.valor)}</span></div>`).join('')}
         ${l.D.folha.map(it=>`<div class="gp-dia-it folha"><span class="seta">−</span><span class="d">${esc(it.descricao)} <small>descontado do salário</small></span><span class="v">${brl(it.valor)}</span></div>`).join('')}
       </div>
     </div>`;
@@ -3176,49 +3151,6 @@ function gpAplicarBudget(novo){
   toast(`Budget lido: ${novo.regs.length} lançamentos, de ${fmtDateObj(new Date(novo.de+'T12:00:00'))} a ${fmtDateObj(new Date(novo.ate+'T12:00:00'))}.`);
 }
 window.setMetaGuardarGp = function(v){ DB.gpMetaGuardar = Math.max(0, round2(parseFloat(String(v).replace(/\./g,'').replace(',','.'))||0)); saveDB(); renderGestao(); };
-window.setIncluirVendasGp = function(v){ DB.gpIncluirVendas = !!v; saveDB(); renderGestao(); };
-/* Caixa das vendas no mês, dia a dia:
-   entra = o que as clientes pagam neste mês (as parcelas do mês anterior vencem no começo deste),
-   sai   = os pedidos de produtos (Clarice/Boticário, Natura…) cadastrados em Minhas Contas.
-   Se em algum dia o saldo das vendas fica negativo, a Diana precisa repor do próprio dinheiro. */
-function gpVendasCaixa(ym){
-  const ref = ymAdd(ym, -1);
-  const [yy,mm] = ym.split('-').map(Number);
-  const ultimo = new Date(yy, mm, 0).getDate();
-  const venc = vencimentoCobranca(ref);
-  let diaPrev = (venc.getFullYear()===yy && venc.getMonth()+1===mm) ? venc.getDate() : 1;
-  if (currentYM()===ym) diaPrev = Math.max(diaPrev, Math.min(ultimo, new Date().getDate()));
-  const mov = [];
-  (DB.pagamentos||[]).forEach(p=>{
-    const d = String(p.dataPagamento||'');
-    if (d.slice(0,7)===ym && Number(p.valor)>0) mov.push({dia:Number(d.slice(8,10))||1, valor:round2(Number(p.valor)), desc:nomeCliente(p.clienteId), tipo:'ent', real:true});
-  });
-  // conta só a parcela do mês que ainda não foi paga (atrasos antigos ficam de fora: não dá para contar com eles)
-  let aReceber = 0, nCli = 0, atrasado = 0;
-  clientesComMovimento(ref).forEach(id=>{
-    const cob = cobrancaCliente(id, ref);
-    const doMes = Math.max(0, Math.min(cob.totalAberto, cob.valorMesTotal - cob.pagoMes));
-    if (doMes>0.005){ aReceber += doMes; nCli++; }
-    atrasado += Math.max(0, cob.totalAberto - doMes);
-  });
-  aReceber = round2(aReceber); atrasado = round2(atrasado);
-  if (aReceber>0) mov.push({dia:diaPrev, valor:aReceber, desc:`${nCli} cliente(s) a receber`, tipo:'ent', real:false});
-  (DB.contas||[]).filter(c=>grupoDaConta(c)==='pedidos').forEach(c=>{
-    const calc = contaCalc(c, ym);
-    if (!calc.emRange || !calc.valorMes) return;
-    mov.push({dia: calc.venceEm ? calc.venceEm.getDate() : 1, valor: -calc.valorMes, desc: c.categoria.replace(/^Pedido\s*/i,'')+(c.descricao?' — '+c.descricao:'')+' '+calc.parcelaLabel, tipo:'sai', pago: calc.status==='Pago'});
-  });
-  mov.sort((a,b)=>a.dia-b.dia || b.valor-a.valor);
-  let saldo = 0, min = 0, diaPior = null, diaFalta = null;
-  mov.forEach(m=>{ saldo = round2(saldo + m.valor); m.saldo = saldo; if (saldo < min){ min = saldo; diaPior = m.dia; } if (saldo < -0.005 && diaFalta===null) diaFalta = m.dia; });
-  const entra = round2(mov.filter(m=>m.valor>0).reduce((t,m)=>t+m.valor,0));
-  const sai = round2(-mov.filter(m=>m.valor<0).reduce((t,m)=>t+m.valor,0));
-  return {mov, entra, sai, liquido: round2(entra-sai), deficit: round2(-min), diaFalta, diaPior, aReceber, atrasado, diaPrev, temDados: mov.length>0};
-}
-function gpVendasDoMes(ym){
-  const C = gpVendasCaixa(ym);
-  return {recebe: C.entra, pedidos: C.sai, liquido: C.liquido, caixa: C};
-}
 function gpBudgetMes(ym){
   const B = DB.gpBudget; const r = {renda:0, emprestimo:0, despesa:0, dia:0, porCatBudget:{}, porSub:{}};
   if (!B) return r;
@@ -3249,11 +3181,9 @@ function gpUltimoFechado(){
 }
 function gpPlanoDoMes(M){
   const ym = M.ym;
-  const vendas = {caixa: M.vendasCaixa};
-  const usarVendas = DB.gpIncluirVendas!==false;
   const meta = Number(DB.gpMetaGuardar)||0;
   const entra = round2(M.entradas);
-  const disponivel = round2(entra - M.totFolha - M.saidas - M.repor - meta);
+  const disponivel = round2(entra - M.totFolha - M.saidas - meta);
   const uf = gpUltimoFechado();
   const refMedia = uf && ymDiff(ym, ymAdd(uf,1))>0 ? ymAdd(uf,1) : ym;
   const base = DB.gpCategorias.map(c=>({c, media: gpMediaCategoria(c.id, refMedia, 3)}));
@@ -3269,7 +3199,7 @@ function gpPlanoDoMes(M){
     return {c:b.c, media:b.media, limite};
   });
   const totalPlano = round2(plano.reduce((t,p)=>t+p.limite,0));
-  return {vendas, usarVendas, meta, entra, disponivel, plano, totalPlano, somaBase, aperto, faltaComMinimo: round2(Math.max(0, totalPlano - disponivel)), sobraExtra: round2(Math.max(0, disponivel - totalPlano))};
+  return {meta, entra, disponivel, plano, totalPlano, somaBase, aperto, faltaComMinimo: round2(Math.max(0, totalPlano - disponivel)), sobraExtra: round2(Math.max(0, disponivel - totalPlano))};
 }
 window.aplicarPlanoGp = function(){
   const P = gpPlanoDoMes(gpMes(DB.mesAtual));
@@ -3291,8 +3221,7 @@ function gpViewAnalise(M, parte){
     <div class="valor">${brl(Math.abs(P.disponivel))}</div>
     ${ok?`<div class="sub">≈ <b>${brl(round2(P.disponivel/semanas))}</b> por semana · <b>${brl(round2(P.disponivel/diasMes))}</b> por dia</div>`:`<div class="sub">antes de qualquer gasto com comida, bebida ou Uber</div>`}
     <div class="conta">
-      <span>Entra (salário, social media…)</span><b>${brl(M.entradas)}</b>
-      <span><label><input type="checkbox" ${P.usarVendas?'checked':''} onchange="setIncluirVendasGp(this.checked)"> Falta para a Clarice/Boticário</label> <small>${M.repor>0.005?'dia '+M.diaRepor:(M.vendasCaixa.temDados?'coberto pelas clientes':'sem pedidos')}</small></span><b>−${brl(M.repor)}</b>
+      <span>Entra (seu dinheiro: salário, social media, 13º…)</span><b>${brl(M.entradas)}</b>
       <span>Descontos em folha</span><b>−${brl(M.totFolha)}</b>
       <span>Contas e parcelas do mês</span><b>−${brl(M.saidas)}</b>
       <span>Quero guardar <input class="gp-meta" inputmode="decimal" value="${P.meta?String(P.meta).replace('.',','):''}" placeholder="0" onchange="setMetaGuardarGp(this.value)"></span><b>−${brl(P.meta)}</b>
