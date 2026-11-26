@@ -3558,7 +3558,7 @@ function gpImportarDoLink(){
   const novas = (pacote.contas||[]).filter(c=>!existentes.has(c.id));
   const novasRec = (pacote.receitas||[]).filter(r=>!existentes.has(r.id));
   // ajustes em contas já cadastradas (ex.: dia de vencimento) e dias dos grupos
-  const porId = new Map(lista.concat(novas).map(x=>[x.id, x]));
+  const porId = new Map(lista.concat(novas, DB.receitas, novasRec).map(x=>[x.id, x]));
   const ajustes = (pacote.ajustes||[]).map(a=>({a, it:porId.get(a.id)})).filter(x=>x.it && Object.keys(x.a.set||{}).some(k=>x.it[k]!==x.a.set[k]));
   const gruposMudam = Object.keys(pacote.gruposSet||{}).filter(g=>{ const at=DB.gpGrupos[g]||{}; return Object.keys(pacote.gruposSet[g]).some(k=>at[k]!==pacote.gruposSet[g][k]); });
   const tabBtn = document.querySelector('.tab-btn[data-tab="gestao"]'); if (tabBtn) tabBtn.click();
@@ -3570,7 +3570,7 @@ function gpImportarDoLink(){
     ${novas.length||novasRec.length||ajustes.length||gruposMudam.length ? `
       <div class="lista-resumo"><b>${novas.length} conta(s)</b>${novasRec.length?` e <b>${novasRec.length} recebimento(s)</b>`:''} novo(s)${ajustes.length||gruposMudam.filter(g=>pacote.gruposSet[g].dia).length?` · <b>${ajustes.length+gruposMudam.filter(g=>pacote.gruposSet[g].dia).length} ajuste(s)</b>`:''}. Valores de ${esc(monthLabel(ref))}:</div>
       ${gruposMudam.filter(g=>pacote.gruposSet[g].dia).map(g=>`<div class="lista-item"><div><b>${esc(g)}</b> · <span class="hint">vence todo dia</span></div><div class="val">dia ${pacote.gruposSet[g].dia}</div></div>`).join('')}
-      ${ajustes.map(x=>`<div class="lista-item"><div>${esc(x.it.descricao)} · <span class="hint">${esc(x.it.grupo)}</span></div><div class="val">${[x.a.set.valor!=null?brl(x.a.set.valor):'', x.a.set.dia?'dia '+x.a.set.dia:'', x.a.set.mesInicio?'a partir de '+monthLabelShort(x.a.set.mesInicio):''].filter(Boolean).join(' · ')||'ajuste'}</div></div>`).join('')}
+      ${ajustes.map(x=>`<div class="lista-item"><div>${esc(x.it.descricao||x.it.fonte)} · <span class="hint">${esc(x.it.grupo||x.it.fonte||'')}</span></div><div class="val">${[x.a.set.valor!=null?brl(x.a.set.valor):'', x.a.set.dia?'dia '+x.a.set.dia:'', x.a.set.mesInicio?'a partir de '+monthLabelShort(x.a.set.mesInicio):''].filter(Boolean).join(' · ')||'ajuste'}</div></div>`).join('')}
       ${Object.keys(porGrupo).map(g=>`<div class="lista-item"><div><b>${esc(g)}</b> · ${porGrupo[g].n} conta(s)</div><div class="val">${brl(porGrupo[g].t)}</div></div>`).join('')}
       ${novas.length?`<div class="lista-item"><div><b>Contas de ${esc(monthLabel(ref))}</b></div><div class="val">${brl(round2(Object.values(porGrupo).reduce((t,g)=>t+g.t,0)))}</div></div>`:''}
       ${novasRec.map(r=>`<div class="lista-item"><div>${esc(r.descricao||r.fonte)} · <span class="hint">${esc(r.fonte)} · dia ${r.dia||'—'}</span></div><div class="val">${brl(r.valor)}</div></div>`).join('')}
