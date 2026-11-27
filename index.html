@@ -535,6 +535,12 @@
   #tab-gestao .gp-fontes span{background:#F2F4F7;}
   #tab-gestao .gp-duo{gap:12px;}
   #tab-gestao .hint{font-size:.8rem;}
+  .desc-aniv{flex-direction:column;gap:2px;}
+  .desc-aniv > span:first-child{display:flex;align-items:center;gap:10px;font-size:.92rem;cursor:pointer;}
+  .field.desc-aniv input[type=checkbox]{width:20px;height:20px;flex:none;padding:0;margin:0;accent-color:var(--volt);}
+  .total-cobrar{flex-direction:row;justify-content:space-between;align-items:center;background:var(--paper-dim);border-radius:10px;padding:10px 12px;}
+  .total-cobrar span{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-60);}
+  .total-cobrar b{font-size:1.05rem;text-align:right;} .total-cobrar small{display:block;font-weight:500;color:var(--ink-45);font-size:.74rem;}
   .aviso-saldo{margin-top:10px;background:#FEF4E6;color:#93370D;border-radius:12px;padding:10px 12px;font-size:.86rem;display:flex;flex-direction:column;gap:8px;align-items:flex-start;}
   .gp-mini3 b.neg{color:var(--danger);}
   .gp-item .v.neg{color:var(--danger,#E5484D);}
@@ -1399,7 +1405,10 @@ function openVendaForm(id){
         </select>
       </div>
       <div class="field"><label>Data da compra</label><input type="date" name="dataCompra" value="${v.dataCompra}"></div>
-      <div class="field"><label>Total da compra (R$)*</label><input required type="number" step="0.01" min="0" name="total" value="${v.total}"></div>
+      <div class="field"><label>Valor dos produtos (R$)*</label><input required type="number" step="0.01" min="0" name="valorCheio" value="${v.valorCheio!=null?v.valorCheio:v.total}"><span class="hint">Preço cheio, antes de descontos</span></div>
+      <div class="field"><label>Cashback (R$)</label><input type="number" step="0.01" min="0" name="cashback" value="${v.cashback||''}" placeholder="0,00"><span class="hint">Abatido do total</span></div>
+      <label class="field desc-aniv span2"><span><input type="checkbox" name="aniversario" ${v.descontoAniversario?'checked':''}> <b>Aniversariante: 5% de desconto</b></span><span class="hint">Aplicado no valor dos produtos, antes do cashback</span></label>
+      <div class="field span2 total-cobrar"><span>Total a cobrar</span><b id="vendaTotalFinal">—</b><input type="hidden" name="total" value="${v.total}"></div>
       <div class="field"><label>Nº de parcelas*</label><input required type="number" min="1" step="1" name="parcelas" value="${v.parcelas}"></div>
       <div class="field">
         <label>Valor da parcela (R$)*</label>
@@ -1409,6 +1418,7 @@ function openVendaForm(id){
         </div>
       </div>
       <div class="field"><label>Mês da 1ª parcela*</label><input required type="month" name="mesPrimeira" value="${v.mesPrimeira}"></div>
+      ${id?'':`<div class="field span2"><label>A cliente já pagou quantas parcelas?</label><input type="number" min="0" step="1" name="pagas" value="0"><span class="hint">Para compras que já estavam em andamento. As parcelas pagas são registradas como recebidas e a próxima cobrança já vem na parcela seguinte.</span></div>`}
       <div class="field span2"><label>Observações</label><textarea name="obs">${esc(v.obs)}</textarea></div>
       <div class="form-note span2" id="vendaPreview" style="grid-column:1/-1"></div>
       <div class="form-actions" style="grid-column:1/-1">
@@ -1463,12 +1473,36 @@ function openVendaForm(id){
     const produtoText = validItens.map(it=> (it.qtd>1? it.qtd+'x ':'') + it.nome).join(' + ');
     const total = round2(validItens.reduce((s,it)=>s+it.qtd*it.preco,0));
     form.produto.value = produtoText;
-    form.total.value = total;
+    form.valorCheio.value = total;
+    recalcTotal(true);
     if (validItens.length===1) { form.marca.value = validItens[0].marca; if(!form.apelido.value) form.apelido.value = validItens[0].nome; }
     updatePreview();
     toast('Produto(s) e total preenchidos — confira as parcelas.');
   });
   renderItensRows();
+
+  // total = valor dos produtos − 5% (aniversariante) − cashback; a parcela acompanha
+  let mexeuMes = !!id;
+  function recalcTotal(recalcParcela){
+    const cheio = parseFloat(form.valorCheio.value)||0;
+    const cb = parseFloat(form.cashback.value)||0;
+    const aniv = form.aniversario.checked;
+    const descAniv = aniv ? round2(cheio*0.05) : 0;
+    const total = Math.max(0, round2(cheio - descAniv - cb));
+    form.total.value = total;
+    document.getElementById('vendaTotalFinal').innerHTML = (descAniv||cb)
+      ? `${brl(total)} <small>(${brl(cheio)}${descAniv?` − ${brl(descAniv)} aniversário`:''}${cb?` − ${brl(cb)} cashback`:''})</small>` : brl(total);
+    if (recalcParcela){ const n = Math.max(1, parseInt(form.parcelas.value)||1); form.valorParcela.value = round2(total/n); }
+  }
+  ['valorCheio','cashback','parcelas'].forEach(n=>form[n].addEventListener('input', ()=>{ recalcTotal(true); updatePreview(); }));
+  form.aniversario.addEventListener('change', ()=>{ recalcTotal(true); updatePreview(); });
+  form.mesPrimeira.addEventListener('input', ()=>{ mexeuMes = true; });
+  if (form.pagas) form.pagas.addEventListener('input', ()=>{
+    const n = Math.max(0, parseInt(form.pagas.value)||0);
+    if (!mexeuMes) form.mesPrimeira.value = ymAdd(DB.mesAtual, -n);
+    updatePreview();
+  });
+  recalcTotal(false);
 
   function updatePreview(){
     const f = new FormData(form);
@@ -1481,7 +1515,11 @@ function openVendaForm(id){
     const compraPrevia = { produto: f.get('produto')||'', apelido: f.get('apelido')||'', dataCompra: f.get('dataCompra')||'', mesPrimeira, parcelas: Math.max(1,parcelas), total };
     const idxPrevia = Math.min(compraPrevia.parcelas, Math.max(1, parcelaIdx(mesPrimeira, DB.mesAtual)));
     const linhaCobranca = (f.get('produto')||f.get('apelido')) ? preencherModelo(modelosAtuais().item, valoresItem({compra: compraPrevia, idx: idxPrevia, parcelaLabel: idxPrevia+'/'+compraPrevia.parcelas, valor: valorParcela}, DB.mesAtual)) : '';
-    document.getElementById('vendaPreview').innerHTML = `Última parcela: <b>${ultima?monthLabelShort(ultima):'—'}</b> · Conferência: ${confere?'<span style="color:var(--ok)">OK</span>':'<span style="color:var(--danger)">confira os valores</span>'}`
+    const pagas = Math.min(parcelas, Math.max(0, parseInt(f.get('pagas'))||0));
+    const idxAtual = parcelaIdx(mesPrimeira, DB.mesAtual);
+    const txtPagas = pagas ? `<br>Já pagas: <b>${pagas} de ${parcelas}</b> (${Array.from({length:pagas},(_,i)=>monthLabelShort(ymAdd(mesPrimeira,i))).join(', ')}) — ficam registradas como recebidas.` : '';
+    const txtAtual = (idxAtual>=1 && idxAtual<=parcelas) ? `<br>Na cobrança de <b>${monthLabel(DB.mesAtual)}</b>: parcela <b>${idxAtual} de ${parcelas}</b>${idxAtual<=pagas?' <span style="color:var(--ok)">(já paga)</span>':''}.` : '';
+    document.getElementById('vendaPreview').innerHTML = `Última parcela: <b>${ultima?monthLabelShort(ultima):'—'}</b> · Conferência: ${confere?'<span style="color:var(--ok)">OK</span>':'<span style="color:var(--danger)">confira os valores</span>'}` + txtPagas + txtAtual
       + (linhaCobranca ? `<div style="margin-top:10px"><span class="hint" style="display:block;margin-bottom:4px">Como aparece na cobrança:</span><div class="msg-preview" style="padding:10px 12px;background:#fff">${esc(linhaCobranca)}</div></div>` : '');
   }
   form.addEventListener('input', updatePreview);
@@ -1506,9 +1544,16 @@ function openVendaForm(id){
       parcelas: Math.max(1, parseInt(f.get('parcelas'))||1),
       valorParcela: round2(parseFloat(f.get('valorParcela'))||0),
       mesPrimeira: f.get('mesPrimeira'),
-      obs: (f.get('obs')||'').trim()
+      obs: (f.get('obs')||'').trim(),
+      valorCheio: round2(parseFloat(f.get('valorCheio'))||0),
+      cashback: round2(parseFloat(f.get('cashback'))||0),
+      descontoAniversario: !!f.get('aniversario')
     };
-    if (id){ Object.assign(v, data); } else { DB.compras.push(Object.assign({id:uid()}, data)); }
+    if (id){ Object.assign(v, data); } else {
+      DB.compras.push(Object.assign({id:uid()}, data));
+      const pagas = Math.min(data.parcelas, Math.max(0, parseInt(f.get('pagas'))||0));
+      for (let i=0;i<pagas;i++) DB.pagamentos.push({id:uid(), clienteId:data.clienteId, dataPagamento:new Date().toISOString().slice(0,10), mesRef:ymAdd(data.mesPrimeira,i), valor:data.valorParcela, forma:'Já pago', obs:`Parcela ${i+1}/${data.parcelas} paga antes do cadastro — ${data.apelido||data.produto}`});
+    }
     saveDB(); closeModal(); renderAll(); toast('Venda salva.');
   });
 }
