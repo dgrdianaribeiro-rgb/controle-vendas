@@ -538,6 +538,18 @@
   #tab-gestao .gp-fontes span{background:#F2F4F7;}
   #tab-gestao .gp-duo{gap:12px;}
   #tab-gestao .hint{font-size:.8rem;}
+  .gp-cenarios{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:10px;}
+  .gp-cenarios > div{background:#fff;border-radius:20px;padding:16px;box-shadow:var(--gp-sombra);display:flex;flex-direction:column;gap:2px;}
+  .gp-cenarios .eti{font-size:.82rem;font-weight:700;color:var(--ink-60);}
+  .gp-cenarios b{font-size:1.5rem;font-weight:800;letter-spacing:-.02em;}
+  .gp-cenarios small{color:var(--ink-45);font-size:.78rem;}
+  .gp-cenarios p{margin:8px 0 0;font-size:.84rem;color:var(--ink-60);}
+  .gp-cenarios p b{font-size:inherit;letter-spacing:0;color:#101828;}
+  .gp-cenarios .bom > b{color:var(--ok,#12A150);} .gp-cenarios .ruim > b{color:var(--danger,#E5484D);}
+  .gp-porque{background:#fff;border-radius:16px;padding:12px 14px;box-shadow:var(--gp-sombra);margin-bottom:12px;}
+  .gp-porque summary{cursor:pointer;font-weight:700;color:var(--volt,#2F54EB);}
+  .gp-porque ul{margin:10px 0 0;padding-left:18px;font-size:.86rem;color:var(--ink-60);display:flex;flex-direction:column;gap:6px;}
+  #tab-gestao .gp-prev td.real-neg{color:var(--danger,#E5484D);font-weight:700;}
   .desc-aniv{flex-direction:column;gap:2px;}
   .desc-aniv > span:first-child{display:flex;align-items:center;gap:10px;font-size:.92rem;cursor:pointer;}
   .field.desc-aniv input[type=checkbox]{width:20px;height:20px;flex:none;padding:0;margin:0;accent-color:var(--volt);}
@@ -2907,42 +2919,70 @@ function gpViewQuinzenas(M){
 
 function gpViewPrevisao(mesIni){
   const meses = Array.from({length:12}, (_,i)=>ymAdd(mesIni, i));
-  let acum = 0;
-  const linhas = meses.map((m,i)=>{
+  // média real do dia a dia (Budget): o quanto você costuma gastar de verdade
+  const uf = gpUltimoFechado();
+  const refMedia = uf ? ymAdd(uf, 1) : null;
+  const mediaReal = refMedia ? round2(DB.gpCategorias.reduce((t,c)=>t+gpMediaCategoria(c.id, refMedia, 3),0)) : null;
+  const saldoInicio = round2(Number((DB.gpSaldoIni||{})[mesIni])||0);
+  let conta = saldoInicio, contaReal = saldoInicio;
+  const linhas = meses.map(m=>{
     const M = gpMes(m);
-    acum = round2(acum + M.sobra);
+    const sobraMes = round2(M.sobra - M.saldoIni);              // só o que entra e sai no mês (sem saldo do mês anterior)
+    const sobraReal = mediaReal!=null ? round2(sobraMes + M.totDia - Math.max(M.totDia, mediaReal)) : null;
+    conta = round2(conta + sobraMes);
+    if (sobraReal!=null) contaReal = round2(contaReal + sobraReal);
     const terminam = gpPrep().filter(it=>it.recorrencia==='parcelado' && gpUltimo(it)===ymAdd(m,-1));
     const alivio = round2(terminam.reduce((t,it)=>t+it.valor,0));
-    return {m, M, acum, terminam, alivio};
+    return {m, M, sobraMes, sobraReal, conta, contaReal, terminam, alivio};
   });
-  const vermelhos = linhas.filter(l=>l.M.sobra<0);
+  const media = arr => arr.length ? round2(arr.reduce((t,x)=>t+x,0)/arr.length) : 0;
+  const medLim = media(linhas.map(l=>l.sobraMes));
+  const medReal = mediaReal!=null ? media(linhas.map(l=>l.sobraReal)) : null;
   let azulDesde = null;
-  for (let i=linhas.length-1;i>=0;i--){ if (linhas[i].M.sobra<0) break; azulDesde = linhas[i].m; }
-  const pior = linhas.reduce((a,b)=>b.M.sobra<a.M.sobra?b:a, linhas[0]);
-  const precisa = round2(vermelhos.reduce((t,l)=>t-l.M.sobra,0));
-  const semEntradas = !DB.receitas.length;
+  for (let i=linhas.length-1;i>=0;i--){ if (linhas[i].sobraMes<0) break; azulDesde = linhas[i].m; }
+  const limiteDia = round2(DB.gpCategorias.reduce((t,c)=>t+(Number(c.limite)||0),0));
+  const fim = linhas[linhas.length-1];
+  const sinal = v => (v<0?'−':'+')+brl(Math.abs(v));
   const resumo = `
-    <div class="gp-resumo">
-      ${semEntradas?`<div class="alerta">Ainda não há recebimentos cadastrados, então todos os meses aparecem no vermelho. Cadastre seu salário e as outras entradas em <b>Recebimentos e descontos</b>.</div>`:''}
-      <div><span>Primeiro mês no vermelho</span><b>${vermelhos.length?esc(monthLabel(vermelhos[0].m))+' · falta '+brl(-vermelhos[0].M.sobra):'nenhum nos próximos 12 meses'}</b></div>
-      <div><span>Mês mais apertado</span><b>${pior && pior.M.sobra<0?esc(monthLabel(pior.m))+' · falta '+brl(-pior.M.sobra):'nenhum'}</b></div>
-      <div><span>Quanto vai precisar (soma do que falta)</span><b>${brl(precisa)}</b></div>
-      <div><span>Desaperta (fica no azul de vez) em</span><b>${azulDesde?esc(monthLabel(azulDesde)):'ainda não, nos próximos 12 meses'}</b></div>
-    </div>`;
-  const max = Math.max(1, ...linhas.map(l=>Math.max(l.M.entradas, l.M.saidas+l.M.totFolha+l.M.totDia)));
+    ${!DB.receitas.length?`<div class="gp-avisos" style="margin:0 0 10px"><div class="atencao">Cadastre o que você recebe em Entradas; sem isso todos os meses aparecem no vermelho.</div></div>`:''}
+    <div class="gp-cenarios">
+      <div class="bom">
+        <span class="eti">Se você seguir os limites</span>
+        <b>${sinal(medLim)}</b><small>por mês, em média</small>
+        <p>Dia a dia de <b>${brl(limiteDia)}</b>/mês. Guardando tudo o que sobra, em ${esc(monthLabelShort(fim.m))} você teria <b>${brl(fim.conta)}</b> na conta.</p>
+      </div>
+      ${mediaReal!=null?`<div class="${medReal<0?'ruim':'bom'}">
+        <span class="eti">Se continuar gastando como hoje</span>
+        <b>${sinal(medReal)}</b><small>por mês, em média</small>
+        <p>Dia a dia de <b>${brl(mediaReal)}</b>/mês (sua média no Budget). Em ${esc(monthLabelShort(fim.m))} a conta estaria em <b>${fim.contaReal<0?'−':''}${brl(Math.abs(fim.contaReal))}</b>.</p>
+      </div>`:''}
+      <div>
+        <span class="eti">Desaperta (só sobra, todo mês) em</span>
+        <b>${azulDesde?esc(monthLabel(azulDesde)):'ainda não'}</b><small>seguindo os limites</small>
+      </div>
+    </div>
+    <details class="gp-porque">
+      <summary>Por que o valor que sobra parece tão alto?</summary>
+      <ul>
+        <li><b>Ele soma tudo o que sobra, mês a mês, como se nada fosse gasto.</b> Qualquer sobra usada sai desse total.</li>
+        <li>O dia a dia previsto é o dos seus <b>limites (${brl(limiteDia)}/mês)</b>${mediaReal!=null?`, mas a sua média real é <b>${brl(mediaReal)}/mês</b>. A diferença, ${brl(Math.max(0,round2(mediaReal-limiteDia)))} por mês, é o tamanho do esforço`:''}.</li>
+        <li>Só entram contas e recebimentos cadastrados. Compras novas, presentes, imprevistos e parcelas que você criar depois <b>não estão na conta</b>.</li>
+        <li>Muita parcela termina nos próximos meses (Empréstimo IV, BMG, cartões). Por isso a sobra cresce: ela só vira dinheiro se você não criar parcelas novas.</li>
+      </ul>
+    </details>`;
   const tabela = `<div class="table-wrap"><table class="table gp-prev">
-    <thead><tr><th>Mês</th><th class="num">Entradas</th><th class="num">Folha</th><th class="num">Contas</th><th class="num">Dia a dia</th><th class="num">Sobra / falta</th><th class="num">Acumulado</th><th>O que muda</th></tr></thead>
-    <tbody>${linhas.map(l=>`<tr class="${l.M.sobra<0?'neg':''}">
-      <td data-label="Mês"><b>${esc(monthLabelShort(l.m))}</b><div class="gp-mini"><span class="e" style="width:${Math.round(100*l.M.entradas/max)}%"></span><span class="s" style="width:${Math.round(100*(l.M.saidas+l.M.totFolha+l.M.totDia)/max)}%"></span></div></td>
-      <td data-label="Entradas" class="num">${brl(l.M.entradas)}</td>
-      <td data-label="Folha" class="num">${brl(l.M.totFolha)}</td>
-      <td data-label="Contas" class="num">${brl(l.M.saidas)}</td>
-      <td data-label="Dia a dia" class="num">${brl(l.M.totDia)}</td>
-      <td data-label="Sobra / falta" class="num sobra">${l.M.sobra<0?'−':'+'}${brl(Math.abs(l.M.sobra))}</td>
-      <td data-label="Acumulado" class="num">${l.acum<0?'−':''}${brl(Math.abs(l.acum))}</td>
+    <thead><tr><th>Mês</th><th class="num">Entra</th><th class="num">Sai (contas + folha)</th><th class="num">Dia a dia (limite)</th><th class="num">Sobra do mês</th><th class="num">Na conta no fim, guardando tudo</th>${mediaReal!=null?'<th class="num">Gastando como hoje</th>':''}<th>O que muda</th></tr></thead>
+    <tbody>${linhas.map(l=>`<tr class="${l.sobraMes<0?'neg':''}">
+      <td data-label="Mês"><b>${esc(monthLabelShort(l.m))}</b></td>
+      <td data-label="Entra" class="num">${brl(l.M.entradas)}</td>
+      <td data-label="Sai (contas + folha)" class="num">${brl(round2(l.M.saidas+l.M.totFolha))}</td>
+      <td data-label="Dia a dia (limite)" class="num">${brl(l.M.totDia)}</td>
+      <td data-label="Sobra do mês" class="num sobra">${sinal(l.sobraMes)}</td>
+      <td data-label="Na conta no fim, guardando tudo" class="num">${l.conta<0?'−':''}${brl(Math.abs(l.conta))}</td>
+      ${mediaReal!=null?`<td data-label="Gastando como hoje" class="num ${l.sobraReal<0?'real-neg':''}">${sinal(l.sobraReal)}</td>`:''}
       <td data-label="O que muda">${l.terminam.length?`<span class="gp-alivio">+${brl(l.alivio)} livre: ${l.terminam.map(it=>esc(it.descricao)).join(', ')} terminou</span>`:'—'}</td>
     </tr>`).join('')}</tbody></table></div>
-    <p class="hint" style="margin:10px 2px 0">Acumulado = se a sobra de cada mês ficar guardada para o mês seguinte. Na barrinha de cada mês: verde é o que entra, vermelho o que sai.</p>`;
+    <p class="hint" style="margin:10px 2px 0">${saldoInicio?`Começa com ${brl(saldoInicio)} (saldo em conta no dia 1º de ${esc(monthLabel(mesIni))}). `:''}"Sobra do mês" = o que entra − o que sai − o dia a dia, sem contar o mês anterior. "Na conta no fim" só existe se a sobra ficar guardada.</p>`;
   return resumo + tabela;
 }
 
