@@ -2458,6 +2458,10 @@ document.getElementById('btnSettings').addEventListener('click', ()=>{
         <div class="txt"><b>Colar dados (JSON)</b><span>Se o seletor de arquivo não funcionar no seu aparelho</span></div>
         <button class="btn ghost sm" id="btnColarJson">Colar</button>
       </div>
+      ${DB.backupVendas?`<div class="settings-row">
+        <div class="txt"><b>Desfazer correção de vendas</b><span>Volta as compras de ${esc(nomeCliente(DB.backupVendas.clienteId))} para antes do último link (${fmtDateObj(new Date(DB.backupVendas.em))})</span></div>
+        <button class="btn ghost sm" onclick="desfazerVendasLink()">Desfazer</button>
+      </div>`:''}
       <div class="settings-row">
         <div class="txt"><b>Apagar tudo</b><span>Remove clientes, vendas, pagamentos, contas e parcelamentos</span></div>
         <button class="btn danger sm" id="btnWipe">Apagar</button>
@@ -3631,6 +3635,117 @@ abrirListaDoLink();
 window.addEventListener('hashchange', abrirListaDoLink);
 gpImportarDoLink();
 window.addEventListener('hashchange', gpImportarDoLink);
+
+/* ===================== LINK DE CORREÇÃO DE VENDAS (#vendas=) =====================
+   Ajusta as compras de UMA cliente para o mês informado: acha a mesma compra (mesmo nº de
+   parcelas e mesmo valor de parcela), corrige mês/descrição, remove duplicadas e cria as que
+   faltam. Compras já terminadas e pagamentos não são tocados. Guarda cópia para desfazer. */
+function vendasDoLink(){
+  const m = location.hash.match(/^#vendas=([A-Za-z0-9_\-]+)/);
+  if (!m) return;
+  history.replaceState(null, '', location.pathname + location.search);
+  let pac;
+  try{
+    const b64 = m[1].replace(/-/g,'+').replace(/_/g,'/');
+    const bin = atob(b64 + '==='.slice((b64.length+3)%4));
+    pac = JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, ch=>ch.charCodeAt(0))));
+  }catch(e){ toast('Não consegui ler o link de correção.'); return; }
+  const alvo = normNome(pac.cliente||'');
+  const achados = DB.clientes.filter(c=>normNome(c.nome)===alvo).concat(DB.clientes.filter(c=>normNome(c.nome)!==alvo && normNome(c.nome).includes(alvo)));
+  if (!achados.length){ toast(`Não achei a cliente "${pac.cliente}" neste aparelho.`); return; }
+  const tabBtn = document.querySelector('.tab-btn[data-tab="cobrancas"]'); if (tabBtn) tabBtn.click();
+  if (achados.length>1){
+    openModal(`<div class="modal-head"><h3>Qual cliente?</h3><button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div>
+      <div class="gp-ops">${achados.map(c=>`<button type="button" class="gp-op" data-id="${esc(c.id)}"><span><b>${esc(c.nome)}</b><small>${DB.compras.filter(x=>x.clienteId===c.id).length} compra(s)</small></span></button>`).join('')}</div>`);
+    document.querySelectorAll('.gp-op[data-id]').forEach(b=>b.addEventListener('click', ()=>vendasPrevia(pac, b.dataset.id)));
+    return;
+  }
+  vendasPrevia(pac, achados[0].id);
+}
+function vendasPlano(pac, clienteId){
+  const mes = pac.mesRef || DB.mesAtual;
+  const doCli = DB.compras.filter(c=>c.clienteId===clienteId);
+  const usados = new Set(), duplicadas = [];
+  const itens = (pac.compras||[]).map(t=>{
+    const mesmo = c => !usados.has(c.id) && Number(c.parcelas)===Number(t.parcelas) && Math.abs(Number(c.valorParcela)-Number(t.valorParcela))<=0.05;
+    const cands = doCli.filter(mesmo);
+    const old = cands[0] || null;
+    if (old){ usados.add(old.id); cands.slice(1).filter(c=>valorMesCompra(c, mes)>0 || c.mesPrimeira===old.mesPrimeira).forEach(c=>{ usados.add(c.id); duplicadas.push(c); }); }
+    const muda = [];
+    if (old){
+      if (old.mesPrimeira!==t.mesPrimeira){ const io = parcelaIdx(old.mesPrimeira, mes); muda.push(`em ${esc(monthLabelShort(mes))}: ${io>old.parcelas?'já tinha acabado':(io<1?'ainda não começava':io+'/'+old.parcelas)} → ${parcelaIdx(t.mesPrimeira, mes)}/${t.parcelas}`); }
+      if ((old.apelido||old.produto)!==(t.apelido||t.produto)) muda.push('descrição');
+      if (Math.abs(Number(old.total)-Number(t.total))>0.05) muda.push(`total ${brl(old.total)} → ${brl(t.total)}`);
+    }
+    return {t, old, muda};
+  });
+  const saem = doCli.filter(c=>!usados.has(c.id) && valorMesCompra(c, mes)>0);
+  return {mes, itens, duplicadas, saem};
+}
+let vendasPlanoAtual = null;
+function vendasPrevia(pac, clienteId){
+  const P = vendasPlano(pac, clienteId);
+  vendasPlanoAtual = {pac, clienteId, P};
+  const cli = getCliente(clienteId);
+  const totMes = round2(P.itens.reduce((t,x)=>{ const i = parcelaIdx(x.t.mesPrimeira, P.mes); return t + ((i>=1 && i<=x.t.parcelas) ? Number(x.t.valorParcela) : 0); },0));
+  const venc = vencimentoCobranca(P.mes);
+  // simula a conta depois da correção (sem salvar), para mostrar o saldo de meses anteriores
+  const antes = cobrancaCliente(clienteId, P.mes);
+  const original = DB.compras;
+  DB.compras = vendasAplicarEm(original.map(c=>Object.assign({}, c)), clienteId, P, new Set());
+  const depois = cobrancaCliente(clienteId, P.mes);
+  DB.compras = original;
+  const linha = x => {
+    const i = parcelaIdx(x.t.mesPrimeira, P.mes);
+    const tag = !x.old ? '<span class="badge info">nova</span>' : (x.muda.length ? '<span class="badge warn">corrigida</span>' : '<span class="badge ok">igual</span>');
+    return `<div class="lista-item"><div>${tag} <b>${esc(x.t.apelido||x.t.produto)}</b> · ${i}/${x.t.parcelas}${x.muda.length?`<span class="muda">${x.muda.join(' · ')}</span>`:''}</div><div class="val">${brl(x.t.valorParcela)}</div></div>`;
+  };
+  openModal(`
+    <div class="modal-head"><h3>Conta de ${esc(cli.nome)}</h3><button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div>
+    <div class="lista-resumo">Parcelas de <b>${esc(monthLabel(P.mes))}</b>: <b>${brl(totMes)}</b> · vence até ${fmtDateObj(venc)}
+      ${Math.abs(depois.saldoAnterior)>0.005?`<br>Saldo de meses anteriores: <b>${brl(depois.saldoAnterior)}</b>${Math.abs(depois.saldoAnterior-antes.saldoAnterior)>0.005?` (antes: ${brl(antes.saldoAnterior)})`:''}`:''}
+      <br>Total a pagar no mês: <b>${brl(depois.totalAberto)}</b>${Math.abs(depois.totalAberto-antes.totalAberto)>0.005?` (antes: ${brl(antes.totalAberto)})`:''}</div>
+    ${P.itens.map(linha).join('')}
+    ${P.duplicadas.length?`<div class="lista-dia" style="margin-top:16px"><span>Duplicadas que serão apagadas</span></div>${P.duplicadas.map(c=>`<div class="lista-item"><div><span class="badge danger">duplicada</span> ${esc(c.apelido||c.produto)} · ${parcelaIdx(c.mesPrimeira,P.mes)}/${c.parcelas}</div><div class="val">${brl(c.valorParcela)}</div></div>`).join('')}`:''}
+    ${P.saem.length?`<div class="lista-dia" style="margin-top:16px"><span>Estão na conta de ${esc(monthLabelShort(P.mes))}, mas não na sua mensagem</span></div>
+      <p class="hint" style="margin:0 0 4px">Serão apagadas. Marque a que quiser manter.</p>
+      ${P.saem.map(c=>`<label class="lista-sai"><input type="checkbox" class="manterVenda" value="${esc(c.id)}"><span><b>${esc(c.apelido||c.produto)}</b> · ${parcelaIdx(c.mesPrimeira,P.mes)}/${c.parcelas} · <b>${brl(c.valorParcela)}</b><br><span class="hint">Manter esta compra</span></span></label>`).join('')}`:''}
+    <p class="hint" style="margin:12px 0 0">Compras já terminadas e pagamentos registrados não mudam. O app guarda uma cópia: dá para desfazer em ⚙️ Ajustes.</p>
+    <div class="form-actions">
+      <button type="button" class="btn ghost" onclick="closeModal()">Cancelar</button>
+      <button type="button" class="btn primary" onclick="aplicarVendasLink()">Corrigir conta</button>
+    </div>`);
+}
+function vendasAplicarEm(compras, clienteId, P, manter){
+  const apagar = new Set(P.duplicadas.map(c=>c.id).concat(P.saem.filter(c=>!manter.has(c.id)).map(c=>c.id)));
+  const lista = compras.filter(c=>!apagar.has(c.id));
+  P.itens.forEach(x=>{
+    const dados = {clienteId, produto:x.t.produto, marca:x.t.marca||'Boticário', apelido:x.t.apelido||'', dataCompra:x.t.dataCompra||new Date().toISOString().slice(0,10), total:round2(Number(x.t.total)), parcelas:Number(x.t.parcelas), valorParcela:round2(Number(x.t.valorParcela)), mesPrimeira:x.t.mesPrimeira};
+    if (x.old){ const c = lista.find(y=>y.id===x.old.id); if (c){ dados.obs = c.obs||''; if (!x.t.dataCompra) dados.dataCompra = c.dataCompra||dados.dataCompra; Object.assign(c, dados); } }
+    else lista.push(Object.assign({id:uid(), obs:''}, dados));
+  });
+  return lista;
+}
+window.aplicarVendasLink = function(){
+  if (!vendasPlanoAtual) return;
+  const {clienteId, P} = vendasPlanoAtual;
+  const manter = new Set(Array.from(document.querySelectorAll('.manterVenda:checked')).map(i=>i.value));
+  DB.backupVendas = {em:new Date().toISOString(), clienteId, compras: JSON.parse(JSON.stringify(DB.compras.filter(c=>c.clienteId===clienteId)))};
+  DB.compras = vendasAplicarEm(DB.compras, clienteId, P, manter);
+  DB.mesAtual = P.mes;
+  vendasPlanoAtual = null;
+  saveDB(); closeModal(); renderAll();
+  toast('Conta corrigida. Abra a mensagem da cliente em Cobranças para conferir.');
+};
+window.desfazerVendasLink = function(){
+  const bk = DB.backupVendas; if (!bk) return;
+  if (!confirm('Voltar as compras dessa cliente para como estavam antes da última correção por link?')) return;
+  DB.compras = DB.compras.filter(c=>c.clienteId!==bk.clienteId).concat(bk.compras);
+  delete DB.backupVendas;
+  saveDB(); closeModal(); renderAll(); toast('Compras voltaram para como estavam.');
+};
+vendasDoLink();
+window.addEventListener('hashchange', vendasDoLink);
 
 /* ===================== PWA (best-effort) ===================== */
 if ('serviceWorker' in navigator) {
