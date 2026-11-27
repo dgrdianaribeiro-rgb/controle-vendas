@@ -1077,7 +1077,7 @@ function planilhaSheetRows(wb, nomes){
 function cell(row, ...chaves){ for(const c of chaves){ if(row[c]!==undefined && row[c]!=='') return row[c]; } return ''; }
 
 function importarPlanilha(wb){
-  const novo = { clientes:[], compras:[], pagamentos:[], contas:[], produtos: SEED_PRODUTOS.slice(), mesAtual: DB.mesAtual, pixKey: DB.pixKey, diasVencimento: DB.diasVencimento, modelosMensagem: DB.modelosMensagem, recados: DB.recados, parcelamentos: DB.parcelamentos||[], receitas: DB.receitas||[], gpGrupos: DB.gpGrupos||{}, gpCategorias: DB.gpCategorias, gpGastos: DB.gpGastos||[], gpSaldoIni: DB.gpSaldoIni||{}, gpBudget: DB.gpBudget, gpMetaGuardar: DB.gpMetaGuardar };
+  const novo = { clientes:[], compras:[], pagamentos:[], contas:[], produtos: SEED_PRODUTOS.slice(), mesAtual: DB.mesAtual, pixKey: DB.pixKey, diasVencimento: DB.diasVencimento, modelosMensagem: DB.modelosMensagem, recados: DB.recados, parcelamentos: DB.parcelamentos||[], receitas: DB.receitas||[], gpGrupos: DB.gpGrupos||{}, gpCategorias: DB.gpCategorias, gpGastos: DB.gpGastos||[], gpSaldoIni: DB.gpSaldoIni||{}, gpBudget: DB.gpBudget, gpMetaGuardar: DB.gpMetaGuardar, gpMetaMes: DB.gpMetaMes };
   function clienteIdPorNome(nomeRaw){
     const nome = String(nomeRaw||'').trim(); if(!nome) return null;
     let c = novo.clientes.find(x=>normNome(x.nome)===normNome(nome));
@@ -2458,12 +2458,12 @@ function aplicarImportJson(texto){
     if(!data || typeof data!=='object') throw new Error('formato inválido');
     if(!confirm('Importar vai substituir todos os dados atuais deste navegador. Continuar?')) return;
     const parcelamentosAtuais = DB.parcelamentos||[], receitasAtuais = DB.receitas||[], gruposAtuais = DB.gpGrupos||{};
-    const atuaisGp = {gpCategorias: DB.gpCategorias, gpGastos: DB.gpGastos, gpSaldoIni: DB.gpSaldoIni, gpBudget: DB.gpBudget, gpMetaGuardar: DB.gpMetaGuardar};
+    const atuaisGp = {gpCategorias: DB.gpCategorias, gpGastos: DB.gpGastos, gpSaldoIni: DB.gpSaldoIni, gpBudget: DB.gpBudget, gpMetaGuardar: DB.gpMetaGuardar, gpMetaMes: DB.gpMetaMes};
     DB = Object.assign({ compras:[], contas:[], pagamentos:[], clientes:[], produtos: SEED_PRODUTOS.slice(), mesAtual: currentYM(), pixKey:'', diasVencimento:5 }, data);
     if (!Array.isArray(data.parcelamentos)) DB.parcelamentos = parcelamentosAtuais;
     if (!Array.isArray(data.receitas)) DB.receitas = receitasAtuais;
     if (!data.gpGrupos) DB.gpGrupos = gruposAtuais;
-    ['gpCategorias','gpGastos','gpSaldoIni','gpBudget','gpMetaGuardar'].forEach(k=>{ if (data[k]===undefined) DB[k] = atuaisGp[k]; });
+    ['gpCategorias','gpGastos','gpSaldoIni','gpBudget','gpMetaGuardar','gpMetaMes'].forEach(k=>{ if (data[k]===undefined) DB[k] = atuaisGp[k]; });
     saveDB(); closeModal(); renderAll(); toast('Dados importados com sucesso.');
   }catch(err){ toast('Não deu para importar: ' + err.message); }
 }
@@ -2678,7 +2678,10 @@ function gpMes(ym){
   const totDia = round2(porCat.reduce((t,x)=>t+x.previsto,0) + semCat);
   quinz[1].dia = round2(totDia/2); quinz[2].dia = round2(totDia - quinz[1].dia); quinz[0].dia = 0;
   // a Gestão é só o dinheiro pessoal: vendas, clientes e pedidos de produtos ficam fora
-  return {ym, itens, contas, folha, receitas, entradas, totFolha, saidas, pago, totDia, porCat, gastosMes, sobra: round2(entradas-totFolha-saidas-totDia), quinz, qFolha, qDoDesconto, salario, salarios, liquidos};
+  // saldo em conta no dia 1º (o que sobrou do mês anterior), quando informado
+  const saldoIni = round2(Number((DB.gpSaldoIni||{})[ym])||0);
+  if (saldoIni) quinz[1].ent += saldoIni;
+  return {ym, itens, contas, folha, receitas, entradas, saldoIni, totFolha, saidas, pago, totDia, porCat, gastosMes, sobra: round2(saldoIni+entradas-totFolha-saidas-totDia), quinz, qFolha, qDoDesconto, salario, salarios, liquidos};
 }
 
 window.setGpAba = function(a){ gpAba = a; renderGestao(); };
@@ -3202,7 +3205,9 @@ function gpAplicarBudget(novo){
   saveDB(); gpAba='analise'; renderGestao();
   toast(`Budget lido: ${novo.regs.length} lançamentos, de ${fmtDateObj(new Date(novo.de+'T12:00:00'))} a ${fmtDateObj(new Date(novo.ate+'T12:00:00'))}.`);
 }
-window.setMetaGuardarGp = function(v){ DB.gpMetaGuardar = Math.max(0, round2(parseFloat(String(v).replace(/\./g,'').replace(',','.'))||0)); saveDB(); renderGestao(); };
+// quanto guardar é por mês (ex.: guardar em dezembro o que vai pagar o começo de janeiro)
+function gpMetaDoMes(ym){ const m = (DB.gpMetaMes||{})[ym]; return m!=null ? Number(m)||0 : (Number(DB.gpMetaGuardar)||0); }
+window.setMetaGuardarGp = function(v){ if (!DB.gpMetaMes || typeof DB.gpMetaMes!=='object') DB.gpMetaMes = {}; DB.gpMetaMes[DB.mesAtual] = Math.max(0, round2(parseFloat(String(v).replace(/\./g,'').replace(',','.'))||0)); saveDB(); renderGestao(); };
 function gpBudgetMes(ym){
   const B = DB.gpBudget; const r = {renda:0, emprestimo:0, despesa:0, dia:0, porCatBudget:{}, porSub:{}};
   if (!B) return r;
@@ -3233,8 +3238,8 @@ function gpUltimoFechado(){
 }
 function gpPlanoDoMes(M){
   const ym = M.ym;
-  const meta = Number(DB.gpMetaGuardar)||0;
-  const entra = round2(M.entradas);
+  const meta = gpMetaDoMes(ym);
+  const entra = round2(M.entradas + M.saldoIni);
   const disponivel = round2(entra - M.totFolha - M.saidas - meta);
   const uf = gpUltimoFechado();
   const refMedia = uf && ymDiff(ym, ymAdd(uf,1))>0 ? ymAdd(uf,1) : ym;
@@ -3273,10 +3278,11 @@ function gpViewAnalise(M, parte){
     <div class="valor">${brl(Math.abs(P.disponivel))}</div>
     ${ok?`<div class="sub">≈ <b>${brl(round2(P.disponivel/semanas))}</b> por semana · <b>${brl(round2(P.disponivel/diasMes))}</b> por dia</div>`:`<div class="sub">antes de qualquer gasto com comida, bebida ou Uber</div>`}
     <div class="conta">
+      ${M.saldoIni?`<span>Saldo em conta no dia 1º</span><b>${brl(M.saldoIni)}</b>`:''}
       <span>Entra (seu dinheiro: salário, social media, 13º…)</span><b>${brl(M.entradas)}</b>
       <span>Descontos em folha</span><b>−${brl(M.totFolha)}</b>
       <span>Contas e parcelas do mês</span><b>−${brl(M.saidas)}</b>
-      <span>Quero guardar <input class="gp-meta" inputmode="decimal" value="${P.meta?String(P.meta).replace('.',','):''}" placeholder="0" onchange="setMetaGuardarGp(this.value)"></span><b>−${brl(P.meta)}</b>
+      <span>Guardar (para o mês seguinte ou reserva) <input class="gp-meta" inputmode="decimal" value="${P.meta?String(P.meta).replace('.',','):''}" placeholder="0" onchange="setMetaGuardarGp(this.value)"></span><b>−${brl(P.meta)}</b>
       <span><b>Livre para o dia a dia</b></span><b>${P.disponivel<0?'−':''}${brl(Math.abs(P.disponivel))}</b>
     </div>
   </div>`;
@@ -3619,8 +3625,10 @@ function gpImportarDoLink(){
   novas.forEach(c=>{ const g=porGrupo[c.grupo]=porGrupo[c.grupo]||{n:0,t:0}; g.n++; if (gpOcorre(c, ref)) g.t=round2(g.t+c.valor); });
   openModal(`
     <div class="modal-head"><h3>Adicionar à Gestão de Parcelas</h3><button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div>
-    ${novas.length||novasRec.length||ajustes.length||gruposMudam.length ? `
+    ${novas.length||novasRec.length||ajustes.length||gruposMudam.length||Object.keys(pacote.saldoIni||{}).length||Object.keys(pacote.metaMes||{}).length ? `
       <div class="lista-resumo"><b>${novas.length} conta(s)</b>${novasRec.length?` e <b>${novasRec.length} recebimento(s)</b>`:''} novo(s)${ajustes.length||gruposMudam.filter(g=>pacote.gruposSet[g].dia).length?` · <b>${ajustes.length+gruposMudam.filter(g=>pacote.gruposSet[g].dia).length} ajuste(s)</b>`:''}. Valores de ${esc(monthLabel(ref))}:</div>
+      ${Object.keys(pacote.metaMes||{}).map(ym=>`<div class="lista-item"><div><b>Guardar para o mês seguinte</b> · <span class="hint">${esc(monthLabel(ym))}</span></div><div class="val">${brl(pacote.metaMes[ym])}</div></div>`).join('')}
+      ${Object.keys(pacote.saldoIni||{}).map(ym=>`<div class="lista-item"><div><b>Saldo em conta no dia 1º</b> · <span class="hint">${esc(monthLabel(ym))}</span></div><div class="val">${brl(pacote.saldoIni[ym])}</div></div>`).join('')}
       ${gruposMudam.filter(g=>pacote.gruposSet[g].dia).map(g=>`<div class="lista-item"><div><b>${esc(g)}</b> · <span class="hint">vence todo dia</span></div><div class="val">dia ${pacote.gruposSet[g].dia}</div></div>`).join('')}
       ${ajustes.map(x=>`<div class="lista-item"><div>${esc(x.it.descricao||x.it.fonte)} · <span class="hint">${esc(x.it.grupo||x.it.fonte||'')}</span></div><div class="val">${[x.a.set.valor!=null?brl(x.a.set.valor):'', x.a.set.dia?'dia '+x.a.set.dia:'', x.a.set.mesInicio?'a partir de '+monthLabelShort(x.a.set.mesInicio):''].filter(Boolean).join(' · ')||'ajuste'}</div></div>`).join('')}
       ${Object.keys(porGrupo).map(g=>`<div class="lista-item"><div><b>${esc(g)}</b> · ${porGrupo[g].n} conta(s)</div><div class="val">${brl(porGrupo[g].t)}</div></div>`).join('')}
@@ -3639,6 +3647,8 @@ function gpImportarDoLink(){
     novasRec.forEach(r=>DB.receitas.push(r));
     Object.keys(pacote.grupos||{}).forEach(g=>{ if (!DB.gpGrupos[g]) DB.gpGrupos[g] = pacote.grupos[g]; });
     Object.keys(pacote.gruposSet||{}).forEach(g=>{ DB.gpGrupos[g] = Object.assign({}, DB.gpGrupos[g]||{}, pacote.gruposSet[g]); });
+    Object.keys(pacote.saldoIni||{}).forEach(ym=>{ DB.gpSaldoIni[ym] = round2(Number(pacote.saldoIni[ym])||0); });
+    if (pacote.metaMes){ DB.gpMetaMes = Object.assign({}, DB.gpMetaMes||{}, pacote.metaMes); }
     ajustes.forEach(x=>Object.assign(x.it, x.a.set));
     saveDB(); closeModal(); gpAba='contas'; renderGestao();
     toast(`${novas.length} conta(s) adicionadas${ajustes.length+gruposMudam.length?', '+(ajustes.length+gruposMudam.length)+' ajuste(s)':''}.${ymDiff(ref, DB.mesAtual)!==0?' Use ▶ lá em cima para ver '+monthLabel(ref)+'.':''}`);
