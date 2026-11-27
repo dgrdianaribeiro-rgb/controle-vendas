@@ -1,6 +1,6 @@
 {
-  "name": "Controle de Vendas e Cobranças",
-  "short_name": "Vendas",
+  "name": "Diana's Store — Controle de Vendas",
+  "short_name": "Diana's Store",
   "description": "Painel de vendas, clientes, produtos, parcelas, pagamentos e contas a pagar — Diana Ribeiro",
   "start_url": "./index.html",
   "scope": "./",
