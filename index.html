@@ -535,6 +535,7 @@
   #tab-gestao .gp-fontes span{background:#F2F4F7;}
   #tab-gestao .gp-duo{gap:12px;}
   #tab-gestao .hint{font-size:.8rem;}
+  .aviso-saldo{margin-top:10px;background:#FEF4E6;color:#93370D;border-radius:12px;padding:10px 12px;font-size:.86rem;display:flex;flex-direction:column;gap:8px;align-items:flex-start;}
   .gp-mini3 b.neg{color:var(--danger);}
   .gp-item .v.neg{color:var(--danger,#E5484D);}
   .gp-det summary{cursor:pointer;list-style:none;font:600 .84rem 'Manrope',sans-serif;color:var(--volt,#2F54EB);padding:4px 0;}
@@ -2145,6 +2146,7 @@ window.verMensagem = function(clienteId){
   openModal(`
     <div class="modal-head"><h3>Mensagem — ${esc(nome)}</h3><button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div>
     <div class="msg-preview" id="msgPreview">${esc(msg)}</div>
+    ${(()=>{ const cob = cobrancaCliente(clienteId, DB.mesAtual); return Math.abs(cob.saldoAnterior)>0.005 ? `<div class="aviso-saldo">Esta conta mostra ${cob.saldoAnterior>0?`<b>${brl(cob.saldoAnterior)}</b> de meses anteriores`:`um crédito de <b>${brl(-cob.saldoAnterior)}</b> de meses anteriores`}. Se ${esc(nome.split(' ')[0])} está em dia, toque no botão para zerar.<button type="button" class="btn sm ghost" onclick="zerarSaldoAnterior('${clienteId}')">Está em dia: zerar saldo anterior</button></div>` : ''; })()}
     <div class="form-actions">
       ${waHref?`<a class="btn primary" href="${waHref}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.29-1.39a9.9 9.9 0 004.75 1.21h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2z"/></svg>Abrir no WhatsApp</a>`:''}
       <button class="btn ghost" onclick="copiarMensagem()">Copiar mensagem</button>
@@ -3807,6 +3809,35 @@ function reparcelarDoLink(){
 }
 reparcelarDoLink();
 window.addEventListener('hashchange', reparcelarDoLink);
+
+/* Cliente em dia, mas a conta mostra saldo de meses anteriores (pagamento antigo não registrado,
+   compra duplicada já paga…): registra um "acerto" no mês anterior com o valor exato do saldo. */
+window.zerarSaldoAnterior = function(clienteId, semPerguntar){
+  const mes = DB.mesAtual;
+  const cob = cobrancaCliente(clienteId, mes);
+  if (Math.abs(cob.saldoAnterior)<=0.005){ toast('Não há saldo anterior para zerar.'); return; }
+  if (!semPerguntar && !confirm(`Registrar um acerto de ${brl(cob.saldoAnterior)} em ${monthLabel(ymAdd(mes,-1))} para ${nomeCliente(clienteId)}? O saldo de meses anteriores fica zerado.`)) return;
+  DB.pagamentos.push({id:uid(), clienteId, dataPagamento:new Date().toISOString().slice(0,10), mesRef:ymAdd(mes,-1), valor:round2(cob.saldoAnterior), forma:'Acerto', obs:'Acerto: cliente em dia (saldo de meses anteriores zerado)'});
+  saveDB(); renderAll(); verMensagem(clienteId); toast('Saldo anterior zerado. Para desfazer, apague o pagamento "Acerto" em Pagamentos.');
+};
+/* link #acerto={"cliente":"Sandra","mes":"2026-12"} */
+function acertoDoLink(){
+  const m = location.hash.match(/^#acerto=([A-Za-z0-9_\-]+)/);
+  if (!m) return;
+  history.replaceState(null, '', location.pathname + location.search);
+  let pac;
+  try{ const b64 = m[1].replace(/-/g,'+').replace(/_/g,'/'); const bin = atob(b64 + '==='.slice((b64.length+3)%4)); pac = JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, ch=>ch.charCodeAt(0)))); }
+  catch(e){ toast('Não consegui ler o link.'); return; }
+  const alvo = normNome(pac.cliente||'');
+  const cli = DB.clientes.find(c=>normNome(c.nome)===alvo) || DB.clientes.find(c=>normNome(c.nome).includes(alvo));
+  if (!cli){ toast(`Não achei "${pac.cliente}" nas clientes.`); return; }
+  if (pac.mes) DB.mesAtual = pac.mes;
+  saveDB(); renderAll();
+  const tabBtn = document.querySelector('.tab-btn[data-tab="cobrancas"]'); if (tabBtn) tabBtn.click();
+  verMensagem(cli.id);
+}
+acertoDoLink();
+window.addEventListener('hashchange', acertoDoLink);
 
 /* ===================== PWA (best-effort) ===================== */
 if ('serviceWorker' in navigator) {
