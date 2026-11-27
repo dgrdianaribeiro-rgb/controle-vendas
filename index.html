@@ -2745,6 +2745,7 @@ function gpViewInicio(M, lista){
   if (estouradas.length) avisos.push({t:'ruim', m:`Passou do limite em ${estouradas.map(x=>esc(x.c.nome)).join(', ')}.`});
   const totalGasto = round2(M.gastosMes.reduce((t,g)=>t+g.valor,0));
   if (!M.receitas.length) avisos.push({t:'atencao', m:'Cadastre o que você recebe em Entradas.'});
+  if (P.disponivel<0 && !M.saldoIni) avisos.unshift({t:'atencao', m:`O dinheiro que sobrou do mês passado (o que cai no dia 30) não está contado. <button type="button" class="gp-link" onclick="setGpAba('contas'); setGpContasModo('data'); setTimeout(()=>{const i=document.querySelector('.gp-saldo-ini'); if(i){i.focus(); i.scrollIntoView({block:'center'});}},50)">Informar saldo do dia 1º</button>`});
   if (semDia) avisos.push({t:'atencao', m:`${semDia} conta(s) sem dia de vencimento.`});
   let saldoDevedor = 0, fim = '';
   lista.forEach(it=>{ saldoDevedor += gpSaldo(it); if (it.recorrencia==='parcelado' && gpSaldo(it)>0 && gpUltimo(it)>fim) fim = gpUltimo(it); });
