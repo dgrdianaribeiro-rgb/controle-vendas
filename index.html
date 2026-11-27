@@ -902,10 +902,8 @@ function clientesComMovimento(mesRef){
 }
 
 function vencimentoCobranca(mesRef){
-  const [y,m]=mesRef.split('-').map(Number);
-  const d=new Date(y, m, 0); // último dia do mês
-  d.setDate(d.getDate()+(DB.diasVencimento||0));
-  return d;
+  // a conta do mês vence no Nº dia útil do próprio mês (padrão: 5º dia útil). Ex.: dezembro/2026 → 07/12/2026
+  return enesimoDiaUtil(mesRef, Math.max(1, parseInt(DB.diaUtilVencimento)||5));
 }
 
 const MODELO_PADRAO = {
@@ -1413,7 +1411,7 @@ function openVendaForm(id){
       <div class="field span2"><label>Observações</label><textarea name="obs">${esc(v.obs)}</textarea></div>
       <div class="form-note span2" id="vendaPreview" style="grid-column:1/-1"></div>
       <div class="form-actions" style="grid-column:1/-1">
-        ${id?`<button type="button" class="btn danger" onclick="deleteVenda('${id}')">Excluir</button>`:''}
+        ${id?`<button type="button" class="btn danger" onclick="deleteVenda('${id}')">Excluir</button><button type="button" class="btn ghost" onclick="abrirReparcelar('${id}')">Reparcelar o que falta</button>`:''}
         <button type="button" class="btn ghost" onclick="closeModal()">Cancelar</button>
         <button type="submit" class="btn primary">Salvar</button>
       </div>
@@ -2433,8 +2431,8 @@ document.getElementById('btnSettings').addEventListener('click', ()=>{
         <input id="cfgPix" style="max-width:180px" value="${esc(DB.pixKey)}">
       </div>
       <div class="settings-row">
-        <div class="txt"><b>Dias para vencimento</b><span>Após o fim do mês de referência</span></div>
-        <input id="cfgDias" type="number" min="0" style="max-width:80px;text-align:right" value="${DB.diasVencimento}">
+        <div class="txt"><b>Vencimento das cobranças</b><span>Dia útil do próprio mês da conta (5 = 5º dia útil; dezembro/26 vence 07/12)</span></div>
+        <input id="cfgDias" type="number" min="1" max="20" style="max-width:80px;text-align:right" value="${DB.diaUtilVencimento||5}">
       </div>
       <div class="settings-row">
         <div class="txt"><b>Exportar dados</b><span>Baixa um arquivo .json de backup</span></div>
@@ -2520,7 +2518,7 @@ document.getElementById('btnSettings').addEventListener('click', ()=>{
 });
 window.saveSettings = function(){
   DB.pixKey = (document.getElementById('cfgPix').value||'').trim();
-  DB.diasVencimento = Math.max(0, parseInt(document.getElementById('cfgDias').value)||0);
+  DB.diaUtilVencimento = Math.min(20, Math.max(1, parseInt(document.getElementById('cfgDias').value)||5));
   saveDB(); closeModal(); renderAll(); toast('Ajustes salvos.');
 };
 
@@ -3746,6 +3744,69 @@ window.desfazerVendasLink = function(){
 };
 vendasDoLink();
 window.addEventListener('hashchange', vendasDoLink);
+
+/* ===================== REPARCELAR O QUE FALTA DE UMA COMPRA =====================
+   A cliente pagou parte (ex.: a 1ª parcela, com valor a menos). A compra vira duas:
+   - a parte paga (1 parcela, no mês em que pagou);
+   - o restante, dividido em N vezes a partir do mês escolhido. */
+window.abrirReparcelar = function(id, nPadrao){
+  const c = DB.compras.find(x=>x.id===id); if(!c) return;
+  const cli = getCliente(c.clienteId);
+  const pagoMes = (DB.pagamentos||[]).filter(p=>p.clienteId===c.clienteId && p.mesRef===c.mesPrimeira).reduce((t,p)=>t+Number(p.valor||0),0);
+  const sugerePago = round2(Math.min(Number(c.valorParcela)||0, pagoMes||Number(c.valorParcela)||0));
+  const proximo = ymAdd(c.mesPrimeira, 1);
+  openModal(`
+    <div class="modal-head"><h3>Reparcelar o que falta</h3><button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div>
+    <div class="lista-resumo"><b>${esc(cli?cli.nome:'')}</b> · ${esc(c.apelido||c.produto)}<br>Compra de ${brl(c.total)} em ${c.parcelas}x de ${brl(c.valorParcela)} · 1ª parcela em ${esc(monthLabel(c.mesPrimeira))}</div>
+    <form id="formReparc" class="form-grid">
+      <div class="field"><label>Quanto já pagou desta compra (R$)</label><input name="pago" type="number" step="0.01" min="0" value="${sugerePago}" inputmode="decimal"><span class="hint">${pagoMes?`Pagamentos registrados em ${esc(monthLabelShort(c.mesPrimeira))}: ${brl(pagoMes)} (pode incluir outras compras)`:'Coloque o valor que a pessoa pagou.'}</span></div>
+      <div class="field"><label>Mês em que pagou</label><input name="mesPago" type="month" value="${c.mesPrimeira}"></div>
+      <div class="field"><label>Dividir o que falta em</label><input name="n" type="number" min="1" max="24" value="${nPadrao||2}"></div>
+      <div class="field"><label>Primeira parcela nova em</label><input name="inicio" type="month" value="${proximo}"></div>
+      <div class="form-note" id="reparcPrev" style="grid-column:1/-1"></div>
+      <div class="form-actions" style="grid-column:1/-1">
+        <button type="button" class="btn ghost" onclick="closeModal()">Cancelar</button>
+        <button type="submit" class="btn primary">Reparcelar</button>
+      </div>
+    </form>`);
+  const f = document.getElementById('formReparc');
+  const ler = () => { const d = new FormData(f); const pago = round2(parseFloat(d.get('pago'))||0); const n = Math.max(1, parseInt(d.get('n'))||1);
+    const falta = round2(Number(c.total) - pago); return {pago, n, falta, parcela: round2(falta/n), mesPago: d.get('mesPago')||c.mesPrimeira, inicio: d.get('inicio')||proximo}; };
+  const prev = () => { const r = ler(); document.getElementById('reparcPrev').innerHTML = r.falta>0.005
+    ? `Já pago: <b>${brl(r.pago)}</b> (${esc(monthLabelShort(r.mesPago))}) · falta <b>${brl(r.falta)}</b><br>Novo: <b>${r.n}x de ${brl(r.parcela)}</b> de ${esc(monthLabelShort(r.inicio))} a ${esc(monthLabelShort(ymAdd(r.inicio, r.n-1)))}${Math.abs(r.parcela*r.n-r.falta)>0.009?` <span class="hint">(arredondado: ${brl(round2(r.parcela*r.n))})</span>`:''}`
+    : '<span style="color:var(--danger)">O valor pago já cobre a compra toda.</span>'; };
+  f.addEventListener('input', prev); prev();
+  f.addEventListener('submit', e=>{
+    e.preventDefault();
+    const r = ler(); if (r.falta<=0.005){ toast('Não sobra nada para reparcelar.'); return; }
+    DB.backupVendas = {em:new Date().toISOString(), clienteId:c.clienteId, compras: JSON.parse(JSON.stringify(DB.compras.filter(x=>x.clienteId===c.clienteId)))};
+    const base = c.apelido || c.produto;
+    DB.compras.push({id:uid(), clienteId:c.clienteId, produto:c.produto, marca:c.marca, apelido: base+' — restante', dataCompra:c.dataCompra, total:r.falta, parcelas:r.n, valorParcela:r.parcela, mesPrimeira:r.inicio, obs:`Restante de ${brl(c.total)} depois de pagar ${brl(r.pago)} em ${monthLabelShort(r.mesPago)}`});
+    Object.assign(c, {apelido: base+' — parte paga', total:r.pago, parcelas:1, valorParcela:r.pago, mesPrimeira:r.mesPago});
+    saveDB(); closeModal(); renderAll(); toast(`Reparcelado: ${r.n}x de ${brl(r.parcela)}. Para voltar: Ajustes → Desfazer.`);
+  });
+};
+/* link #reparcelar={"cliente":"João","busca":"egeo","parcelas":2} abre o reparcelamento da compra certa */
+function reparcelarDoLink(){
+  const m = location.hash.match(/^#reparcelar=([A-Za-z0-9_\-]+)/);
+  if (!m) return;
+  history.replaceState(null, '', location.pathname + location.search);
+  let pac;
+  try{ const b64 = m[1].replace(/-/g,'+').replace(/_/g,'/'); const bin = atob(b64 + '==='.slice((b64.length+3)%4)); pac = JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, ch=>ch.charCodeAt(0)))); }
+  catch(e){ toast('Não consegui ler o link.'); return; }
+  const alvo = normNome(pac.cliente||''), busca = normNome(pac.busca||'');
+  const clis = DB.clientes.filter(c=>normNome(c.nome)===alvo || normNome(c.nome).startsWith(alvo+' ') || normNome(c.nome).includes(alvo));
+  const compras = DB.compras.filter(c=>clis.some(k=>k.id===c.clienteId) && normNome((c.produto||'')+' '+(c.apelido||'')).includes(busca) && !/— (parte paga|restante)$/.test(c.apelido||''));
+  const tabBtn = document.querySelector('.tab-btn[data-tab="vendas"]'); if (tabBtn) tabBtn.click();
+  if (!clis.length){ toast(`Não achei "${pac.cliente}" nas clientes.`); return; }
+  if (!compras.length){ toast(`Não achei compra com "${pac.busca}" de ${clis.map(c=>c.nome).join(', ')}.`); return; }
+  if (compras.length===1) return abrirReparcelar(compras[0].id, pac.parcelas);
+  openModal(`<div class="modal-head"><h3>Qual compra?</h3><button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div>
+    <div class="gp-ops">${compras.map(c=>`<button type="button" class="gp-op" data-id="${esc(c.id)}"><span><b>${esc(c.apelido||c.produto)}</b><small>${esc(nomeCliente(c.clienteId))} · ${c.parcelas}x de ${brl(c.valorParcela)} · desde ${esc(monthLabelShort(c.mesPrimeira))}</small></span></button>`).join('')}</div>`);
+  document.querySelectorAll('.gp-op[data-id]').forEach(b=>b.addEventListener('click', ()=>abrirReparcelar(b.dataset.id, pac.parcelas)));
+}
+reparcelarDoLink();
+window.addEventListener('hashchange', reparcelarDoLink);
 
 /* ===================== PWA (best-effort) ===================== */
 if ('serviceWorker' in navigator) {
