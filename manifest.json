@@ -1,6 +1,6 @@
 {
-  "name": "Diana's Store — Controle de Vendas",
-  "short_name": "Diana's Store",
+  "name": "Gestão de Compra — Diana Ribeiro",
+  "short_name": "Gestão de Compra",
   "description": "Painel de vendas, clientes, produtos, parcelas, pagamentos e contas a pagar — Diana Ribeiro",
   "start_url": "./index.html",
   "scope": "./",
